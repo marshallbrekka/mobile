@@ -1,0 +1,67 @@
+<div class="series-view">
+  <div ng-show="!series" ng-include="'/partials/loading.html'"></div>
+  <div ng-show="series">
+   <div ng-class="series.show | seriestoclass" class="meta">
+        <div class="lcol">
+          <div ng-include="'/partials/poster.html'"></div>
+          <div ng-switch="playable()">
+            <div ng-switch-when="true"
+                 key-coord
+                 type="x">
+              <div class="selectable playbtn"
+                   ng-click="playCurrent()">
+                <a><span>Play</span></a>
+              </div>
+            </div>
+          <div ng-switch-when="false"
+               class="video-status"
+               ng-show="status()"
+               key-coord
+               type="x">
+            {{status()}}
+          </div>
+
+          </div>
+        </div>
+        <div class="rcol">
+          <h4 class="title"><span>{{series.title}}</span></h4>
+          <p ng-show="series.year"><span>Year: <span>{{series.year}}</span></span></p>
+          <p ng-show="series.runtime"><span>Runtime: <span>{{series.runtime}} minutes</span></span></p>
+          <p ng-show="series.episodes"><span>Episodes: <span>{{series.episodes.length}}</span></span></p>
+        </div>
+    </div>
+    <div ng-switch="series.show">
+      <div ng-switch-when="true"
+           ng-controller="ShowCtrl">
+        <div key-coord
+             type="x"
+             ids="season-list,episode-list"
+             key-focus
+             leave-reset="false">
+          <ul id="season-list" class="show-column seasons" key-coord 
+              type="y"
+              scroll-offset="30"
+              leave-reset="false"
+              enter-direction="right"
+              key-watch="seasons">
+            <li ng-repeat="season in seasons"
+                ng-click="select(season)"
+                ng-class="season | seasonselected:selectedSeason">
+              <span>Season {{season}}</span>
+            </li>
+          </ul>
+          <ul id="episode-list" class="show-column episodes"
+              key-coord
+              scroll-offset="30"
+              type="y"
+              key-watch="episodeList">
+            <li ng-repeat="episode in episodeList"
+                ng-click="selectEpisode(episode)">
+              <span>{{episode.title}}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

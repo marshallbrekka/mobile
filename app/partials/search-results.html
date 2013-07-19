@@ -1,0 +1,5 @@
+<ul id="search-results">
+  <li ng-repeat="item in items">
+    <a href="#nogo{{item.mid}}">{{item.title}}<span>{{item.show | typename}}</span></a></li>
+  <li ng-show="notFound()">Nothing found by that name.</li>
+</ul>
