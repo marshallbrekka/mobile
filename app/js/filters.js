@@ -5,8 +5,8 @@
 var filters = angular.module('RFZ.filters', [])
 
 filters.filter("ifEqual", function() {
-  return function(val1, val2, reVal) {
-    return val1 === val2 ? reVal : null;
+  return function(val1, val2, ifTrue, ifFalse) {
+    return val1 === val2 ? ifTrue : ifFalse;
   }
 });
 

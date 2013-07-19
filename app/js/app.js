@@ -17,4 +17,4 @@ var RFZ = angular.module('RFZ', ['RFZ.filters'/*, 'RFZ.services', 'RFZ.directive
                         controller: Accounts})
     $routeProvider.otherwise({redirectTo: '/'});*/
   }]);
-//angular.module('RFZ.directives', []);
+var directives = angular.module('RFZ.directives', [])
