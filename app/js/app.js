@@ -3,7 +3,7 @@
 // Declare app level module which depends on filters, and services
 var RFZ = angular.module('RFZ', ['RFZ.filters'/*, 'RFZ.services', 'RFZ.directives'*/]).
   config(['$routeProvider', function($routeProvider) {
-/*    $routeProvider.when('/overview',
+    $routeProvider.when('/overview',
                         {templateUrl: 'partials/overview.html',
                          controller: Overview});
     $routeProvider.when('/progress',
@@ -15,6 +15,6 @@ var RFZ = angular.module('RFZ', ['RFZ.filters'/*, 'RFZ.services', 'RFZ.directive
     $routeProvider.when("/accounts",
                        {templateUrl: "partials/accounts.html",
                         controller: Accounts})
-    $routeProvider.otherwise({redirectTo: '/'});*/
+    $routeProvider.otherwise({redirectTo: '/overview'});
   }]);
 var directives = angular.module('RFZ.directives', [])
