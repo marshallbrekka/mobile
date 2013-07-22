@@ -1,7 +1,10 @@
 'use strict';
+var directives = angular.module('RFZ.directives', []);
+var services = angular.module('RFZ.services', []);
+var filters = angular.module('RFZ.filters', [])
 
 // Declare app level module which depends on filters, and services
-var RFZ = angular.module('RFZ', ['RFZ.filters'/*, 'RFZ.services', 'RFZ.directives'*/]).
+var RFZ = angular.module('RFZ', ['RFZ.filters', 'RFZ.services', 'RFZ.directives']).
   config(['$routeProvider', function($routeProvider) {
     $routeProvider.when('/overview',
                         {templateUrl: 'partials/overview.html',
@@ -17,4 +20,5 @@ var RFZ = angular.module('RFZ', ['RFZ.filters'/*, 'RFZ.services', 'RFZ.directive
                         controller: Accounts})
     $routeProvider.otherwise({redirectTo: '/overview'});
   }]);
-var directives = angular.module('RFZ.directives', [])
+
+

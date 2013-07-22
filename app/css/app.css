@@ -55,7 +55,7 @@ body {
      bottom:49px;
     left:0;
     right:0;
-    background:url("../ios-images/gui_white_pattern_bg@2x.png") fixed;
+    background:url("../ios-images/gui_white_pattern_bg.png") fixed;
 /*    background:url("../img/ios-bg.png") 0 -64px;*/
     background-size:100%;
     overflow-y: auto;
@@ -148,6 +148,9 @@ body {
 }
 
 .pane-header {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     color:#001331;
     font-size:16px;
     font-weight:bold;
@@ -205,7 +208,7 @@ body {
 }
 
 .pane-divider {
-    margin-top:6px;
+    margin-top:10px;
     border-top:1px solid #fff;
     padding-top:6px;
     box-shadow:0 -1px 0 0 #d1cfc8;
@@ -244,7 +247,7 @@ body {
 
 .progress-bar {
     height:20px;
-    margin:6px 0 10px 0;
+    margin:6px 0 0 0;
     border-radius:4px;
     background-image:-webkit-linear-gradient(top, rgb(255,194,0) 0%,rgb(255,164,0) 100%),
                      -webkit-linear-gradient(top, rgb(0,170,229) 0%,rgb(0,128,201) 100%),
