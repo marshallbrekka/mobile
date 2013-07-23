@@ -1,6 +1,6 @@
 <div class="status-text">Last Updated: Today, 13:04am{{lastUpdated}}</div>
 <div class="pane transparent" id="overview-assets">
-  <div class="left">
+  <div class="left" ng-click="refresh()">
     <div class="pane-header">Cash</div>
     <div class="text-large positive">{{cash | currency}}</div>
   </div>
@@ -10,6 +10,6 @@
   </div>
 </div>
 
-<div progress account="targetAccount"></div>
+<div progress account="targetAccount()"></div>
 
 <div class="status-text text-medium">Activity Updates</div>

@@ -13,14 +13,63 @@
 <link rel="stylesheet" href="css/app.css"/>
 </head>
 <body ng-controller="Menu">
-<div id="header">
+<div id="overlay-view">
+  <div class="header">
+    <div class="left header-refresh header-button"></div>
+    <div class="right header-settings header-button"></div>
+    <span class="name">Settings</span>
+  </div>
+  <div class="view">
+    <div class="subview">
+      <div class="scrollarea">
+        <div class="table table-top">
+          Payment Reminders
+        </div>
+        <div class="table table-bottom">
+          Days Before Due Date
+        </div>
+        <div class="table table-top">
+          Payment Reminders
+        </div>
+        <div class="table table-bottom">
+          Days Before Due Date
+        </div>
+        <div class="table table-top">
+          Payment Reminders
+        </div>
+        <div class="table table-bottom">
+          Days Before Due Date
+        </div>
+        <div class="table table-top">
+          Payment Reminders
+        </div>
+        <div class="table table-bottom">
+          Days Before Due Date
+        </div>
+        <div class="table table-top">
+          Payment Reminders
+        </div>
+        <div class="table table-bottom">
+          Days Before Due Date
+        </div>
+        <div class="table table-top">
+          Payment Reminders
+        </div>
+        <div class="table table-bottom">
+          Days Before Due Date
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="header">
   <div class="left header-refresh header-button"></div>
   <div class="right header-settings header-button"></div>
   <span class="name">{{paths[pathIndex] | capitalize}}</span>
 </div>
-<div id="view">
-  <div id="subview">
-    <div id="scrollarea" ng-view></div>
+<div class="view">
+  <div class="subview">
+    <div class="scrollarea" ng-view></div>
   </div>
 </div>
 <ul id="menu">
@@ -35,7 +84,7 @@
   <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.4/angular.min.js"></script>
   -->
 <script>
-var container = document.getElementsByTagName("body")[0];
+/*var container = document.getElementsByTagName("body")[0];
 var view =
 document.getElementById("view").addEventListener("touchmove",function(e)
 {
@@ -44,7 +93,7 @@ document.getElementById("view").addEventListener("touchmove",function(e)
 container.addEventListener("touchmove", function(evt){
 evt.stopPropagation();
 evt.preventDefault();
-}, false);
+}, false);*/
 
 
 </script>

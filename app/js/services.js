@@ -7,7 +7,7 @@
 // In this case it is a simple value service.
 
 services.factory("model", function() {
-  return {accounts : [{"payments":[{"amount":891.54,"date":1373353200000},
+  var accounts = [{"payments":[{"amount":891.54,"date":1373353200000},
                                     {"amount":382.64,"date":1370588400000},
                                     {"amount":1000.0,"date":1370588400000},
                                     {"amount":9.19,"date":1348642800000}],
@@ -45,7 +45,83 @@ services.factory("model", function() {
                        "paidOff":false,
                        "type":"Checking/Savings",
                        "apr":0.0,
-                       "id":93649}]}
+                       "id":93649}];
+  var settings = {"billpay":{"enrolled":true,"_meta":{"enrolled":null}},
+                  "backbone":{"enrolled":false,"_meta":{"enrolled":null}},
+                  "offers":{"enabled":true,"enrolled":true,"_meta":{"enabled":null,"enrolled":null}},
+                  "debt-movement":{"enrolled":false,"_meta":{"enrolled":null,"created":null},"created":0},
+                  "large-deposit-threshold":{"_meta":{"value":{"group":"4",
+                                                               "title":"Large Deposit Amount",
+                                                               "type":"currency",
+                                                               "mobile":true}},
+                                             "value":200.0},
+                  "notifications":{"reminders":7,
+                                    "offers":false,
+                                    "is_summary":false,
+                                    "_meta":{"reminders":{"group":"1",
+                                                          "title":"Days Before Due Date",
+                                                          "type":"number",
+                                                          "mobile":true}
+,
+                                             "offers":null,
+                                             "is_summary":null,
+                                             "low_checking":{"group":"2",
+                                                             "title":"Low Balance Warning",
+                                                             "type":"toggle",
+                                                             "mobile":true},
+                                             "is_reminders":{"group":"1",
+                                                             "title":"Payment Reminders",
+                                                             "type":"toggle",
+                                                             "mobile":true},
+                                             "account_milestones":{"group":"5",
+                                                                   "title":"Account Milestones",
+                                                                   "type":"toggle",
+                                                                   "mobile":true},
+                                             "plan_change":null,
+                                             "large_purchase":{"group":"3",
+                                                               "title":"Large Purchase Alert",
+                                                               "type":"toggle",
+                                                               "mobile":true},
+                                             "apr_change":{"group":"5",
+                                                           "title":"APR Changes",
+                                                           "type":"toggle",
+                                                           "mobile":true},
+                                             "announcement_emails":{"title":"Product Updates and Announcements",
+                                                                    "type":"toggle",
+                                                                    "mobile":false},
+                                             "summary":null,
+                                             "large_deposit":{"group":"4",
+                                                              "title":"Large Deposit Alert",
+                                                              "type":"toggle",
+                                                              "mobile":true}},
+                                    "low_checking":false,
+                                    "is_reminders":false,
+                                    "account_milestones":false,
+                                    "plan_change":false,
+                                    "large_purchase":false,
+                                    "apr_change":false,
+                                    "announcement_emails":false,
+                                    "summary":"weekly",
+                                    "large_deposit":false},
+                  "low-checking-threshold":{"_meta":{"value":{"group":"2",
+                                                              "title":"Low Balance Amount",
+                                                              "type":"currency",
+                                                              "mobile":true}},
+                                            "value":200.0},
+                  "progress-reports":{"enabled":false,"_meta":{"enabled":null}},
+                  "calendar-sync":{"enabled":false,"_meta":{"enabled":null}},
+                  "large-purchase-threshold":{"_meta":{"value":{"group":"3",
+                                                                "title":"Large Purchase Amount",
+                                                                "type":"currency",
+                                                                "mobile":true}},
+                                              "value":200.0}}
+  return {accounts : accounts,
+          change : function(cb) {
+            console.log("changing");
+            accounts[0].isTarget = !accounts[0].isTarget;
+            accounts[1].isTarget = !accounts[1].isTarget;
+            cb();
+          }};
 });
 
 
