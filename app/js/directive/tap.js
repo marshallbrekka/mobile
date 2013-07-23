@@ -1,17 +1,13 @@
 RFZ.directive("rfzTap", function() {
-  
-  
   return function(scope, element, attrs) {
-    element.bind("touchstart", function() {
-      element.addClass("touch-start");
-      element.bind("touchend", function() {
-        element.removeClass("touch-start");
-        scope.$apply(attrs["rfzTap"]);
-      });
-    });
-            
-/*    element.bind('click', function() {
+    function touchEnd() {
+      element.removeClass("touch-start");
+      element.unbind("touchend", touchEnd);
       scope.$apply(attrs["rfzTap"]);
-    });*/
+    }
+    element.bind("touchstart", function(e) {
+      element.addClass("touch-start");
+      element.bind("touchend", touchEnd);
+    });
   }
 });

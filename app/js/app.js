@@ -1,7 +1,15 @@
 'use strict';
 var directives = angular.module('RFZ.directives', []);
 var services = angular.module('RFZ.services', []);
-var filters = angular.module('RFZ.filters', [])
+var filters = angular.module('RFZ.filters', []);
+
+var consoleEl = $("#console");
+function mobileConsole(msg) {
+  consoleEl.css("display", "block").text(msg);
+}
+
+
+
 
 // Declare app level module which depends on filters, and services
 var RFZ = angular.module('RFZ', ['RFZ.filters', 'RFZ.services', 'RFZ.directives']).

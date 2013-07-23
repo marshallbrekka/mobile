@@ -12,7 +12,7 @@ function Overview($scope, model) {
   $scope.dailyInterest = -0.97;
   $scope.cash = 31000;
 
-  $scope.refresh = function() {
+  $scope.refresh = function(e) {
     model.change(function() {
 //      $scope.$digest();
     });
