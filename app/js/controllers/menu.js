@@ -5,4 +5,11 @@ function Menu($scope, $location) {
     $scope.pathIndex = index;
     $location.path("/" + $scope.paths[index]);
   }
+  $scope.openSettings = function() {
+    $("#overlay-view").css("-webkit-transform","translate(0,0)");
+  }
+  $scope.closeSettings = function() {
+    $("#overlay-view").css("-webkit-transform","");
+  }
+  
 }

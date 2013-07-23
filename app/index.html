@@ -16,7 +16,7 @@
 <div id="overlay-view">
   <div class="header">
     <div class="left header-refresh header-button"></div>
-    <div class="right header-settings header-button"></div>
+    <div class="right header-settings header-button" rfz-tap="closeSettings()"></div>
     <span class="name">Settings</span>
   </div>
   <div class="view">
@@ -24,10 +24,32 @@
       <div class="scrollarea">
         <div class="table table-top">
           Payment Reminders
+          <div toggle></div>
         </div>
         <div class="table table-bottom">
           Days Before Due Date
         </div>
+        <div class="table table-top">
+          Payment Reminders
+          <div toggle></div>
+        </div>
+        <div class="table table-bottom">
+          Days Before Due Date
+        </div>
+        <div class="table table-top">
+          Payment Reminders
+          <div toggle></div>
+        </div>
+        <div class="table table-bottom">
+          Days Before Due Date
+        </div>
+        <div class="table table-top">
+          Payment Reminders
+        </div>
+        <div class="table table-bottom">
+          Days Before Due Date
+        </div>
+
         <div class="table table-top">
           Payment Reminders
         </div>
@@ -64,7 +86,7 @@
 </div>
 <div class="header">
   <div class="left header-refresh header-button"></div>
-  <div class="right header-settings header-button"></div>
+  <div class="right header-settings header-button" rfz-tap="openSettings()"></div>
   <span class="name">{{paths[pathIndex] | capitalize}}</span>
 </div>
 <div class="view">
@@ -111,5 +133,6 @@ evt.preventDefault();
   <script src="js/controllers/accounts.js"></script>
   <script src="js/directive/tap.js"></script>
   <script src="js/directive/progress.js"></script>
+  <script src="js/directive/toggle.js"></script>
 </body>
 </html>
