@@ -1,0 +1,37 @@
+<div rfz-pane-header="Settings">
+  <div rfz-pane-header-button 
+       position="left"
+       class="header-button"
+       rfz-tap="hideOverlay()">Cancel</div>
+  <div rfz-pane-header-button
+       position="right"
+       rfz-change-direction="right"
+       rfz-change-pane="settings2">
+    Second Pane
+  </div>
+</div>
+<div rfz-pane-body rfz-scroll-view>
+  <div class="table table-top">
+    Payment Reminders
+    <div toggle="settingOne"></div>
+  </div>
+  <div class="table table-bottom">
+    Days Before Due Date
+    <div rfz-table-input="testModel"></div>
+  </div>
+  <div class="table table-top">
+    Payment Reminders
+    <div toggle="settingTwo"></div>
+  </div>
+  <div class="table table-bottom">
+    Days Before Due Date
+    <div rfz-table-input="testModel"></div>
+  </div>
+  <div class="table table-top">
+    Payment Reminders
+    <div toggle></div>
+  </div>
+  <div class="table table-bottom">
+    Days Before Due Date
+  </div>
+</div>

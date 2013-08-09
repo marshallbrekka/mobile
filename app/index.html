@@ -12,100 +12,89 @@
 <link rel="stylesheet" href="css/reset.css"/>
 <link rel="stylesheet" href="css/app.css"/>
 </head>
-<body ng-controller="Menu">
-<div id="overlay-view">
-  <div class="header">
-    <div class="left header-refresh header-button"></div>
-    <div class="right header-settings header-button" rfz-tap="closeSettings()"></div>
-    <span class="name">Settings</span>
-  </div>
-  <div class="view">
-    <div class="subview">
-      <div class="scrollarea">
-        <div class="table table-top">
-          Payment Reminders
-          <div toggle="settingOne"></div>
-        </div>
-        <div class="table table-bottom">
-          Days Before Due Date
-          <div rfz-table-input="testModel"></div>
-        </div>
-        <div class="table table-top">
-          Payment Reminders
-          <div toggle="settingTwo"></div>
-        </div>
-        <div class="table table-bottom">
-          Days Before Due Date
-          <div rfz-table-input="testModel"></div>
-        </div>
-        <div class="table table-top">
-          Payment Reminders
-          <div toggle></div>
-        </div>
-        <div class="table table-bottom">
-          Days Before Due Date
-        </div>
-        <div class="table table-top">
-          Payment Reminders
-        </div>
-        <div class="table table-bottom">
-          Days Before Due Date
-        </div>
 
-        <div class="table table-top">
-          Payment Reminders
-        </div>
-        <div class="table table-bottom">
-          Days Before Due Date
-        </div>
-        <div class="table table-top">
-          Payment Reminders
-        </div>
-        <div class="table table-bottom">
-          Days Before Due Date
-        </div>
-        <div class="table table-top">
-          Payment Reminders
-        </div>
-        <div class="table table-bottom">
-          Days Before Due Date
-        </div>
-        <div class="table table-top">
-          Payment Reminders
-        </div>
-        <div class="table table-bottom">
-          Days Before Due Date
-        </div>
-        <div class="table table-top">
-          Payment Reminders
-        </div>
-        <div class="table table-bottom">
-          Days Before Due Date
+<body ng-controller="Menu">
+<div  ng-controller="Overlay">
+  <div rfz-view="overview">
+    <div><div ng-bind="overlayName"></div></div>
+    <div rfz-pane="overview">
+      <div ng-controller="Overview" ng-include="'/partials/overview.html'"></div>
+    </div>
+    
+    <div ng-switch="overlayName" ng-animate="'overlay'">
+      <div ng-switch-when="settings">
+        <div rfz-view="settings" no-menu="true">
+          <div rfz-pane="settings">
+            <div ng-include="'/partials/settings.html'"></div>
+          </div>
+          <div rfz-pane="settings2">
+            <div rfz-pane-header="Second Pane">
+              <div rfz-pane-header-button
+                   type="back"
+                   rfz-change-pane="settings"
+                   rfz-change-direction="left"
+                   position="left">
+                Settings
+              </div>
+            </div>
+            <div rfz-scroll-view rfz-pane-body>
+              <div class="table table-top">
+                Payment Reminders
+              </div>
+              <div class="table table-bottom">
+                Days Before Due Date
+              </div>
+              <div class="table table-top">
+                Payment Reminders
+              </div>
+              <div class="table table-bottom">
+                Days Before Due Date
+              </div>
+              <div class="table table-top">
+                Payment Reminders
+              </div>
+              <div class="table table-bottom">
+                Days Before Due Date
+              </div>
+              <div class="table table-top">
+                Payment Reminders
+              </div>
+              <div class="table table-bottom">
+                Days Before Due Date
+              </div>
+              <div class="table table-top">
+                Payment Reminders
+              </div>
+              <div class="table table-bottom">
+                Days Before Due Date
+              </div>
+              <div class="table table-top">
+                Payment Reminders
+              </div>
+              <div class="table">
+                Some Middle Line
+              </div>
+              <div class="table table-bottom">
+                Days Before Due Date
+              </div>
+
+
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
-
-<div class="header">
-  <div class="left header-refresh header-button"></div>
-  <div class="right header-settings header-button" rfz-tap="openSettings()"></div>
-  <span class="name">{{paths[pathIndex] | capitalize}}</span>
-</div>
-<div class="view">
-  <div class="subview">
-    <div class="scrollarea" ng-view></div>
-  </div>
-</div>
-<ul id="menu">
-  <li ng-repeat="path in paths"
-      class="menu-{{path}}"
-      ng-class="pathIndex | ifEqual:$index:'selected'"
-      rfz-tap="go($index)">
-    <span>{{path | capitalize}}</span>
-  </li>
-</ul>
-<div id="console"></div>
+  <ul id="menu">
+    <li ng-repeat="path in paths"
+        class="menu-{{path}}"
+        ng-class="pathIndex | ifEqual:$index:'selected'"
+        rfz-tap="go($index)">
+      <span>{{path | capitalize}}</span>
+    </li>
+  </ul>
+  <div id="console"></div>
   <!-- In production use:
   <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.4/angular.min.js"></script>
   -->
@@ -128,6 +117,7 @@ evt.preventDefault();
   <script src="lib/angular/angular.js"></script>
   <script src="lib/spin.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/util.js"></script>
   <script src="js/filters.js"></script>
   <script src="js/services.js"></script>
   <script src="js/controllers/menu.js"></script>
@@ -135,9 +125,12 @@ evt.preventDefault();
   <script src="js/controllers/progress.js"></script>
   <script src="js/controllers/payments.js"></script>
   <script src="js/controllers/accounts.js"></script>
+  <script src="js/controllers/overlay.js"></script>
   <script src="js/directive/tap.js"></script>
   <script src="js/directive/progress.js"></script>
   <script src="js/directive/toggle.js"></script>
+  <script src="js/directive/view.js"></script>
+  <script src="js/directive/scroll-view.js"></script>
   <script src="js/directive/table-input.js"></script>
 </body>
 </html>

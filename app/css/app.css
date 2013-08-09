@@ -1,9 +1,21 @@
 /* app css stylesheet */
+@font-face {
+  font-family: 'FontAwesome';
+  src: url('../font/fontawesome-webfont.eot?v=3.2.1');
+  src: url('../font/fontawesome-webfont.eot?#iefix&v=3.2.1') format('embedded-opentype'), url('../font/fontawesome-webfont.woff?v=3.2.1') format('woff'), url('../font/fontawesome-webfont.ttf?v=3.2.1') format('truetype'), url('../font/fontawesome-webfont.svg#fontawesomeregular?v=3.2.1') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+* {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none; /* Disable selection/copy in UIWebView */
+}
+
 body {
     position:absolute;
     top:0;
     left:0;
-
     right:0;
     bottom:0;
     margin:0;
@@ -27,6 +39,17 @@ body {
     z-index:2000;
 }
 
+#animate {
+    z-index:1000;
+    left:0;
+    right:0;
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+}
+
 #overlay-view {
     z-index:1000;
     width:100%;
@@ -37,7 +60,97 @@ body {
     right:0;
     top:0;
     -webkit-transform: translate(0, 100%);
-    -webkit-transition:-webkit-transform 0.3s;
+    -webkit-transition:-webkit-transform 0.3s ease-in-out;
+}
+
+.rfz-view {
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    bottom:49px;
+    z-index:10;
+    background:url("../ios-images/gui_white_pattern_bg.png") fixed;
+    background-size:100%;
+}
+
+
+.rfz-view.no-menu {
+    bottom:-49px;
+    z-index:1000;
+}
+
+.rfz-view-enter,
+.rfz-view-enter-active,
+.rfz-view-leave, 
+.rfz-view-enter .rfz-pane-body,
+.rfz-view-enter-active .rfz-pane-body, 
+.rfz-view-leave .rfz-pane-body {
+    -webkit-transition:-webkit-transform 0.3s ease-in-out;
+    transition: -webkit-transform 0.3s ease-in-out;
+}
+
+
+
+.rfz-view-direction-right .rfz-view-enter .rfz-pane-body,
+.rfz-view-direction-left .rfz-view-leave-active .rfz-pane-body {
+    -webkit-transform: translateX(100%);
+}
+
+.rfz-view-direction-left .rfz-view-enter .rfz-pane-body,
+.rfz-view-direction-right .rfz-view-leave-active .rfz-pane-body {
+    -webkit-transform: translateX(-100%);
+}
+
+.rfz-view-direction-left .rfz-view-enter-active .rfz-pane-body,
+.rfz-view-direction-right .rfz-view-enter-active .rfz-pane-body {
+    -webkit-transform: translateX(0);
+}
+
+.rfz-view-enter .header{
+    z-index:115;
+}
+
+.rfz-view-leave .header {
+    z-index:120;
+}
+
+.rfz-view-leave .header {
+    opacity: 1;
+}
+
+.rfz-view-leave-active .header {
+    opacity: 0;
+}
+
+.rfz-view-direction-left .rfz-view-enter .header-name, 
+.rfz-view-direction-right .rfz-view-leave-active .header-name {
+    -webkit-transform:translateX(-30%);
+}
+
+.rfz-view-direction-right .rfz-view-enter .header-name, 
+.rfz-view-direction-left .rfz-view-leave-active .header-name {
+    -webkit-transform:translateX(30%);
+}
+
+.rfz-view-direction-right .rfz-view-enter-active .header-name,
+.rfz-view-direction-left .rfz-view-enter-active .header-name {
+    -webkit-transform:translateX(0);
+}
+
+
+.overlay-enter, .overlay-enter-active, .overlay-leave, .overlay-enter .rfz-view.no-menu, .overlay-enter-active .rfz-view.no-menu, .overlay-leave .rfz-view.no-menu {
+    -webkit-transition:-webkit-transform 0.3s ease-in-out;
+    transition: -webkit-transform 0.3s ease-in-out;
+}
+
+.overlay-enter .rfz-view.no-menu, .overlay-leave .rfz-view.no-menu {
+    -webkit-transform: translateY(100%);
+
+}
+
+.overlay-enter.overlay-enter-active .rfz-view.no-menu {
+    -webkit-transform: translateY(0);
 }
 
 .header {
@@ -46,44 +159,130 @@ body {
     left:0;
     right:0;
     height:44px;
-    background:url("../ios-images/navbar_bg@2x.png");
+    background:url("../ios-images/navbar_bg@2x.png") right no-repeat, #2D5081;
     box-shadow:0 0 3px 0 rgba(0,0,0,0.5);
-    background-size:100%;
+    background-size:480px 88px;
     z-index:100;
     text-align:center;
     font-size:20px;
     font-weight:bold;
     color:#fff;
     text-shadow:0 -1px 0 rgba(0,0,0,0.8);
+    -webkit-transition:opacity 0.3s;
 }
 
-.header .name {
-    display:inline-block;
+.header-content {
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    background:url("../ios-images/navbar_bg@2x.png") right no-repeat, #2D5081;
+    background-size:480px 88px;
+    opacity:1;
+    -webkit-transition:opacity 0.3s;
+}
+
+.header-content.main {
+    z-index:100;
+}
+
+.header .header-name {
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:0;
     padding-top:11px;
+    -webkit-transition:-webkit-transform 0.3s, opacity 0.3s;
+}
+
+.header-button, .header-button:before, .header-button:after {
+    background:url("../img/nav-btn-sprite.png") 0 0;
+    background-size:13px 180px;
 }
 
 .header-button {
-    margin:7px 5px 0 5px;
-    width:46px;
-    height:30px;
-    background-size:100%;
+    z-index:1;
+    padding:8px 6px;
+    position:relative;
+    min-width:32px;
+    margin:7px 11px 0 11px;
+    height:14px;
+    font-size:12px;
+    font-weight:bold;
+    text-shadow:0 -1px 0 #000;
 }
+
+.header-button:after {
+    content:'';
+    width:6px;
+    height:30px;
+    position:absolute;
+    right:-6px;
+    top:0;
+    background-position:0 -120px;
+}
+
+.header-button:before {
+    content:'';
+    width:6px;
+    height:30px;
+    position:absolute;
+    left:-6px;
+    top:0;
+    background-position:-7px -120px;
+}
+
+.header-button.back {
+    padding-left:0;
+    margin-left:18px;
+}
+
+.header-button.back:before {
+    width:13px;
+    left:-13px;
+    background-position:0 -60px;
+}
+
+.header-button.touch-start {
+    background-position-y:-30px;
+} 
+
+.header-button.touch-start:after {
+    background-position-y:-150px;
+}
+
+.header-button.touch-start:before {
+    background-position-y:-150px;
+}
+
+.header-button.back.touch-start:before {
+    background-position-y:-90px;
+}
+
 
 .header-refresh {
 /*    background-image:url("../ios-images/navbar_button_settings_off@2x.png");*/
 }
 
-.header-settings {
-    background-image:url("../ios-images/navbar_button_settings_off@2x.png");
+.header-settings span:after {
+    font-family:FontAwesome;
+    content:"\f013";
+    font-size:18px;
+    position:relative;
+    top:-2px;
+    font-weight:normal;
+    -webkit-font-smoothing: antialiased;
 }
 
 .view {
     position:absolute;
     top:44px;
-    bottom:49px;
+    bottom:0;
     left:0;
     right:0;
-    background:url("../ios-images/gui_white_pattern_bg.png") fixed;
 /*    background:url("../img/ios-bg.png") 0 -64px;*/
     background-size:100%;
     overflow-y: auto;
