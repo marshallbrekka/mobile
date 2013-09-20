@@ -1,1 +1,12 @@
-<div ng-repeat="acct in debtAccounts()" progress account="acct"></div>
+<div rfz-pane-header="Progress">
+  <div rfz-pane-header-button
+       rfz-tap="showOverlay('settings')"
+       position="right"
+       class="header-settings">
+    <span></span>
+  </div>
+  <div rfz-pane-header-button position="left">Refresh</div>
+</div>
+<div rfz-pane-body rfz-scroll-view>
+  <div ng-repeat="acct in debtAccounts()" progress account="acct"></div>
+</div>

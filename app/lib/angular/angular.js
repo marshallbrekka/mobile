@@ -3411,6 +3411,7 @@ var $AnimatorProvider = function() {
             }
 
             function beginAnimation() {
+              element.height();
               element.addClass(activeClassName);
               if (polyfillStart) {
                 polyfillStart(element, done, memento);

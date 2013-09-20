@@ -15,85 +15,50 @@
 
 <body ng-controller="Menu">
 <div  ng-controller="Overlay">
-  <div rfz-view="overview">
-    <div><div ng-bind="overlayName"></div></div>
-    <div rfz-pane="overview">
-      <div ng-controller="Overview" ng-include="'/partials/overview.html'"></div>
-    </div>
-    
-    <div ng-switch="overlayName" ng-animate="'overlay'">
-      <div ng-switch-when="settings">
-        <div rfz-view="settings" no-menu="true">
-          <div rfz-pane="settings">
-            <div ng-include="'/partials/settings.html'"></div>
-          </div>
-          <div rfz-pane="settings2">
-            <div rfz-pane-header="Second Pane">
-              <div rfz-pane-header-button
-                   type="back"
-                   rfz-change-pane="settings"
-                   rfz-change-direction="left"
-                   position="left">
-                Settings
-              </div>
-            </div>
-            <div rfz-scroll-view rfz-pane-body>
-              <div class="table table-top">
-                Payment Reminders
-              </div>
-              <div class="table table-bottom">
-                Days Before Due Date
-              </div>
-              <div class="table table-top">
-                Payment Reminders
-              </div>
-              <div class="table table-bottom">
-                Days Before Due Date
-              </div>
-              <div class="table table-top">
-                Payment Reminders
-              </div>
-              <div class="table table-bottom">
-                Days Before Due Date
-              </div>
-              <div class="table table-top">
-                Payment Reminders
-              </div>
-              <div class="table table-bottom">
-                Days Before Due Date
-              </div>
-              <div class="table table-top">
-                Payment Reminders
-              </div>
-              <div class="table table-bottom">
-                Days Before Due Date
-              </div>
-              <div class="table table-top">
-                Payment Reminders
-              </div>
-              <div class="table">
-                Some Middle Line
-              </div>
-              <div class="table table-bottom">
-                Days Before Due Date
-              </div>
-
-
-            </div>
-          </div>
+  <div ng-switch="overlayName" ng-animate="'overlay'">
+    <div ng-switch-when="settings">
+      <div rfz-view="settings" no-menu="true">
+        <div rfz-pane="settings">
+          <div ng-include="'/partials/settings.html'"></div>
+        </div>
+        <div rfz-pane="settings-notifications">
+          <div ng-include="'/partials/settings-notifications.html'"></div>
         </div>
       </div>
     </div>
   </div>
-</div>
-  <ul id="menu">
-    <li ng-repeat="path in paths"
-        class="menu-{{path}}"
-        ng-class="pathIndex | ifEqual:$index:'selected'"
-        rfz-tap="go($index)">
-      <span>{{path | capitalize}}</span>
+  <div ng-switch="mainView">
+    <div ng-switch-when="overview" rfz-view="overview">
+      <div rfz-pane="overview">
+        <div ng-controller="Overview" ng-include="'/partials/overview.html'"></div>
+      </div>
+    </div>
+    <div ng-switch-when="progress" rfz-view="progress">
+      <div rfz-pane="progress">
+        <div ng-controller="Progress" ng-include="'/partials/progress.html'"></div>
+      </div>
+    </div>
+    <div ng-switch-when="payments" ng-controller="Payments">
+      <div rfz-view="all">
+        <div rfz-pane="all">
+          <div ng-include="'/partials/payments.html'"></div>
+        </div>
+        <div rfz-pane="payment">
+          <div ng-include="'/partials/payment-single.html'"></div>
+        </div>
+      </div>
+    </div>
+    <ul id="menu">
+      <li ng-repeat="path in paths"
+          class="menu-{{path}}"
+          ng-class="pathIndex | ifEqual:$index:'selected'"
+          rfz-tap="go($index)">
+        <span>{{path | capitalize}}</span>
     </li>
   </ul>
+
+  </div>
+</div>
   <div id="console"></div>
   <!-- In production use:
   <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.4/angular.min.js"></script>
@@ -132,5 +97,6 @@ evt.preventDefault();
   <script src="js/directive/view.js"></script>
   <script src="js/directive/scroll-view.js"></script>
   <script src="js/directive/table-input.js"></script>
+  <script src="js/directive/side-scroll.js"></script>
 </body>
 </html>

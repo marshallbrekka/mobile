@@ -64,6 +64,11 @@ RFZ.controller("rfzView", function($scope) {
 // adds a few custom attributes and classes so that we can control the
 // slide direction when changing panes.
 RFZ.directive("rfzView", function($animator) {
+  function directionToClass(dir) {
+    if(!dir) dir = "no-animation";
+    return "rfz-view-direction-" + dir;
+  }
+
   return {
     restrict: 'A',
     require: 'rfzView',
@@ -75,8 +80,9 @@ RFZ.directive("rfzView", function($animator) {
     link: function(scope, element, attr, ngSwitchController) {
       scope.rfzView = attr.rfzView;
       scope.$watch("rfzViewDirection", function(value, preValue) {
-        element.removeClass("rfz-view-direction-" + preValue);
-        element.addClass("rfz-view-direction-" + value);
+        
+        element.removeClass(directionToClass(preValue));
+        element.addClass(directionToClass(value));
       });
       element.addClass("rfz-view");
       if (attr.noMenu) {

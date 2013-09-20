@@ -1,3 +1,11 @@
+RFZ.controller("rfzScrollView", function() {
+  return {
+    height : function() {
+      return 0;
+    }
+  }
+});
+
 RFZ.directive("rfzScrollView", function() {
   return {
     restrict : "A",

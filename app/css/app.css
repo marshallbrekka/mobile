@@ -12,6 +12,10 @@
     -webkit-user-select: none; /* Disable selection/copy in UIWebView */
 }
 
+li {
+    list-style-type:none;
+}
+
 body {
     position:absolute;
     top:0;
@@ -70,13 +74,13 @@ body {
     right:0;
     bottom:49px;
     z-index:10;
-    background:url("../ios-images/gui_white_pattern_bg.png") fixed;
+    background:url("../ios-images/gui_white_pattern_bg@2x.png") fixed;
     background-size:100%;
 }
 
 
 .rfz-view.no-menu {
-    bottom:-49px;
+    bottom:0px;;
     z-index:1000;
 }
 
@@ -89,6 +93,15 @@ body {
     -webkit-transition:-webkit-transform 0.3s ease-in-out;
     transition: -webkit-transform 0.3s ease-in-out;
 }
+
+.rfz-view-direction-no-animation,
+.rfz-view-direction-no-animation .rfz-view-enter,
+.rfz-view-direction-no-animation .rfz-view-leave,
+.rfz-view-direction-no-animation .rfz-pane-body {
+    -webkit-transition:none;
+    transition:none;
+}
+
 
 
 
@@ -286,6 +299,7 @@ body {
 /*    background:url("../img/ios-bg.png") 0 -64px;*/
     background-size:100%;
     overflow-y: auto;
+/*    overflow-x:hidden;*/
     -webkit-overflow-scrolling: touch;
     -webkit-transform: translateZ(0);
 }
@@ -302,6 +316,8 @@ body {
 
 .scrollarea {
     overflow:auto;
+/*    overflow-y:auto;
+    overflow-x:hidden;*/
     min-height:100%;
     position:relative;
     padding-bottom:1px;
@@ -320,7 +336,6 @@ body {
     color:#929BA2;
     font-size:10px;
     font-weight:bold;
-    list-style-type:none;
     text-align:center;
     float:left;
     width:25%;
@@ -515,6 +530,66 @@ body {
     border-top-right-radius:7px;
 }
 
+.table-solid {
+    border-radius:1px 1px 0 0;
+    font-size:12px;
+    font-weight:bold;
+    color:#000;
+    margin:0 11px 16px;
+    background:#fff;
+    line-height:14px;
+    box-shadow:0px 1px 1px rgba(0,0,0,0.3);
+}
+
+.table-solid .row {
+    padding: 13px 11px 17px;
+    height:45px;
+    color:#585453;
+    border-bottom:1px solid #c3cfdf;
+    background:#f7faff;
+    overflow:hidden;
+}
+
+.table-solid .row.touch-start {
+    background:#ebf0fa;
+}
+
+.table-solid .row.last {
+    border-bottom:none;
+}
+
+.table-solid .table-header {
+    padding: 6px 11px 5px;
+    border-bottom:3px solid #2d5081;
+    text-transform:uppercase;
+}
+
+.table-text-blue {
+    color:#2d5081;
+}
+
+.table-solid .left {
+    height:30px;
+    font-size:18px;
+    padding-left:30px;
+    background:url("../ios-images/payments_icon_paid@2x.png") no-repeat;
+    background-size: 21px 18px;
+}
+
+.table-solid .right {
+    font-weight:normal;
+    width : 56%;
+}
+
+.payment-month {
+    color:#585453;
+    font-size:20px;
+    font-weight:normal;
+    text-align:center;
+    padding-top:18px;
+    padding-bottom:18px;
+}
+
 .toggle {
     width:77px;
     height:27px;
@@ -653,4 +728,26 @@ body {
     border-left:1px solid rgba(255,255,255,0.9);
 }
 
+.side-scroll {
+    overflow:hidden;
+ }
 
+.side-scroll-container {
+    -webkit-transform:translate3d(0,0,0);
+    height:100%;
+    overflow:hidden;
+ }
+
+.side-scroll.parralax {
+    text-align:center;
+    -webkit-mask-image: -webkit-linear-gradient(left, transparent 5%, 
+                                                white 18%, white 82%, transparent 95%);
+}
+
+.side-scroll.parralax .side-scroll-container {
+    padding:0 25%;
+}
+
+.side-scroll.table {
+    top:40px;
+}

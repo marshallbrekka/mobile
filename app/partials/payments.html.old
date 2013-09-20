@@ -1,0 +1,26 @@
+<div rfz-pane-header="Payments">
+  <div rfz-pane-header-button
+       position="right">Pay
+  </div>
+  <div rfz-pane-header-button position="left">Refresh</div>
+</div>
+<div rfz-pane-body rfz-scroll-view>
+  <div class="payment-month">July 2013</div>
+  <div class="table-solid">
+    <div class="table-header table-text-blue">Paid</div>
+    <ul>
+      <li ng-repeat="payment in payments" class="row {{payment.status}}"
+          ng-class="{last : $last}"
+          rfz-change-pane="payment"
+          rfz-change-direction="right">
+        <div class="left amount table-text-blue">{{payment.amount | currency}}</div>
+        <div class="right">
+          Paid on {{payment.created | date:'MMM dd'}}<br/>
+          to {{paymentAccount(payment).name}}
+        </div>
+      </li>
+  </div>
+  <div rfz-side-scroll="payments" as="payment">
+    <div class="my-payment">{{payment.amount}}</div>
+  </div>
+</div>
