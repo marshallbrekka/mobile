@@ -80,6 +80,10 @@ Point.prototype.copy = function() {
   return new Point(this.x, this.y);
 }
 
+Point.prototype.toString = function() {
+  return "X: " + this.x + ", Y: " + this.y;
+}
+
 Point.prototype.adjustIfOutsideRange = function(min, max, adjustmentFactor) {
   var k, props = ["x", "y"];
   for (var i in props) {
@@ -90,6 +94,7 @@ Point.prototype.adjustIfOutsideRange = function(min, max, adjustmentFactor) {
       this[k] -= (this[k] - max[k]) * adjustmentFactor;
     }
   }
+  return this;
 }
 
 Point.prototype.equals = function(p2) {
@@ -99,17 +104,32 @@ Point.prototype.equals = function(p2) {
 Point.prototype.inverse = function() {
   this.x *= -1;
   this.y *= -1;
+  return this;
+}
+
+Point.prototype.abs = function() {
+  this.x = Math.abs(this.x);
+  this.y = Math.abs(this.y);
+  return this;
+}
+
+Point.prototype.multiply = function(factor) {
+  this.x *= factor;
+  this.y *= factor;
+  return this;
 }
 
 
 Point.prototype.roundToPx = function() {
   this.x = Math.round(this.x);
   this.y = Math.round(this.y);
+  return this;
 }
 
 Point.prototype.clamp = function(minPoint, maxPoint) {
   this.x = clampNum(this.x, minPoint.x, maxPoint.x);
   this.y = clampNum(this.y, minPoint.y, maxPoint.y);
+  return this;
 }
 
 
@@ -130,6 +150,7 @@ function Touch() {
 }
 
 Touch.MAX_TRACKING_TIME = 100;
+Touch.OUT_OF_BOUNDS_FRICTION = 0.5;
 
 (function() {
   var supportsTouches = "createTouch" in document;
@@ -140,7 +161,6 @@ Touch.MAX_TRACKING_TIME = 100;
 })();
 
 Touch.prototype.handleEvent = function(e) {
-  console.log(e);
   e.preventDefault();
   switch(e.type) {
   case Touch.START_EVENT:
@@ -160,13 +180,13 @@ Touch.prototype.handleEvent = function(e) {
 
 Touch.prototype.addEvents = function() {
   for (var i = 0; i < arguments.length; i++) {
-    this.content.addEventListener(arguments[i], this);    
+    this.container.addEventListener(arguments[i], this);    
   }
 }
 
 Touch.prototype.removeEvents = function() {
   for (var i = 0; i < arguments.length; i++) {
-    this.content.removeEventListener(arguments[i], this);
+    this.container.removeEventListener(arguments[i], this);
   }
 }
 
@@ -195,26 +215,35 @@ Touch.prototype.touchStart = function(e) {
   this.startPosition = this.position.copy();
   this.startTouch = point.copy();
   this.minPoint = new Point();
-  this.maxPoint = new Point(this.content.scrollWidth, this.content.scrollHeight);
+  var rect = this.container.getBoundingClientRect();
+  this.maxPoint = new Point(this.content.scrollWidth - rect.width,
+                            this.content.scrollHeight - rect.height);
+  var adjustedDiff = Point.difference(
+    this.position,
+    this.position.copy().adjustIfOutsideRange(this.minPoint,
+                                              this.maxPoint,
+                                              Touch.OUT_OF_BOUNDS_FRICTION))
+    .multiply(1 / Touch.OUT_OF_BOUNDS_FRICTION);
+  this.startTouch = Point.add(this.startTouch, adjustedDiff);
   this.trackPosition(point);
   this.painting = false;
   this.addEvents(Touch.MOVE_EVENT, Touch.END_EVENT, Touch.CANCEL_EVENT);
   this.dragging = true;
   this.decelerating = false;
+  console.log("Touch Start: " + this.position.toString());
 }
 
 Touch.prototype.touchMove = function(e) {
-  var point = Point.fromEvent(e);
-  console.log("touchMove");
-  point = Point.difference(this.startPosition, point);
-  point = Point.add(this.startTouch, point);
+  var point = Point.fromEvent(e),
+      diff;
+  diff = Point.difference(this.startTouch, point);
+  point = Point.add(this.startPosition, diff);
   point.adjustIfOutsideRange(this.minPoint, this.maxPoint, Touch.OUT_OF_BOUNDS_FRICTION || 0.5);
   this.trackPosition(point);
   this.setPositionAnimated(point, false);
 }
 
 Touch.prototype.touchEnd = function(e) {
-  console.log("touch end");
   this.removeEvents(Touch.MOVE_EVENT, Touch.END_EVENT, Touch.CANCEL_EVENT);
   this.dragging = false;
   var tracked = this.clipTrackedPositions();
@@ -223,11 +252,10 @@ Touch.prototype.touchEnd = function(e) {
   } else {
     console.log("dont have enough tracking events");
   }
-  
+  console.log("Touch End: " + this.position.toString());
 }
 
 Touch.prototype.setPositionAnimated = function(point, animate, duration) {
-  console.log(point);
   if (point && !point.equals(this.position)) {
     (this.position = point.copy()).roundToPx();
     if (!this.dragging && !this.decelerating) {
@@ -236,7 +264,7 @@ Touch.prototype.setPositionAnimated = function(point, animate, duration) {
     this.container.scrollTop = this.container.scrollLeft = 0;
     setTranslate(this.content, -this.position.x,  -this.position.y);
     if (animate) {
-      this.scrollTransitionActive = truel
+      this.scrollTransitionActive = true;
       setTransition(this.content, duration || Touch.PAGE_TRANSITION_DURATION);
       // TODO animate scroll indicators getting larger again
     } else {
