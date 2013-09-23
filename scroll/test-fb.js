@@ -197,6 +197,7 @@ function Touch() {
   this.bounces = true;
   this.canScrollVertically = true;
   this.canScrollHorizontally = false;
+  this.pagingEnabled = true;
   this.animator = function(time) {
 //   console.log("animating");
    if (!self.animating) return;
@@ -216,6 +217,8 @@ Touch.MIN_VELOCITY_FOR_DECELERATION_WITH_PAGING = 300;
 Touch.DESIRED_FRAME_RATE = 1 / 60;
 Touch.PENETRATION_DECELERATION = 8;
 Touch.PENETRATION_ACCELERATION = 5;
+Touch.PAGING_ACCELERATION = 3.6E-4;
+Touch.PAGING_DECELERATION = 0.9668;
 
 (function() {
   var supportsTouches = "createTouch" in document;
@@ -301,6 +304,9 @@ Touch.prototype.touchStart = function(e) {
                                               this.maxPoint,
                                               Touch.OUT_OF_BOUNDS_FRICTION))
     .multiply(1 / Touch.OUT_OF_BOUNDS_FRICTION);
+  if (this.pagingEnabled) {
+    this.pageSize = new Point(rect.width, rect.height);
+  }
   this.startTouch = Point.add(this.startTouch, adjustedDiff);
   this.trackPosition(point);
   this.painting = false;
@@ -362,8 +368,9 @@ Touch.prototype.snapPositionToBounds = function(animate) {
   var useNewPosition = false;
   var position = this.position.copy();
   if (this.pagingEnabled && animate) {
-    position.x = Math.round(this.position.x / this.pageSize.width) * this.pageSize.width;
-    position.y = Math.round(this.position.y / this.pageSize.height) * this.pageSize.height;    
+    position = Point.applyFn(function(curPos, pageSize) {
+      return Math.round(curPos / pageSize) * pageSize;
+    }, this.position, this.pageSize);
     useNewPosition = true;
   } else if (this.bounces) {
     position.clamp(this.minPoint, this.maxPoint);
@@ -392,13 +399,22 @@ Touch.prototype.startDeceleration = function() {
       this.maxDecelerationPoint = this.maxPoint.copy();
       
       var minDecelerationVelocity;
-      // TODO paging specifics here
-
+      
       if (this.pagingEnabled) {
+        var pageSize = this.pageSize;
+        this.minDecelerationPoint = Point.applyFn(function(curPos, pageSize) {
+          return Math.max(0, Math.floor(curPos / pageSize) * pageSize);
+        }, this.position, this.pageSize);
+
+        this.maxDecelerationPoint = Point.applyFn(function(curPos, pageSize, maxPoint) {
+          return Math.min(maxPoint, Math.ceil(curPos / pageSize) * pageSize);
+        }, this.position, this.pageSize, this.maxPoint);
+
         minDecelerationVelocity = Touch.MIN_VELOCITY_FOR_DECELERATION_WITH_PAGING;
       } else {
         minDecelerationVelocity = Touch.MIN_VELOCITY_FOR_DECELERATION;
       }
+
       var absVelocity = this.decelerationVelocity.copy().abs();
       if (absVelocity.test(function(v) {return v > minDecelerationVelocity;})) {
         this.decelerating = true;
@@ -425,24 +441,38 @@ Touch.prototype.stepThroughDeceleration = function() {
   if (this.decelerating) {
     var frameTime = Date.now();
     var elapsedTime = frameTime - this.previousDecelerationFrame;
-//    elapsedTime = 16;
+    elapsedTime = 16;
     var animatedPosition = this.animatedPosition.copy();
     if (this.pagingEnabled) {
-      // TODO paging decelerating
+      for (var frame = 0; frame < elapsedTime; frame++) {
+        this.decelerationVelocity = Point.applyFn(function(decVelocity, position, nextPagePosition) {
+          var velocity = decVelocity + 1E3 * Touch.PAGING_ACCELERATION *
+            (nextPagePosition - position);
+          return velocity * Touch.PAGING_DECELERATION;
+        }, this.decelerationVelocity, animatedPosition, this.nextPagePosition);
+        
+       animatedPosition = Point.applyFn(function(curPos, velocity) {
+         return curPos * velocity / 1E3;
+       }, animatedPosition, this.decelerationVelocity);
+      }
     } else {
       var decelerationFactor = this.adjustedDecelerationFactor;
-      var adjustedDecelerationFactorByTime = new Point(
-        Math.exp(Math.log(decelerationFactor.x) * elapsedTime),
-        Math.exp(Math.log(decelerationFactor.y) * elapsedTime));
-      decelerationFactor = new Point(
-       decelerationFactor.x * ((1 - adjustedDecelerationFactorByTime.x) /
-                               (1 - decelerationFactor.x)),
-       decelerationFactor.y * ((1 - adjustedDecelerationFactorByTime.y) /
-                               (1 - decelerationFactor.y)));
-      animatedPosition.x += this.decelerationVelocity.x / 1E3 * decelerationFactor.x;
-      animatedPosition.y += this.decelerationVelocity.y / 1E3 * decelerationFactor.y;
-      this.decelerationVelocity.x *= adjustedDecelerationFactorByTime.x;
-      this.decelerationVelocity.y *= adjustedDecelerationFactorByTime.y;
+
+      var adjustedDecelerationFactorByTime = Point.applyFn(function(decFact) {
+        return Math.exp(Math.log(decFact) * elapsedTime)
+      }, decelerationFactor);
+
+      decelerationFactor = Point.applyFn(function(decFactByTime, decFact) {
+        return decFact * ((1 - decFactByTime) / (1 - decFact));
+      }, adjustedDecelerationFactorByTime, decelerationFactor);
+
+      animatedPosition = Point.applyFn(function(pos, velocity, decFact) {
+        return pos + velocity / 1E3 * decFact;
+      }, animatedPosition, this.decelerationVelocity, decelerationFactor);
+      
+      this.declerationVelocity = Point.apply(function(velocity, decFactByTime) {
+        return velocity * decFactByTime;
+      }, this.decelerationVelocity, adjustedDecelerationFactorByTime);
     }
     if (!this.bounces) {
       // TODO some stuff for not bouncing scenario
