@@ -49,6 +49,19 @@ function setTranslate(element, x, y, z) {
     "translate3d(" + (x || 0) + "px," + (y || 0) + "px," + (z || 0) + "px)";
 }
 
+function getPointFromTranslate(element) {
+  var computed = getComputedStyle(element);
+  console.log(computed);
+  var pieces = computed.webkitTransform.split("(")[1].split(",");
+  console.log(pieces);
+
+  if (pieces.length < 16) {
+    return new Point(parseFloat(pieces[4]), parseFloat(pieces[5]));
+  } else {
+    return new Point(parseFloat(pieces[12]), parseFloat(pieces[13]));    
+  }
+}
+
 function setTransition(element, duration) {
   element.style.webkitTransitionDuration = duration + "s";
 }
@@ -76,12 +89,35 @@ Point.add = function(p1, p2) {
   return new Point(p1.x + p2.x, p1.y + p2.y);
 }
 
+Point.applyFn = function(fn, pts) {
+  var point;
+  var units = [[], []];
+  for (var i = 1; i < arguments.length; i++) {
+    point = arguments[i];
+    units[0].push(point.x);
+    units[1].push(point.y);
+  }
+  
+  return new Point(
+    fn.apply(fn, units[0]),
+    fn.apply(fn, units[1]));
+}
+
 Point.prototype.copy = function() {
   return new Point(this.x, this.y);
 }
 
 Point.prototype.toString = function() {
   return "X: " + this.x + ", Y: " + this.y;
+}
+
+Point.prototype.isInsideRange = function(min, max) {
+  var props = ["x", "y"], k;
+  for (var i in props) {
+    k = props[i];
+    if (this[k] < min[k] || this[k] > max[k]) return false;
+  }
+  return true;
 }
 
 Point.prototype.adjustIfOutsideRange = function(min, max, adjustmentFactor) {
@@ -101,6 +137,20 @@ Point.prototype.equals = function(p2) {
   return this.x == p2.x && this.y == p2.y;
 }
 
+Point.prototype.test = function(testFn, and) {
+  var x = testFn(this.x);
+  return and ?
+    x && testFn(this.y) :
+    x || testFn(this.y);
+}
+
+Point.prototype.compare = function(compareFn, p2, and) {
+  var x = compareFn(this.x, p2.x);
+  return and ?
+    x && compareFn(this.y, p2.y) :
+    x || compareFn(this.y, p2.y);
+}
+
 Point.prototype.inverse = function() {
   this.x *= -1;
   this.y *= -1;
@@ -113,10 +163,14 @@ Point.prototype.abs = function() {
   return this;
 }
 
-Point.prototype.multiply = function(factor) {
+Point.prototype.multiply = function(factor, yfactor) {
   this.x *= factor;
-  this.y *= factor;
+  this.y *= (yfactor || factor);
   return this;
+}
+
+Point.prototype.divide = function(factor) {
+  return this.multiply(1 / factor);
 }
 
 
@@ -140,6 +194,9 @@ function Touch() {
   var self = this;
   this.position = new Point();
   this.animating = false;
+  this.bounces = true;
+  this.canScrollVertically = true;
+  this.canScrollHorizontally = false;
   this.animator = function(time) {
 //   console.log("animating");
    if (!self.animating) return;
@@ -151,17 +208,27 @@ function Touch() {
 
 Touch.MAX_TRACKING_TIME = 100;
 Touch.OUT_OF_BOUNDS_FRICTION = 0.5;
+Touch.PAGE_TRANSITION_DURATION = 0.25;
+Touch.DELECERATION_FRICTION = 0.998;
+Touch.MINIMUM_VELOCITY = 10;
+Touch.MIN_VELOCITY_FOR_DECELERATION = 250;
+Touch.MIN_VELOCITY_FOR_DECELERATION_WITH_PAGING = 300;
+Touch.DESIRED_FRAME_RATE = 1 / 60;
+Touch.PENETRATION_DECELERATION = 8;
+Touch.PENETRATION_ACCELERATION = 5;
 
 (function() {
   var supportsTouches = "createTouch" in document;
   Touch.START_EVENT = supportsTouches ? "touchstart" : "mousedown";
-  Touch.MOVE_EVENT = supportsTouches ? "touchemove" : "mousemove";
+  Touch.MOVE_EVENT = supportsTouches ? "touchmove" : "mousemove";
   Touch.END_EVENT = supportsTouches ? "touchend" : "mouseup";
   Touch.CANCEL_EVENT = "touchcancel";
+  Touch.TRANSITION_END_EVENT = "webkitTransitionEnd";
 })();
 
 Touch.prototype.handleEvent = function(e) {
   e.preventDefault();
+  console.log(e.type);
   switch(e.type) {
   case Touch.START_EVENT:
     this.touchStart(e);
@@ -174,6 +241,9 @@ Touch.prototype.handleEvent = function(e) {
    break;
   case Touch.CANCEL_EVENT:
     this.touchCancelled(e);
+    break;
+  case Touch.TRANSITION_END_EVENT:
+    this.transitionEnded(e);
     break;
   }
 }
@@ -209,8 +279,15 @@ Touch.prototype.clipTrackedPositions = function() {
 }
 
 Touch.prototype.touchStart = function(e) {
+  this.dragging = true;
   var point = Point.fromEvent(e);
   console.log("touch start");
+  if (this.scrollTransitionActive) {
+    this.transitionEnded(e);
+    this.setPositionAnimated(getPointFromTranslate(this.content).inverse());
+    console.log("stopped transition");
+    
+  }
   this.tracking = [];
   this.startPosition = this.position.copy();
   this.startTouch = point.copy();
@@ -228,7 +305,6 @@ Touch.prototype.touchStart = function(e) {
   this.trackPosition(point);
   this.painting = false;
   this.addEvents(Touch.MOVE_EVENT, Touch.END_EVENT, Touch.CANCEL_EVENT);
-  this.dragging = true;
   this.decelerating = false;
   console.log("Touch Start: " + this.position.toString());
 }
@@ -236,23 +312,30 @@ Touch.prototype.touchStart = function(e) {
 Touch.prototype.touchMove = function(e) {
   var point = Point.fromEvent(e),
       diff;
+  this.trackPosition(point);
   diff = Point.difference(this.startTouch, point);
   point = Point.add(this.startPosition, diff);
+  if (!this.canScrollVertically) point.y = 0;
+  if (!this.canScrollHorizontally) point.x = 0;
   point.adjustIfOutsideRange(this.minPoint, this.maxPoint, Touch.OUT_OF_BOUNDS_FRICTION || 0.5);
-  this.trackPosition(point);
   this.setPositionAnimated(point, false);
 }
 
 Touch.prototype.touchEnd = function(e) {
   this.removeEvents(Touch.MOVE_EVENT, Touch.END_EVENT, Touch.CANCEL_EVENT);
   this.dragging = false;
-  var tracked = this.clipTrackedPositions();
-  if (tracked.length > 2) {
-    console.log("have tracking events");
-  } else {
-    console.log("dont have enough tracking events");
+  this.startDeceleration()
+  if (!this.decelerating) {
+    this.snapPositionToBounds(true);
   }
-  console.log("Touch End: " + this.position.toString());
+}
+
+Touch.prototype.transitionEnded = function(e) {
+  if (this.scrollTransitionActive) {
+    this.scrollTransitionActive = false;
+    this.removeEvents(Touch.TRANSITION_END_EVENT)
+    setTransition(this.content, 0);
+  }
 }
 
 Touch.prototype.setPositionAnimated = function(point, animate, duration) {
@@ -265,6 +348,7 @@ Touch.prototype.setPositionAnimated = function(point, animate, duration) {
     setTranslate(this.content, -this.position.x,  -this.position.y);
     if (animate) {
       this.scrollTransitionActive = true;
+      this.addEvents(Touch.TRANSITION_END_EVENT);
       setTransition(this.content, duration || Touch.PAGE_TRANSITION_DURATION);
       // TODO animate scroll indicators getting larger again
     } else {
@@ -276,18 +360,141 @@ Touch.prototype.setPositionAnimated = function(point, animate, duration) {
 
 Touch.prototype.snapPositionToBounds = function(animate) {
   var useNewPosition = false;
-  var position = new Point();
+  var position = this.position.copy();
   if (this.pagingEnabled && animate) {
     position.x = Math.round(this.position.x / this.pageSize.width) * this.pageSize.width;
     position.y = Math.round(this.position.y / this.pageSize.height) * this.pageSize.height;    
     useNewPosition = true;
   } else if (this.bounces) {
-    position.clamp(this.position, new Point(), this.maxPoint);
+    position.clamp(this.minPoint, this.maxPoint);
     useNewPosition = !position.equals(this.position);
   }
   if (useNewPosition) {
     this.setPositionAnimated(position, animate);
   }
+}
+
+Touch.prototype.startDeceleration = function() {
+//  this.decelerating = true;
+  if (!this.bounces || this.position.isInsideRange(this.minPoint, this.maxPoint)) {
+    var trackedTouches = this.clipTrackedPositions(), firstTouch, lastTouch;
+    if (trackedTouches.length > 2) {
+      firstTouch = trackedTouches[trackedTouches.length - 1];
+      lastTouch = trackedTouches[0];
+      var distance = Point.difference(lastTouch.point, firstTouch.point).inverse();
+      var acceleration = (lastTouch.time - firstTouch.time) / 1E3;
+      this.decelerationVelocity = distance.divide(acceleration);
+      this.adjustedDecelerationFactor = new Point(Touch.DELECERATION_FRICTION,
+                                                 Touch.DELECERATION_FRICTION);
+      if (!this.canScrollVertically) this.decelerationVelocity.y = 0;
+      if (!this.canScrollHorizontally) this.decelerationVelocity.x = 0;
+      this.minDecelerationPoint = new Point();
+      this.maxDecelerationPoint = this.maxPoint.copy();
+      
+      var minDecelerationVelocity;
+      // TODO paging specifics here
+
+      if (this.pagingEnabled) {
+        minDecelerationVelocity = Touch.MIN_VELOCITY_FOR_DECELERATION_WITH_PAGING;
+      } else {
+        minDecelerationVelocity = Touch.MIN_VELOCITY_FOR_DECELERATION;
+      }
+      var absVelocity = this.decelerationVelocity.copy().abs();
+      if (absVelocity.test(function(v) {return v > minDecelerationVelocity;})) {
+        this.decelerating = true;
+        if (this.pagingEnabled) {
+          this.nextPagePosition = new Point(this.decelerationVelocity.x > 0 ?
+                                              this.maxDecelerationPoint.x : 
+                                              this.minDecelerationPoint.x,
+                                            this.decelerationVelocity.y > 0 ?
+                                              this.maxDecelerationPoint.y :
+                                              this.minDecelerationPoint.y);
+        }
+        this.animatedPosition = this.position.copy();
+        var self = this;
+        setTimeout(function() {
+          self.stepThroughDeceleration()
+        }, Touch.DESIRED_FRAME_RATE);
+        this.previousDecelerationFrame = Date.now();
+      }
+    }
+  }
+}
+
+Touch.prototype.stepThroughDeceleration = function() {
+  if (this.decelerating) {
+    var frameTime = Date.now();
+    var elapsedTime = frameTime - this.previousDecelerationFrame;
+//    elapsedTime = 16;
+    var animatedPosition = this.animatedPosition.copy();
+    if (this.pagingEnabled) {
+      // TODO paging decelerating
+    } else {
+      var decelerationFactor = this.adjustedDecelerationFactor;
+      var adjustedDecelerationFactorByTime = new Point(
+        Math.exp(Math.log(decelerationFactor.x) * elapsedTime),
+        Math.exp(Math.log(decelerationFactor.y) * elapsedTime));
+      decelerationFactor = new Point(
+       decelerationFactor.x * ((1 - adjustedDecelerationFactorByTime.x) /
+                               (1 - decelerationFactor.x)),
+       decelerationFactor.y * ((1 - adjustedDecelerationFactorByTime.y) /
+                               (1 - decelerationFactor.y)));
+      animatedPosition.x += this.decelerationVelocity.x / 1E3 * decelerationFactor.x;
+      animatedPosition.y += this.decelerationVelocity.y / 1E3 * decelerationFactor.y;
+      this.decelerationVelocity.x *= adjustedDecelerationFactorByTime.x;
+      this.decelerationVelocity.y *= adjustedDecelerationFactorByTime.y;
+    }
+    if (!this.bounces) {
+      // TODO some stuff for not bouncing scenario
+    }
+    
+    this.animatedPosition = animatedPosition;
+    this.setPositionAnimated(animatedPosition.copy());
+    var belowMinVelocity = this.decelerationVelocity.copy().abs().test(function(v) {
+      return v <= Touch.MINIMUM_VELOCITY;
+    }, true);
+    var donePaging = this.pagingEnabled && belowMinVelocity &&
+      Point.difference(this.nextPagePosition, animatedPosition).test(function(v) {return v <= 1;});
+    
+    if (!this.pagingEnabled && belowMinVelocity || donePaging) {
+      this.decelerationCompleted();
+    } else {
+      if (!this.pagingEnabled && this.bounces) {
+        var overflow = Point.applyFn(function(animated, min, max) {
+          if (animated < min) return min - animated;
+          else if (animated > max) return max - animated;
+          return 0;
+        }, animatedPosition, this.minPoint, this.maxPoint);
+        
+        var overflowDecelerationVelocity = Point.applyFn(function(overflow, decelerationVelocity) {
+          if (overflow != 0) {
+            if (overflow * decelerationVelocity <= 0) {
+              return decelerationVelocity + overflow * Touch.PENETRATION_DECELERATION;
+            } else {
+              return overflow * Touch.PENETRATION_ACCELERATION;
+            }
+          }
+          return decelerationVelocity;
+        }, overflow, this.decelerationVelocity);
+        this.decelerationVelocity = overflowDecelerationVelocity;
+      }
+
+      var self = this;
+      this.previousDecelerationFrame = frameTime;
+      setTimeout(function() {
+        self.stepThroughDeceleration();
+      }, Touch.DESIRED_FRAME_RATE);
+    }
+  }
+}
+
+Touch.prototype.decelerationCompleted = function() {
+  if (this.pagingEnabled) {
+    this.setPositionAnimated(Point.applyFn(function(curPos, pageSize) {
+      return (Math.round(curPos / pageSize) * pageSize);
+    }, this.position, this.pageSize));
+  }
+  this.snapPositionToBounds(false);
 }
 
 /*Touch.prototype.touchStart = function(e) {
