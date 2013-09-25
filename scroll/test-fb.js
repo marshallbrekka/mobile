@@ -456,7 +456,6 @@ Touch.prototype.stepThroughDeceleration = function() {
       }
     } else {
       var decelerationFactor = this.adjustedDecelerationFactor;
-
       var adjustedDecelerationFactorByTime = Point.applyFn(function(decFact) {
         return Math.exp(Math.log(decFact) * elapsedTime)
       }, decelerationFactor);
@@ -468,7 +467,6 @@ Touch.prototype.stepThroughDeceleration = function() {
       animatedPosition = Point.applyFn(function(pos, velocity, decFact) {
         return pos + velocity / 1E3 * decFact;
       }, animatedPosition, this.decelerationVelocity, decelerationFactor);
-      
       this.decelerationVelocity = Point.applyFn(function(velocity, decFactByTime) {
         return velocity * decFactByTime;
       }, this.decelerationVelocity, adjustedDecelerationFactorByTime);
