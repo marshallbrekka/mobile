@@ -441,7 +441,6 @@ Touch.prototype.stepThroughDeceleration = function() {
   if (this.decelerating) {
     var frameTime = Date.now();
     var elapsedTime = frameTime - this.previousDecelerationFrame;
-    elapsedTime = 16;
     var animatedPosition = this.animatedPosition.copy();
     if (this.pagingEnabled) {
       for (var frame = 0; frame < elapsedTime; frame++) {
@@ -452,7 +451,7 @@ Touch.prototype.stepThroughDeceleration = function() {
         }, this.decelerationVelocity, animatedPosition, this.nextPagePosition);
         
        animatedPosition = Point.applyFn(function(curPos, velocity) {
-         return curPos * velocity / 1E3;
+         return curPos + velocity / 1E3;
        }, animatedPosition, this.decelerationVelocity);
       }
     } else {
@@ -470,7 +469,7 @@ Touch.prototype.stepThroughDeceleration = function() {
         return pos + velocity / 1E3 * decFact;
       }, animatedPosition, this.decelerationVelocity, decelerationFactor);
       
-      this.declerationVelocity = Point.apply(function(velocity, decFactByTime) {
+      this.decelerationVelocity = Point.applyFn(function(velocity, decFactByTime) {
         return velocity * decFactByTime;
       }, this.decelerationVelocity, adjustedDecelerationFactorByTime);
     }
