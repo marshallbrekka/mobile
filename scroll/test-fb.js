@@ -187,24 +187,27 @@ Point.prototype.clamp = function(minPoint, maxPoint) {
 }
 
 
-function Touch() {
-  this.content = content;
-  this.container = parent;
-  this.addEvents(Touch.START_EVENT);
-  var self = this;
-  this.position = new Point();
+function Touch(opts) {
   this.animating = false;
   this.bounces = true;
   this.canScrollVertically = true;
   this.canScrollHorizontally = false;
+  this.container = parent;
+  this.content = content;
+  this.dragging = false;
+  this.minPoint = new Point();
+  this.maxPoint = null;
   this.pagingEnabled = true;
-  this.animator = function(time) {
-//   console.log("animating");
-   if (!self.animating) return;
-//   console.log("animating");
-   self.position(time);
-   window.requestAnimationFrame(self.animator);
-  }
+  this.position = new Point();
+  this.scrollTransitionActive = false;
+  this.startPosition = null;
+  this.startTouch = null
+  this.tracking = null;
+
+  this.addEvents(Touch.START_EVENT);
+
+  var self = this;
+
 }
 
 Touch.MAX_TRACKING_TIME = 100;
@@ -231,7 +234,6 @@ Touch.PAGING_DECELERATION = 0.9668;
 
 Touch.prototype.handleEvent = function(e) {
   e.preventDefault();
-  console.log(e.type);
   switch(e.type) {
   case Touch.START_EVENT:
     this.touchStart(e);
@@ -277,60 +279,86 @@ Touch.prototype.clipTrackedPositions = function() {
     }
     else break;
   }
-  this.tracked = [];
+  this.tracked = null;
   return filtered;
+}
+
+Touch.prototype.trackedPositionsToVelocity = function() {
+  var trackedTouches = this.clipTrackedPositions(),
+      firstTouch,lastTouch, distance, acceleration;
+  if (trackedTouches.length > 2) {
+    firstTouch = trackedTouches[trackedTouches.length - 1];
+    lastTouch = trackedTouches[0];
+    var distance = Point.difference(lastTouch.point, firstTouch.point).inverse();
+    var acceleration = (lastTouch.time - firstTouch.time) / 1E3;
+    return distance.divide(acceleration);
+  } 
 }
 
 Touch.prototype.touchStart = function(e) {
   this.dragging = true;
+  this.decelerating = false;
+  var rect = this.container.getBoundingClientRect();
+  var adjustedDiff;
   var point = Point.fromEvent(e);
-  console.log("touch start");
+
   if (this.scrollTransitionActive) {
     this.transitionEnded(e);
     this.setPositionAnimated(getPointFromTranslate(this.content).inverse());
-    console.log("stopped transition");
-    
   }
+
   this.tracking = [];
   this.startPosition = this.position.copy();
   this.startTouch = point.copy();
-  this.minPoint = new Point();
-  var rect = this.container.getBoundingClientRect();
+  this.trackPosition(point);
   this.maxPoint = new Point(this.content.scrollWidth - rect.width,
                             this.content.scrollHeight - rect.height);
-  var adjustedDiff = Point.difference(
-    this.position,
-    this.position.copy().adjustIfOutsideRange(this.minPoint,
-                                              this.maxPoint,
-                                              Touch.OUT_OF_BOUNDS_FRICTION))
+
+  if (this.bounces) {
+    // If the scroll content was pulled out beyond the edges and was
+    // let go of, and then grabbed again before it has returned to the
+    // nearest edge, then we need to adjust our startTouch to a
+    // position that would have resulted in the current out of bounds
+    // position had we never let go.
+    adjustedDiff = Point.difference(this.position, this.position.copy()
+        .adjustIfOutsideRange(this.minPoint, this.maxPoint, Touch.OUT_OF_BOUNDS_FRICTION))
     .multiply(1 / Touch.OUT_OF_BOUNDS_FRICTION);
+    this.startTouch = Point.add(this.startTouch, adjustedDiff);
+  }
+
   if (this.pagingEnabled) {
     this.pageSize = new Point(rect.width, rect.height);
   }
-  this.startTouch = Point.add(this.startTouch, adjustedDiff);
-  this.trackPosition(point);
-  this.painting = false;
   this.addEvents(Touch.MOVE_EVENT, Touch.END_EVENT, Touch.CANCEL_EVENT);
-  this.decelerating = false;
-  console.log("Touch Start: " + this.position.toString());
 }
 
 Touch.prototype.touchMove = function(e) {
+  e.preventDefault();
   var point = Point.fromEvent(e),
-      diff;
+      diff = Point.difference(this.startTouch, point);
   this.trackPosition(point);
-  diff = Point.difference(this.startTouch, point);
   point = Point.add(this.startPosition, diff);
   if (!this.canScrollVertically) point.y = 0;
   if (!this.canScrollHorizontally) point.x = 0;
-  point.adjustIfOutsideRange(this.minPoint, this.maxPoint, Touch.OUT_OF_BOUNDS_FRICTION || 0.5);
-  this.setPositionAnimated(point, false);
+
+  // If bounces is enabled, adjust the point if it is outside the min
+  // or max, otherwise clamp the point.
+  if (this.bounces) {
+    point.adjustIfOutsideRange(this.minPoint, this.maxPoint, Touch.OUT_OF_BOUNDS_FRICTION);
+  } else {
+    point.clamp(this.minPoint, this.maxPoint);
+  }
+  this.setPositionAnimated(point);
 }
 
 Touch.prototype.touchEnd = function(e) {
+  e.preventDefault();
   this.removeEvents(Touch.MOVE_EVENT, Touch.END_EVENT, Touch.CANCEL_EVENT);
   this.dragging = false;
-  this.startDeceleration()
+  this.startDeceleration();
+  // If the deceleration function determined we weren't going to
+  // decelerate then decelerating is false and we should snap to
+  // the bounds of minPoint and maxPoint
   if (!this.decelerating) {
     this.snapPositionToBounds(true);
   }
@@ -348,9 +376,17 @@ Touch.prototype.setPositionAnimated = function(point, animate, duration) {
   if (point && !point.equals(this.position)) {
     (this.position = point.copy()).roundToPx();
     if (!this.dragging && !this.decelerating) {
-      this.position.clamp(new Point(), this.maxPoint);
+      // If we aren't dragging or decelerating then prevent the
+      // view from being scrolled beyond the content edges.
+      this.position.clamp(this.minPoint, this.maxPoint);
     }
+    
+    // Prevent traditional scrolling from happening.
     this.container.scrollTop = this.container.scrollLeft = 0;
+
+    // the real translate values have to be negative, but we treat
+    // scroll values as positive (zero being the top of the page,
+    // positive n being further down the page).
     setTranslate(this.content, -this.position.x,  -this.position.y);
     if (animate) {
       this.scrollTransitionActive = true;
@@ -368,6 +404,7 @@ Touch.prototype.snapPositionToBounds = function(animate) {
   var useNewPosition = false;
   var position = this.position.copy();
   if (this.pagingEnabled && animate) {
+    // if paging set position to the nearest page from the current position.
     position = Point.applyFn(function(curPos, pageSize) {
       return Math.round(curPos / pageSize) * pageSize;
     }, this.position, this.pageSize);
@@ -382,26 +419,20 @@ Touch.prototype.snapPositionToBounds = function(animate) {
 }
 
 Touch.prototype.startDeceleration = function() {
-//  this.decelerating = true;
+  var minDecelerationVelocity, velocity;
   if (!this.bounces || this.position.isInsideRange(this.minPoint, this.maxPoint)) {
-    var trackedTouches = this.clipTrackedPositions(), firstTouch, lastTouch;
-    if (trackedTouches.length > 2) {
-      firstTouch = trackedTouches[trackedTouches.length - 1];
-      lastTouch = trackedTouches[0];
-      var distance = Point.difference(lastTouch.point, firstTouch.point).inverse();
-      var acceleration = (lastTouch.time - firstTouch.time) / 1E3;
-      this.decelerationVelocity = distance.divide(acceleration);
-      this.adjustedDecelerationFactor = new Point(Touch.DELECERATION_FRICTION,
-                                                 Touch.DELECERATION_FRICTION);
-      if (!this.canScrollVertically) this.decelerationVelocity.y = 0;
-      if (!this.canScrollHorizontally) this.decelerationVelocity.x = 0;
+    velocity = this.trackedPositionsToVelocity()
+    if (velocity) {
+      this.decelerationVelocity = velocity;
+      if (!this.canScrollVertically) velocity.y = 0;
+      if (!this.canScrollHorizontally) velocity.x = 0;
       this.minDecelerationPoint = new Point();
       this.maxDecelerationPoint = this.maxPoint.copy();
       
-      var minDecelerationVelocity;
-      
       if (this.pagingEnabled) {
-        var pageSize = this.pageSize;
+        // Set the minDecelerationPoint to the nearest pageEdge that
+        // is < current position, the the maxDecleration point to the
+        // nearest pageEdge that is > current position.
         this.minDecelerationPoint = Point.applyFn(function(curPos, pageSize) {
           return Math.max(0, Math.floor(curPos / pageSize) * pageSize);
         }, this.position, this.pageSize);
@@ -416,15 +447,14 @@ Touch.prototype.startDeceleration = function() {
       }
 
       var absVelocity = this.decelerationVelocity.copy().abs();
+      // If the abs velocity is greater than the min velocity then
+      // start decelerating
       if (absVelocity.test(function(v) {return v > minDecelerationVelocity;})) {
         this.decelerating = true;
         if (this.pagingEnabled) {
-          this.nextPagePosition = new Point(this.decelerationVelocity.x > 0 ?
-                                              this.maxDecelerationPoint.x : 
-                                              this.minDecelerationPoint.x,
-                                            this.decelerationVelocity.y > 0 ?
-                                              this.maxDecelerationPoint.y :
-                                              this.minDecelerationPoint.y);
+          this.nextPagePosition = Point.applyFn(function(decVel, minDecPoint, maxDecPoint) {
+            return decVel > 0 ? maxDecPoint : minDecPoint;
+          }, this.decelerationVelocity, this.minDecelerationPoint, this.maxDecelerationPoint);
         }
         this.animatedPosition = this.position.copy();
         var self = this;
@@ -437,71 +467,97 @@ Touch.prototype.startDeceleration = function() {
   }
 }
 
+Touch.prototype.adjustVelocityAndPositionForPagingDuration = function(elapsedTime) {
+  for (var frame = 0; frame < elapsedTime; frame++) {
+    // For each frame when paging, perform maths to adjust the
+    // decelerationVelocity, and then apply the velocity to
+    // the animated position.
+    this.decelerationVelocity
+      = Point.applyFn(function(decVelocity, position, nextPagePosition) {
+        var velocity = (decVelocity + 1E3)
+          * Touch.PAGING_ACCELERATION
+          * (nextPagePosition - position);
+        return velocity * Touch.PAGING_DECELERATION;
+      }, this.decelerationVelocity, this.animatedPosition, this.nextPagePosition);
+    
+    this.animatedPosition = Point.applyFn(function(curPos, velocity) {
+      return curPos + velocity / 1E3;
+    }, this.animatedPosition, this.decelerationVelocity);
+  }
+}
+
+Touch.prototype.adjustVelocityAndPositionForDuration = function(elapsedTime) {
+  var decelerationFactor = new Point(Touch.DELECERATION_FRICTION,
+                                     Touch.DELECERATION_FRICTION)
+  var adjustedDecelerationFactorByTime = Point.applyFn(function(decFact) {
+    return Math.exp(Math.log(decFact) * elapsedTime)
+  }, decelerationFactor);
+
+  decelerationFactor = Point.applyFn(function(decFactByTime, decFact) {
+    return decFact * ((1 - decFactByTime) / (1 - decFact));
+  }, adjustedDecelerationFactorByTime, decelerationFactor);
+
+  this.animatedPosition = Point.applyFn(function(pos, velocity, decFact) {
+    return pos + velocity / 1E3 * decFact;
+  }, this.animatedPosition, this.decelerationVelocity, decelerationFactor);
+  this.decelerationVelocity = Point.applyFn(function(velocity, decFactByTime) {
+    return velocity * decFactByTime;
+  }, this.decelerationVelocity, adjustedDecelerationFactorByTime);
+}
+
 Touch.prototype.stepThroughDeceleration = function() {
   if (this.decelerating) {
     var frameTime = Date.now();
     var elapsedTime = frameTime - this.previousDecelerationFrame;
-    var animatedPosition = this.animatedPosition.copy();
+//    var animatedPosition = this.animatedPosition.copy();
     if (this.pagingEnabled) {
-      for (var frame = 0; frame < elapsedTime; frame++) {
-        this.decelerationVelocity = Point.applyFn(function(decVelocity, position, nextPagePosition) {
-          var velocity = decVelocity + 1E3 * Touch.PAGING_ACCELERATION *
-            (nextPagePosition - position);
-          return velocity * Touch.PAGING_DECELERATION;
-        }, this.decelerationVelocity, animatedPosition, this.nextPagePosition);
-        
-       animatedPosition = Point.applyFn(function(curPos, velocity) {
-         return curPos + velocity / 1E3;
-       }, animatedPosition, this.decelerationVelocity);
-      }
+      this.adjustVelocityAndPositionForPagingDuration(elapsedTime);
     } else {
-      var decelerationFactor = this.adjustedDecelerationFactor;
-      var adjustedDecelerationFactorByTime = Point.applyFn(function(decFact) {
-        return Math.exp(Math.log(decFact) * elapsedTime)
-      }, decelerationFactor);
-
-      decelerationFactor = Point.applyFn(function(decFactByTime, decFact) {
-        return decFact * ((1 - decFactByTime) / (1 - decFact));
-      }, adjustedDecelerationFactorByTime, decelerationFactor);
-
-      animatedPosition = Point.applyFn(function(pos, velocity, decFact) {
-        return pos + velocity / 1E3 * decFact;
-      }, animatedPosition, this.decelerationVelocity, decelerationFactor);
-      this.decelerationVelocity = Point.applyFn(function(velocity, decFactByTime) {
-        return velocity * decFactByTime;
-      }, this.decelerationVelocity, adjustedDecelerationFactorByTime);
+      this.adjustVelocityAndPositionForDuration(elapsedTime);
     }
+
     if (!this.bounces) {
-      // TODO some stuff for not bouncing scenario
+      // Potentially adjust the decelerationVelocity and the
+      // animatedPosition if outside the bounds of minPoint and maxPoint
+      var clampedPosition = this.animatedPosition.copy().clamp(this.minPoint, this.maxPoint);
+      this.decelerationVelocity = Point.applyFn(function(curPos, clamped, velocity) {
+        return curPos != clamped ? 0 : velocity;
+      }, this.animatedPosition, clampedPosition, this.decelerationVelocity);
+      
+      if (!clampedPosition.equals(this.animatedPosition)) {
+        this.animatedPosition = clampedPosition;
+      };
     }
     
-    this.animatedPosition = animatedPosition;
-    this.setPositionAnimated(animatedPosition.copy());
+    this.setPositionAnimated(this.animatedPosition.copy());
     var belowMinVelocity = this.decelerationVelocity.copy().abs().test(function(v) {
       return v <= Touch.MINIMUM_VELOCITY;
     }, true);
     var donePaging = this.pagingEnabled && belowMinVelocity &&
-      Point.difference(this.nextPagePosition, animatedPosition).test(function(v) {return v <= 1;});
+      Point.difference(this.nextPagePosition, animatedPosition)
+      .test(function(v) {return v <= 1;});
     
     if (!this.pagingEnabled && belowMinVelocity || donePaging) {
       this.decelerationCompleted();
     } else {
       if (!this.pagingEnabled && this.bounces) {
+        // Adjust the position and velocity if we move outside of the
+        // scroll bounds.
+        // overflow is the number of pixels that we are outside of the
+        // bounds by for each axis.
         var overflow = Point.applyFn(function(animated, min, max) {
-          if (animated < min) return min - animated;
-          else if (animated > max) return max - animated;
-          return 0;
-        }, animatedPosition, this.minPoint, this.maxPoint);
+          if (animated === min) return 0;
+          return animated < min ? min - animated : max - animated;
+        }, this.animatedPosition, this.minPoint, this.maxPoint);
         
         var overflowDecelerationVelocity = Point.applyFn(function(overflow, decelerationVelocity) {
-          if (overflow != 0) {
-            if (overflow * decelerationVelocity <= 0) {
-              return decelerationVelocity + overflow * Touch.PENETRATION_DECELERATION;
-            } else {
-              return overflow * Touch.PENETRATION_ACCELERATION;
-            }
+          if (overflow == 0) {
+            return decelerationVelocity;
+          } else if (overflow * decelerationVelocity <= 0) {
+            return decelerationVelocity + overflow * Touch.PENETRATION_DECELERATION;
+          } else {
+            return overflow * Touch.PENETRATION_ACCELERATION;
           }
-          return decelerationVelocity;
         }, overflow, this.decelerationVelocity);
         this.decelerationVelocity = overflowDecelerationVelocity;
       }
@@ -524,34 +580,6 @@ Touch.prototype.decelerationCompleted = function() {
   this.snapPositionToBounds(false);
 }
 
-/*Touch.prototype.touchStart = function(e) {
-  this.animating = true;
-  
-  parent.addEventListener("touchmove", this);
-  parent.addEventListener("touchend", this);
-  window.requestAnimationFrame(this.animator);
-}
-
-
-Touch.prototype.touchMove = function(e) {
-//  console.log("move");
-  lastTouch = e;
-  var distance = (e.touches[0].pageY - firstTouch.pageY);
-  point.y = startPoint.y + distance;
-//  this.position();
-}
-
-Touch.prototype.touchEnd = function(e) {
-  this.animating = false;
-  parent.removeEventListener("touchmove", this);
-  parent.removeEventListener("touchend", this);
-}
-
-Touch.prototype.position = function() {
-//  console.log("positioning");
-  content.style.webkitTransform = "translate3d(0px, " + point.y + "px, 0)";
-}
-*/
 x = new Touch();
 
 
