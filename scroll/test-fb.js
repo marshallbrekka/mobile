@@ -210,6 +210,7 @@ function Touch(opts) {
 
 }
 
+
 Touch.MAX_TRACKING_TIME = 100;
 Touch.OUT_OF_BOUNDS_FRICTION = 0.5;
 Touch.PAGE_TRANSITION_DURATION = 0.25;
@@ -474,7 +475,7 @@ Touch.prototype.adjustVelocityAndPositionForPagingDuration = function(elapsedTim
     // the animated position.
     this.decelerationVelocity
       = Point.applyFn(function(decVelocity, position, nextPagePosition) {
-        var velocity = (decVelocity + 1E3)
+        var velocity = decVelocity + 1E3
           * Touch.PAGING_ACCELERATION
           * (nextPagePosition - position);
         return velocity * Touch.PAGING_DECELERATION;
@@ -509,13 +510,27 @@ Touch.prototype.stepThroughDeceleration = function() {
   if (this.decelerating) {
     var frameTime = Date.now();
     var elapsedTime = frameTime - this.previousDecelerationFrame;
-//    var animatedPosition = this.animatedPosition.copy();
     if (this.pagingEnabled) {
       this.adjustVelocityAndPositionForPagingDuration(elapsedTime);
     } else {
       this.adjustVelocityAndPositionForDuration(elapsedTime);
-    }
+/*      var decelerationFactor = new Point(Touch.DELECERATION_FRICTION,
+                                       Touch.DELECERATION_FRICTION);
+      var adjustedDecelerationFactorByTime = Point.applyFn(function(decFact) {
+        return Math.exp(Math.log(decFact) * elapsedTime)
+      }, decelerationFactor);
 
+      decelerationFactor = Point.applyFn(function(decFactByTime, decFact) {
+        return decFact * ((1 - decFactByTime) / (1 - decFact));
+      }, adjustedDecelerationFactorByTime, decelerationFactor);
+
+      this.animatedPosition = Point.applyFn(function(pos, velocity, decFact) {
+        return pos + velocity / 1E3 * decFact;
+      }, this.animatedPosition, this.decelerationVelocity, decelerationFactor);
+      this.decelerationVelocity = Point.applyFn(function(velocity, decFactByTime) {
+        return velocity * decFactByTime;
+      }, this.decelerationVelocity, adjustedDecelerationFactorByTime);*/
+    }
     if (!this.bounces) {
       // Potentially adjust the decelerationVelocity and the
       // animatedPosition if outside the bounds of minPoint and maxPoint
@@ -534,7 +549,7 @@ Touch.prototype.stepThroughDeceleration = function() {
       return v <= Touch.MINIMUM_VELOCITY;
     }, true);
     var donePaging = this.pagingEnabled && belowMinVelocity &&
-      Point.difference(this.nextPagePosition, animatedPosition)
+      Point.difference(this.nextPagePosition, this.animatedPosition)
       .test(function(v) {return v <= 1;});
     
     if (!this.pagingEnabled && belowMinVelocity || donePaging) {
@@ -546,8 +561,9 @@ Touch.prototype.stepThroughDeceleration = function() {
         // overflow is the number of pixels that we are outside of the
         // bounds by for each axis.
         var overflow = Point.applyFn(function(animated, min, max) {
-          if (animated === min) return 0;
-          return animated < min ? min - animated : max - animated;
+          if (animated < min) return min - animated;
+          else if (animated > max) return max - animated;
+          return 0;
         }, this.animatedPosition, this.minPoint, this.maxPoint);
         
         var overflowDecelerationVelocity = Point.applyFn(function(overflow, decelerationVelocity) {
@@ -581,7 +597,3 @@ Touch.prototype.decelerationCompleted = function() {
 }
 
 x = new Touch();
-
-
-
-
