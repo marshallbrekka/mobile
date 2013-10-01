@@ -15,7 +15,7 @@ function errorAlert(e) {
           'CancelRequestAnimationFrame'];
     }
 
-    if (!window.requestAnimationFrame | true)
+    if (!window.requestAnimationFrame)
         window.requestAnimationFrame = function(callback, element) {
             var currTime = new Date().getTime();
             var timeToCall = Math.max(0, 16 - (currTime - lastTime));
@@ -30,8 +30,6 @@ function errorAlert(e) {
             clearTimeout(id);
         };
 }());
-
-
 
 
 var firstTouch, lastTouch;
@@ -205,8 +203,13 @@ function Touch(opts) {
   this.tracking = null;
 
   this.addEvents(Touch.START_EVENT);
-
   var self = this;
+  this.frameSetTranslate = function() {
+    if (self.dragging && !self.deceleration) {
+      setTranslate(self.content, -self.position.x, -self.position.y);
+      window.requestAnimationFrame(self.frameSetTranslate);
+    }
+  }
 
 }
 
@@ -331,6 +334,7 @@ Touch.prototype.touchStart = function(e) {
     this.pageSize = new Point(rect.width, rect.height);
   }
   this.addEvents(Touch.MOVE_EVENT, Touch.END_EVENT, Touch.CANCEL_EVENT);
+  window.requestAnimationFrame(this.frameSetTranslate);
 }
 
 Touch.prototype.touchMove = function(e) {
@@ -388,7 +392,9 @@ Touch.prototype.setPositionAnimated = function(point, animate, duration) {
     // the real translate values have to be negative, but we treat
     // scroll values as positive (zero being the top of the page,
     // positive n being further down the page).
-    setTranslate(this.content, -this.position.x,  -this.position.y);
+    if (!this.dragging) {
+      setTranslate(this.content, -this.position.x,  -this.position.y);
+    }
     if (animate) {
       this.scrollTransitionActive = true;
       this.addEvents(Touch.TRANSITION_END_EVENT);
@@ -459,10 +465,10 @@ Touch.prototype.startDeceleration = function() {
         }
         this.animatedPosition = this.position.copy();
         var self = this;
-        setTimeout(function() {
-          self.stepThroughDeceleration()
-        }, Touch.DESIRED_FRAME_RATE);
         this.previousDecelerationFrame = Date.now();
+        window.requestAnimationFrame(function() {
+          self.stepThroughDeceleration();
+        });
       }
     }
   }
@@ -514,22 +520,6 @@ Touch.prototype.stepThroughDeceleration = function() {
       this.adjustVelocityAndPositionForPagingDuration(elapsedTime);
     } else {
       this.adjustVelocityAndPositionForDuration(elapsedTime);
-/*      var decelerationFactor = new Point(Touch.DELECERATION_FRICTION,
-                                       Touch.DELECERATION_FRICTION);
-      var adjustedDecelerationFactorByTime = Point.applyFn(function(decFact) {
-        return Math.exp(Math.log(decFact) * elapsedTime)
-      }, decelerationFactor);
-
-      decelerationFactor = Point.applyFn(function(decFactByTime, decFact) {
-        return decFact * ((1 - decFactByTime) / (1 - decFact));
-      }, adjustedDecelerationFactorByTime, decelerationFactor);
-
-      this.animatedPosition = Point.applyFn(function(pos, velocity, decFact) {
-        return pos + velocity / 1E3 * decFact;
-      }, this.animatedPosition, this.decelerationVelocity, decelerationFactor);
-      this.decelerationVelocity = Point.applyFn(function(velocity, decFactByTime) {
-        return velocity * decFactByTime;
-      }, this.decelerationVelocity, adjustedDecelerationFactorByTime);*/
     }
     if (!this.bounces) {
       // Potentially adjust the decelerationVelocity and the
@@ -580,9 +570,9 @@ Touch.prototype.stepThroughDeceleration = function() {
 
       var self = this;
       this.previousDecelerationFrame = frameTime;
-      setTimeout(function() {
+      window.requestAnimationFrame(function() {
         self.stepThroughDeceleration();
-      }, Touch.DESIRED_FRAME_RATE);
+      });
     }
   }
 }
@@ -597,3 +587,4 @@ Touch.prototype.decelerationCompleted = function() {
 }
 
 x = new Touch();
+x.pagingEnabled = false;
