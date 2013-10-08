@@ -646,7 +646,7 @@ Touch.prototype.stepThroughDeceleration = function() {
             return 1;
           }
         } else {
-          var offset = curPos < minPos ? curPos - minPos : curPos - maxPos;
+          var offset = curPos < minPos ? -1 * (curPos - minPos) : curPos - maxPos;
           if (offset < Touch.MIN_OUT_OF_RANGE_DISTANCE && vel < Touch.MINIMUM_VELOCITY) {
             return 1;
           }
