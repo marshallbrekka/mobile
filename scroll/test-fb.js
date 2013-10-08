@@ -32,6 +32,14 @@ function setTranslate(element, x, y, z) {
     "translate3d(" + (x || 0) + "px," + (y || 0) + "px," + (z || 0) + "px)";
 }
 
+function setTransitionDuration(element, duration) {
+  element.style.webkitTransitionDuration = duration;
+}
+
+function setTransitionProperties(element, properties) {
+  element.style.webkitTransitionProperty = properties.join(", ");
+}
+
 function getPointFromTranslate(element) {
   var computed = getComputedStyle(element);
   var pieces = computed.webkitTransform.split("(")[1].split(",");
@@ -192,6 +200,7 @@ function Indicator(axis) {
 
 Indicator.THICKNESS = 6;
 Indicator.END_SIZE = 3;
+Indicator.FADE_DURATION = ".25s";
 
 Indicator.prototype.handleEvent = function(e) {
   if (e.type == "webkitTransitionEnd") {
@@ -202,24 +211,37 @@ Indicator.prototype.handleEvent = function(e) {
   }
 }
 
+Indicator.prototype.setAnimationMode = function(opacity, duration) {
+  if (this.opacityMode != opacity) {
+    this.opacityMode = opacity;
+    setTransitionProperties(this.element, opacity ? ["opacity"] :
+                            ["width", "height", "-webkit-transform"]);
+    setTransitionDuration(this.element, duration || Indicator.FADE_DURATION);
+  }
+}
+
 Indicator.prototype.show = function() {
+  this.setAnimationMode(true);
   this.fading = false;
   this.element.style.display = "block";
   this.element.style.opacity = "1";
 }
 
 Indicator.prototype.hide = function() {
+  this.setAnimationMode(true)
   this.fading = true;
   this.element.style.opacity = "0";
 }
 
-Indicator.prototype.setLength = function(length) {
+Indicator.prototype.setLength = function(length, animate, duration) {
+  this.setAnimationMode(!animate);
   var unit = this.axis == "x" ? "width" : "height";
   length = Math.max(Indicator.END_SIZE * 2, length);
   this.element.style[unit] = length + "px";
 }
 
-Indicator.prototype.setPosition = function(pos) {
+Indicator.prototype.setPosition = function(pos, animate, duration) {
+  this.setAnimationMode(!animate);
   var x = this.axis == "x" ? pos : 0;
   var y = this.axis == "y" ? pos : 0;
   setTranslate(this.element, x, y);
@@ -322,6 +344,9 @@ Touch.prototype.removeEvents = function() {
   }
 }
 
+Touch.prototype.callListeners = function(){}
+
+
 Touch.prototype.trackPosition = function(point) {
   this.tracking.push({time : Date.now(), point : point});
 }
@@ -360,9 +385,10 @@ Touch.prototype.toggleIndicators = function(show) {
       indicator[method]();
     }
   }, this.indicator, this.canScroll, this.showIndicator, this.maxPoint || new Point());
+  this.callListeners(Touch.INDICATOR_DISPLAY_EVENT, show);
 }
 
-Touch.prototype.positionIndicators = function() {
+Touch.prototype.positionIndicators = function(animate, duration) {
   Point.applyFn(function(indicator, canScroll, offsets, props,
                   containerSize, contentSize, pos, maxPoint) {
     if (canScroll) {
@@ -382,8 +408,8 @@ Touch.prototype.positionIndicators = function() {
                                           (maxLength - actualLength) + offsets[props.start]),
                             minPosition, maxPosition - actualLength);
       }
-      indicator.setLength(actualLength);
-      indicator.setPosition(minPosition);
+      indicator.setLength(actualLength, animate, duration);
+      indicator.setPosition(minPosition, animate, duration);
     }
   }, this.indicator, this.canScroll, this.indicatorOffsets,
      new Axis({start : "left", end : "right"}, {start : "top", end : "bottom"}),
@@ -402,6 +428,7 @@ Touch.prototype.touchStart = function(e) {
 
   if (this.scrollTransitionActive) {
     this.transitionEnded(e);
+    this.toggleIndicators(true);
     this.setPositionAnimated(getPointFromTranslate(this.content).inverse());
   }
 
@@ -468,7 +495,6 @@ Touch.prototype.touchEnd = function(e) {
   // decelerate then decelerating is false and we should snap to
   // the bounds of minPoint and maxPoint
   if (!this.decelerating) {
-    this.toggleIndicators(false);
     this.snapPositionToBounds(true);
   }
 }
@@ -478,6 +504,8 @@ Touch.prototype.transitionEnded = function(e) {
     this.scrollTransitionActive = false;
     this.removeEvents(Touch.TRANSITION_END_EVENT)
     setTransition(this.content, 0);
+    this.toggleIndicators(false);
+    this.callListeners(Touch.MOVE_TRANSITION_END_EVENT);
   }
 }
 
@@ -503,10 +531,12 @@ Touch.prototype.setPositionAnimated = function(point, animate, duration) {
       this.scrollTransitionActive = true;
       this.addEvents(Touch.TRANSITION_END_EVENT);
       setTransition(this.content, duration || Touch.PAGE_TRANSITION_DURATION);
+      this.positionIndicators(true, duration || Touch.PAGE_TRANSITION_DURATION);
       // TODO animate scroll indicators getting larger again
+      this.callListeners(Touch.CHANGE_POSITION_EVENT, duration || Touch.PAGE_TRANSITION_DURATION);
     } else {
-      // send notification to listeners
-      // do things with scroll indicators
+      this.callListeners(Touch.CHANGE_POSITION_EVENT);
+      this.positionIndicators();
     }
   }
 }
@@ -639,7 +669,6 @@ Touch.prototype.stepThroughDeceleration = function() {
     }
     
     this.setPositionAnimated(this.animatedPosition.copy());
-    this.positionIndicators();
     var belowMinVelocity = Point.applyFn(function(vel, curPos, minPos, maxPos) {
         if (curPos >= minPos && curPos <= maxPos) {
           if  (vel < Touch.MINIMUM_VELOCITY) {
@@ -702,6 +731,7 @@ Touch.prototype.decelerationCompleted = function() {
   }
   this.snapPositionToBounds(false);
   this.toggleIndicators(false);
+  this.callListeners(Touch.END_DECELERATION_EVENT);
 }
 
 
