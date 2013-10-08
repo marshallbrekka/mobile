@@ -1,11 +1,3 @@
-function errorAlert(e) {
-  alert("error");
-  alert(e);
-
-}
-//window.onerror = errorAlert;
-
-
 (function() {
     var lastTime = 0;
     var vendors = ['ms', 'moz', 'webkit', 'o'];
@@ -31,13 +23,6 @@ function errorAlert(e) {
         };
 }());
 
-
-var firstTouch, lastTouch;
-var parent = document.getElementById("scroll-parent");
-var content = document.getElementById("scroll-content");
-var point = {x : 0, y : 0};
-var startPoint;
-
 function clampNum(n, min, max) {
   return Math.min(Math.max(n, min), max);
 }
@@ -49,9 +34,7 @@ function setTranslate(element, x, y, z) {
 
 function getPointFromTranslate(element) {
   var computed = getComputedStyle(element);
-  console.log(computed);
   var pieces = computed.webkitTransform.split("(")[1].split(",");
-  console.log(pieces);
 
   if (pieces.length < 16) {
     return new Point(parseFloat(pieces[4]), parseFloat(pieces[5]));
@@ -62,6 +45,29 @@ function getPointFromTranslate(element) {
 
 function setTransition(element, duration) {
   element.style.webkitTransitionDuration = duration + "s";
+}
+
+function roundToPx(val) {
+  var ratio = window.devicePixelRatio;
+  return Math.round(val * ratio) / ratio;
+}
+
+function Edges(o) {
+  o = o || {};      
+  this.top = o.top || 0;
+  this.right = o.right || 0;
+  this.bottom = o.bottom || 0;
+  this.left = o.left || 0;
+}
+
+Edges.toAxis = function(e) {
+  return new Axis({start : e.left, end : e.right},
+                  {start : e.top, end : e.bottom});
+}
+
+function Axis(x, y) {
+  this.x = x;
+  this.y = y;
 }
 
 function Point(x, y) {
@@ -142,13 +148,6 @@ Point.prototype.test = function(testFn, and) {
     x || testFn(this.y);
 }
 
-Point.prototype.compare = function(compareFn, p2, and) {
-  var x = compareFn(this.x, p2.x);
-  return and ?
-    x && compareFn(this.y, p2.y) :
-    x || compareFn(this.y, p2.y);
-}
-
 Point.prototype.inverse = function() {
   this.x *= -1;
   this.y *= -1;
@@ -173,8 +172,8 @@ Point.prototype.divide = function(factor) {
 
 
 Point.prototype.roundToPx = function() {
-  this.x = Math.round(this.x);
-  this.y = Math.round(this.y);
+  this.x = roundToPx(this.x);
+  this.y = roundToPx(this.y);
   return this;
 }
 
@@ -184,22 +183,73 @@ Point.prototype.clamp = function(minPoint, maxPoint) {
   return this;
 }
 
+function Indicator(axis) {
+  this.axis = axis;
+  this.element = document.createElement("div");
+  this.element.className = "scroll-indicator scroll-indicator-" + axis;
+  this.element.style.zIndex = "100";
+}
+
+Indicator.THICKNESS = 6;
+Indicator.END_SIZE = 3;
+
+Indicator.prototype.handleEvent = function(e) {
+  if (e.type == "webkitTransitionEnd") {
+    if (this.fading) {
+      this.element.display = "none";
+      this.fading = false;
+    }
+  }
+}
+
+Indicator.prototype.show = function() {
+  this.fading = false;
+  this.element.style.display = "block";
+  this.element.style.opacity = "1";
+}
+
+Indicator.prototype.hide = function() {
+  this.fading = true;
+  this.element.style.opacity = "0";
+}
+
+Indicator.prototype.setLength = function(length) {
+  var unit = this.axis == "x" ? "width" : "height";
+  length = Math.max(Indicator.END_SIZE * 2, length);
+  this.element.style[unit] = length + "px";
+}
+
+Indicator.prototype.setPosition = function(pos) {
+  var x = this.axis == "x" ? pos : 0;
+  var y = this.axis == "y" ? pos : 0;
+  setTranslate(this.element, x, y);
+}
+
 
 function Touch(opts) {
-  this.animating = false;
+  // Behavior Settings
   this.bounces = true;
-  this.canScrollVertically = true;
-  this.canScrollHorizontally = false;
-  this.container = parent;
-  this.content = content;
+  this.canScroll = new Axis(true, true);
+  this.showIndicator = new Axis(true, true);
+  this.pagingEnabled = false;
+  this.indicatorOffsets = new Axis(new Edges(), new Edges());
+  Point.applyFn(function(canScroll, showIndicator, offsets, prop) {
+    if (canScroll && showIndicator) {
+      offsets[prop] = Indicator.THICKNESS + 1;
+    }
+  }, this.canScroll, this.showIndicator, this.indicatorOffsets, new Axis("right", "bottom"));
+
+  // Internal use properties
+  this.animating = false;
+  this.container = opts.container;
+  this.content = opts.content;
   this.dragging = false;
   this.minPoint = new Point();
   this.maxPoint = null;
-  this.pagingEnabled = true;
   this.position = new Point();
   this.scrollTransitionActive = false;
   this.startPosition = null;
-  this.startTouch = null
+  this.startTouch = null;
   this.tracking = null;
 
   this.addEvents(Touch.START_EVENT);
@@ -210,15 +260,18 @@ function Touch(opts) {
       window.requestAnimationFrame(self.frameSetTranslate);
     }
   }
-
+  this.indicator = new Axis(new Indicator("x"), new Indicator("y"));
+  parent.appendChild(this.indicator.x.element);
+  parent.appendChild(this.indicator.y.element);
 }
-
 
 Touch.MAX_TRACKING_TIME = 100;
 Touch.OUT_OF_BOUNDS_FRICTION = 0.5;
 Touch.PAGE_TRANSITION_DURATION = 0.25;
 Touch.DELECERATION_FRICTION = 0.998;
 Touch.MINIMUM_VELOCITY = 10;
+Touch.MIN_INDICATOR_LENGTH = 32;
+Touch.MIN_OUT_OF_RANGE_DISTANCE = 2;
 Touch.MIN_VELOCITY_FOR_DECELERATION = 250;
 Touch.MIN_VELOCITY_FOR_DECELERATION_WITH_PAGING = 300;
 Touch.DESIRED_FRAME_RATE = 1 / 60;
@@ -299,9 +352,50 @@ Touch.prototype.trackedPositionsToVelocity = function() {
   } 
 }
 
+Touch.prototype.toggleIndicators = function(show) {
+  var method = show ? "show" : "hide";
+
+  Point.applyFn(function(indicator, canScroll, show, maxPoint) {
+    if (canScroll && show && (maxPoint !== 0 || method == "hide")) {
+      indicator[method]();
+    }
+  }, this.indicator, this.canScroll, this.showIndicator, this.maxPoint || new Point());
+}
+
+Touch.prototype.positionIndicators = function() {
+  Point.applyFn(function(indicator, canScroll, offsets, props,
+                  containerSize, contentSize, pos, maxPoint) {
+    if (canScroll) {
+      var minPosition = offsets[props.start] + 1,
+          maxPosition = containerSize - offsets[props.end] - 1,
+          maxLength = maxPosition - minPosition;
+          actualLength = Math.max(Touch.MIN_INDICATOR_LENGTH,
+                                  Math.round(containerSize / contentSize * maxLength));
+      if (pos < 0) {
+        actualLength = Math.round(Math.max(actualLength + pos, Indicator.THICKNESS));
+      } else if (pos > maxPoint) {
+        actualLength = Math.round(Math.max(actualLength + contentSize - containerSize - pos,
+                                           Indicator.THICKNESS));
+        minPosition = maxPosition - actualLength;
+      } else {
+        minPosition = clampNum(Math.round(pos / (contentSize - containerSize) *
+                                          (maxLength - actualLength) + offsets[props.start]),
+                            minPosition, maxPosition - actualLength);
+      }
+      indicator.setLength(actualLength);
+      indicator.setPosition(minPosition);
+    }
+  }, this.indicator, this.canScroll, this.indicatorOffsets,
+     new Axis({start : "left", end : "right"}, {start : "top", end : "bottom"}),
+     new Axis(this.containerRect.width, this.containerRect.height),
+     new Axis(this.content.clientWidth, this.content.clientHeight),
+     this.position, this.maxPoint);
+}
+
 Touch.prototype.touchStart = function(e) {
   this.dragging = true;
   this.decelerating = false;
+  this.firstTouch = true;
   var rect = this.container.getBoundingClientRect();
   var adjustedDiff;
   var point = Point.fromEvent(e);
@@ -315,8 +409,11 @@ Touch.prototype.touchStart = function(e) {
   this.startPosition = this.position.copy();
   this.startTouch = point.copy();
   this.trackPosition(point);
-  this.maxPoint = new Point(this.content.scrollWidth - rect.width,
-                            this.content.scrollHeight - rect.height);
+  this.containerRect = rect;
+  this.maxPoint = Point.applyFn(function(max) {
+    return max < 0 ? 0 : max;
+  }, new Point(this.content.clientWidth - rect.width,
+               this.content.clientHeight - rect.height));
 
   if (this.bounces) {
     // If the scroll content was pulled out beyond the edges and was
@@ -343,8 +440,13 @@ Touch.prototype.touchMove = function(e) {
       diff = Point.difference(this.startTouch, point);
   this.trackPosition(point);
   point = Point.add(this.startPosition, diff);
-  if (!this.canScrollVertically) point.y = 0;
-  if (!this.canScrollHorizontally) point.x = 0;
+  if (this.firstTouch) {
+    this.toggleIndicators(true);
+    this.firstTouch = false;
+  }
+  if (!this.canScroll.y) point.y = 0;
+  if (!this.canScroll.x) point.x = 0;
+  
 
   // If bounces is enabled, adjust the point if it is outside the min
   // or max, otherwise clamp the point.
@@ -354,6 +456,7 @@ Touch.prototype.touchMove = function(e) {
     point.clamp(this.minPoint, this.maxPoint);
   }
   this.setPositionAnimated(point);
+  this.positionIndicators();
 }
 
 Touch.prototype.touchEnd = function(e) {
@@ -365,6 +468,7 @@ Touch.prototype.touchEnd = function(e) {
   // decelerate then decelerating is false and we should snap to
   // the bounds of minPoint and maxPoint
   if (!this.decelerating) {
+    this.toggleIndicators(false);
     this.snapPositionToBounds(true);
   }
 }
@@ -431,8 +535,8 @@ Touch.prototype.startDeceleration = function() {
     velocity = this.trackedPositionsToVelocity()
     if (velocity) {
       this.decelerationVelocity = velocity;
-      if (!this.canScrollVertically) velocity.y = 0;
-      if (!this.canScrollHorizontally) velocity.x = 0;
+      if (!this.canScroll.y) velocity.y = 0;
+      if (!this.canScroll.x) velocity.x = 0;
       this.minDecelerationPoint = new Point();
       this.maxDecelerationPoint = this.maxPoint.copy();
       
@@ -535,14 +639,27 @@ Touch.prototype.stepThroughDeceleration = function() {
     }
     
     this.setPositionAnimated(this.animatedPosition.copy());
-    var belowMinVelocity = this.decelerationVelocity.copy().abs().test(function(v) {
-      return v <= Touch.MINIMUM_VELOCITY;
-    }, true);
+    this.positionIndicators();
+    var belowMinVelocity = Point.applyFn(function(vel, curPos, minPos, maxPos) {
+        if (curPos >= minPos && curPos <= maxPos) {
+          if  (vel < Touch.MINIMUM_VELOCITY) {
+            return 1;
+          }
+        } else {
+          var offset = curPos < minPos ? curPos - minPos : curPos - maxPos;
+          if (offset < Touch.MIN_OUT_OF_RANGE_DISTANCE && vel < Touch.MINIMUM_VELOCITY) {
+            return 1;
+          }
+        }
+        return 0;
+      }, this.decelerationVelocity.copy().abs(), this.position, this.minPoint, this.maxPoint)
+      .equals(new Point(1, 1));
+
     var donePaging = this.pagingEnabled && belowMinVelocity &&
       Point.difference(this.nextPagePosition, this.animatedPosition)
       .test(function(v) {return v <= 1;});
     
-    if (!this.pagingEnabled && belowMinVelocity || donePaging) {
+    if ((!this.pagingEnabled && belowMinVelocity) || donePaging) {
       this.decelerationCompleted();
     } else {
       if (!this.pagingEnabled && this.bounces) {
@@ -584,7 +701,13 @@ Touch.prototype.decelerationCompleted = function() {
     }, this.position, this.pageSize));
   }
   this.snapPositionToBounds(false);
+  this.toggleIndicators(false);
 }
 
-x = new Touch();
-x.pagingEnabled = false;
+
+var parent = document.getElementById("scroll-parent");
+var content = document.getElementById("scroll-content");
+
+x = new Touch({container : parent,
+               content : content});
+x.canScroll.x = false;
