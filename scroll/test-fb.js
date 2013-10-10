@@ -23,6 +23,21 @@
         };
 }());
 
+function merge(obj1, obj2) {
+  var re = {};
+  for (var k in obj1) {
+    if (obj1.hasOwnProperty(k)) {
+      re[k] = obj1[k];
+    }
+  }
+  for (var k in obj2) {
+    if (obj2.hasOwnProperty(k)) {
+      re[k] = obj2[k];
+    }
+  }
+  return re;
+}
+
 function clampNum(n, min, max) {
   return Math.min(Math.max(n, min), max);
 }
@@ -249,11 +264,18 @@ Indicator.prototype.setPosition = function(pos, animate, duration) {
 
 
 function Touch(opts) {
+  var opts = merge({bounces        : true,
+                    canScrollX     : true,
+                    canScrollY     : true,
+                    showIndicatorX : true,
+                    showIndicatorY : true,
+                    pagingEnabled  : false},
+                   opts);
   // Behavior Settings
-  this.bounces = true;
-  this.canScroll = new Axis(true, true);
-  this.showIndicator = new Axis(true, true);
-  this.pagingEnabled = false;
+  this.bounces = opts.bounces;
+  this.canScroll = new Axis(opts.canScrollX, opts.canScrollY);
+  this.showIndicator = new Axis(opts.showIndicatorX, opts.showIndicatorY);
+  this.pagingEnabled = opts.padingEnabled;
   this.indicatorOffsets = new Axis(new Edges(), new Edges());
   Point.applyFn(function(canScroll, showIndicator, offsets, prop) {
     if (canScroll && showIndicator) {
@@ -283,8 +305,8 @@ function Touch(opts) {
     }
   }
   this.indicator = new Axis(new Indicator("x"), new Indicator("y"));
-  parent.appendChild(this.indicator.x.element);
-  parent.appendChild(this.indicator.y.element);
+  this.container.appendChild(this.indicator.x.element);
+  this.container.appendChild(this.indicator.y.element);
 }
 
 Touch.MAX_TRACKING_TIME = 100;
@@ -301,6 +323,10 @@ Touch.PENETRATION_DECELERATION = 8;
 Touch.PENETRATION_ACCELERATION = 5;
 Touch.PAGING_ACCELERATION = 3.6E-4;
 Touch.PAGING_DECELERATION = 0.9668;
+Touch.INDICATOR_DISPLAY_EVENT = "indicatorDeisplayEvent";
+Touch.MOVE_TRANSITION_END_EVENT = "moveTransitionEndEvent";
+Touch.CHANGE_POSITION_EVENT = "changePositionEvent";
+Touch.END_DECELERATION_EVENT = "endDecelerationEvent";
 
 (function() {
   var supportsTouches = "createTouch" in document;
@@ -419,7 +445,7 @@ Touch.prototype.positionIndicators = function(animate, duration) {
 }
 
 Touch.prototype.touchStart = function(e) {
-  this.dragging = true;
+//  this.dragging = true;
   this.decelerating = false;
   this.firstTouch = true;
   var rect = this.container.getBoundingClientRect();
@@ -458,19 +484,32 @@ Touch.prototype.touchStart = function(e) {
     this.pageSize = new Point(rect.width, rect.height);
   }
   this.addEvents(Touch.MOVE_EVENT, Touch.END_EVENT, Touch.CANCEL_EVENT);
-  window.requestAnimationFrame(this.frameSetTranslate);
 }
 
 Touch.prototype.touchMove = function(e) {
-  e.preventDefault();
+  if (this.dragging) {
+    e.stopPropagation();
+  } else if (!this.firstTouch) {
+    return;
+  }
   var point = Point.fromEvent(e),
       diff = Point.difference(this.startTouch, point);
+  if (this.firstTouch) {
+    var abs = diff.copy().abs();
+    if ((abs.x > abs.y && this.canScroll.x) ||
+        (abs.y > abs.x && this.canScroll.y) || 
+        (abs.x == abs.y)) {
+      e.stopPropagation();
+      this.firstTouch = false;
+      this.dragging = true;
+      this.toggleIndicators(true);
+      window.requestAnimationFrame(this.frameSetTranslate);
+    } else {
+      this.firstTouch = false;
+    }
+  }
   this.trackPosition(point);
   point = Point.add(this.startPosition, diff);
-  if (this.firstTouch) {
-    this.toggleIndicators(true);
-    this.firstTouch = false;
-  }
   if (!this.canScroll.y) point.y = 0;
   if (!this.canScroll.x) point.x = 0;
   
@@ -556,6 +595,8 @@ Touch.prototype.snapPositionToBounds = function(animate) {
   }
   if (useNewPosition) {
     this.setPositionAnimated(position, animate);
+  } else if (animate) {
+    this.toggleIndicators(false);
   }
 }
 
@@ -739,5 +780,10 @@ var parent = document.getElementById("scroll-parent");
 var content = document.getElementById("scroll-content");
 
 x = new Touch({container : parent,
-               content : content});
-x.canScroll.x = false;
+               content : content,
+               canScrollX : false});
+
+y = new Touch({container : document.getElementById("master-parent"),
+               content : document.getElementById("master-content"),
+               canScrollY : false});
+
