@@ -1,12 +1,18 @@
 'use strict';
-
+define([
+  "angular",
+  "config/rfz"
+], function(
+  angular,
+  RFZ
+) {
 /* Services */
 
 
 // Demonstrate how to register services
 // In this case it is a simple value service.
 
-services.factory("model", function() {
+RFZ.factory("model", function() {
   var accounts = [{"payments":[{"amount":891.54,"date":1373353200000},
                                     {"amount":382.64,"date":1370588400000},
                                     {"amount":1000.0,"date":1370588400000},
@@ -125,3 +131,4 @@ services.factory("model", function() {
 });
 
 
+});

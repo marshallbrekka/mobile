@@ -1,3 +1,5 @@
+define(["config/rfz", "util"], function(RFZ, util){
+
 /**
 The following controller and directives make up all the pieces that
 are neccesary to make the pane views/transitions work correctly, and
@@ -167,10 +169,12 @@ RFZ.directive("rfzChangePane", function() {
     restrict : "A", 
     require : "^rfzView",
     link : function(scope, element, attrs, ctrl) {
-      onTouch(element, function() {
+      util.onTouch(element, function() {
         scope.$broadcast("rfzViewChange");
         ctrl.openPane(attrs.rfzChangePane, attrs.rfzChangeDirection);
       });
     }
   }
+});
+
 });

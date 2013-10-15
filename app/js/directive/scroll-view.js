@@ -1,3 +1,6 @@
+define(["config/rfz"], function(RFZ){
+
+
 RFZ.controller("rfzScrollView", function() {
   return {
     height : function() {
@@ -24,4 +27,5 @@ RFZ.directive("rfzScrollView", function() {
       }
     }
   }
+});
 });

@@ -1,7 +1,33 @@
 'use strict';
-var directives = angular.module('RFZ.directives', []);
-var services = angular.module('RFZ.services', []);
-var filters = angular.module('RFZ.filters', []);
+define([
+  "angular",
+  "config/rfz",
+  "services",
+  "filters",
+  "controllers/overview",
+  "controllers/progress",
+  "controllers/payments",
+  "controllers/accounts",
+  "controllers/menu",
+  "controllers/overlay",
+  "directive/tap",
+  "directive/progress",
+  "directive/toggle",
+  "directive/view",
+  "directive/scroll-view",
+  "directive/table-input",
+  "directive/side-scroll"
+
+], function(
+  angular,
+  RFZ,
+  services,
+  filters,
+  Overview,
+  Progress,
+  Payments,
+  Accounts
+){
 
 var consoleEl = $("#console");
 function mobileConsole(msg) {
@@ -9,11 +35,8 @@ function mobileConsole(msg) {
 }
 
 
-
-
 // Declare app level module which depends on filters, and services
-var RFZ = angular.module('RFZ', ['RFZ.filters', 'RFZ.services', 'RFZ.directives']).
-  config(['$routeProvider', function($routeProvider) {
+RFZ.config(['$routeProvider', function($routeProvider) {
     $routeProvider.when('/overview',
                         {templateUrl: 'partials/overview.html',
                          controller: Overview});
@@ -28,5 +51,4 @@ var RFZ = angular.module('RFZ', ['RFZ.filters', 'RFZ.services', 'RFZ.directives'
                         controller: Accounts})
     $routeProvider.otherwise({redirectTo: '/overview'});
   }]);
-
-
+});

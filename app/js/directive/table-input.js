@@ -1,3 +1,5 @@
+define(["config/rfz"], function(RFZ){
+
 RFZ.directive("rfzTableInput", function() {
   return {
     restrict : "A",
@@ -27,4 +29,5 @@ RFZ.directive("rfzTableInput", function() {
       });
     }
   }
+});
 });

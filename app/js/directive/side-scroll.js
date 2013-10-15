@@ -1,3 +1,5 @@
+define(["config/rfz"], function(RFZ){
+
 window.requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame;
 
 RFZ.controller("SideScrollBind", function() {
@@ -487,4 +489,6 @@ X      }
       }
     }        
   }
+});
+
 });

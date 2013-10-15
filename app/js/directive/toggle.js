@@ -1,8 +1,9 @@
+define(["config/rfz"], function(RFZ) {
+
 RFZ.directive("toggle", function() {
   function setPosition(slider, percent) {
     var unit = 50 * percent;
-    slider.css("-webkit-transform", "translate(-" + unit + "px, 0)");
-//    slider.css("left", "-" + unit + "px");
+    slider.css("-webkit-transform", "translate3d(-" + unit + "px, 0)");
   }
 
   function toggleBackground(slider, show) {
@@ -88,4 +89,5 @@ RFZ.directive("toggle", function() {
       });
     }
   }
+});
 });
