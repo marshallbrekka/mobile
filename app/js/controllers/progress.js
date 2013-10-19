@@ -1,14 +1,17 @@
-function Progress($scope, model) {
-  $scope.debtAccounts = function() {
-    var re =  _.filter(model.accounts, function(acct) {
-      return acct.type !== "Checking/Savings";
-    });
-    return re;
-  }
+define(["config/rfz", "underscore"], function(RFZ, _) {
+  console.log("progres");
+  RFZ.controller("Progress", ["$scope", "model", function Progress($scope, model) {
+    $scope.debtAccounts = function() {
+      var re =  _.filter(model.accounts, function(acct) {
+        return acct.type !== "Checking/Savings";
+      });
+      return re;
+    }
 
-  $scope.assetAccounts = function() {
-    return _.filter(model.accounts, function(acct) {
-      return acct.type === "Checking/Savings";
-    });
-  }
-}
+    $scope.assetAccounts = function() {
+      return _.filter(model.accounts, function(acct) {
+        return acct.type === "Checking/Savings";
+      });
+    }
+  }]);
+});

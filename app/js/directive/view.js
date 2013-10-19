@@ -122,7 +122,7 @@ RFZ.directive("rfzPaneHeader", function() {
     compile : function(element, attrs) {
       if(!attrs.compiled) {
         element.attr("compiled", true);
-        element.append($("<div class='header-name'>" + attrs.rfzPaneHeader + "</div>"))
+        element.append(angular.element("<div class='header-name'>" + attrs.rfzPaneHeader + "</div>"))
                .removeAttr("rfzPaneHeader")
                .addClass("header");
       }

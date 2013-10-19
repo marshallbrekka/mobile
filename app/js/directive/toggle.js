@@ -1,9 +1,10 @@
-define(["config/rfz"], function(RFZ) {
+define(["config/rfz", "utils/css", "utils/events", "utils/point"],
+function(RFZ, css, EVENTS, Point) {
 
 RFZ.directive("toggle", function() {
   function setPosition(slider, percent) {
-    var unit = 50 * percent;
-    slider.css("-webkit-transform", "translate3d(-" + unit + "px, 0)");
+    var unit = -50 * percent;
+    css.setTranslate(slider[0], unit);
   }
 
   function toggleBackground(slider, show) {
@@ -18,9 +19,9 @@ RFZ.directive("toggle", function() {
     },
     templateUrl : "/partials/toggle.html",
     link : function(scope, element, attr) {
-      var slider = element.find(".toggle-slider");
+      var slider = angular.element(element[0].getElementsByClassName("toggle-slider")[0]);
       var toggleBg = function() {
-        slider.unbind("webkitTransitionEnd", toggleBg);
+        slider.unbind(EVENTS.TRANSITION_END, toggleBg);
         toggleBackground(slider, scope.model)
       };
       if(!scope.model) {
@@ -30,7 +31,6 @@ RFZ.directive("toggle", function() {
       var slidePercent = scope.model ? 0 : 1;
 
       function slide(distance) {
-        //mobileConsole(distance);
         var position;
         if (scope.model) {
           if (distance < 0) {
@@ -47,24 +47,24 @@ RFZ.directive("toggle", function() {
 
       var sliding = false;
       var startPosition
-      element.bind("touchstart", function(e) {
+      element.bind(EVENTS.POINTER_START, function(e) {
         sliding = false;
         toggleBackground(slider, true);
-        startPosition = e.originalEvent.touches[0].pageX;
+        startPosition = Point.fromEvent(e);
         element.addClass("touch-start");
       });
 
-      element.bind("touchmove", function(e) {
+      element.bind(EVENTS.POINTER_MOVE, function(e) {
         if(!sliding) {
           sliding = true;
           slider.addClass("no-transition");
         }
         e.preventDefault();
         e.stopPropagation();
-        slide(e.originalEvent.touches[0].pageX - startPosition);
+        slide(Point.fromEvent(e).x - startPosition.x);
       });
 
-      element.bind("touchend", function() {
+      element.bind(EVENTS.POINTER_END, function() {
         slider.removeClass("no-transition");
         if (sliding) {
           if (slidePercent === 1) {
@@ -73,12 +73,12 @@ RFZ.directive("toggle", function() {
             slidePercent = Math.round(slidePercent);
           }
           scope.model = slidePercent === 0;
-          if (!scope.model) slider.bind("webkitTransitionEnd", toggleBg);
+          if (!scope.model) slider.bind(EVENTS.TRANSITION_END, toggleBg);
 
           setPosition(slider, slidePercent);
         } else {
           if (scope.model) {
-            slider.bind("webkitTransitionEnd", toggleBg);
+            slider.bind(EVENTS.TRANSITION_END, toggleBg);
             scope.model = false;
             setPosition(slider, 1);
           } else {

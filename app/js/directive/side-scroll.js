@@ -1,6 +1,6 @@
 define(["config/rfz"], function(RFZ){
 
-window.requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame;
+//window.requestAnimationFrame = window.requestAnimationFrame || window.webkitRequestAnimationFrame;
 
 RFZ.controller("SideScrollBind", function() {
   console.log("OMG CTRL");
@@ -443,7 +443,7 @@ X      }
       tElement.addClass("side-scroll");
       return {
         pre : function(scope, element, attrs, ctrl) {
-          var startIndex = 0;
+/*          var startIndex = 0;
           var itemLength = scope[attrs.rfzSideScroll].length;
           if (attrs.start === "end") {
             startIndex = itemLength - 1;
@@ -481,10 +481,10 @@ X      }
             if (ctrl) {
               ctrl.addLink(slider)
             }
-          }
+          }*/
         },
         post : function(scope, element, attrs, ctrl) {
-          scope._sliderSetup();
+//          scope._sliderSetup();
         }
       }
     }        

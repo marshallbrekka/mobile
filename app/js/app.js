@@ -16,7 +16,9 @@ define([
   "directive/view",
   "directive/scroll-view",
   "directive/table-input",
-  "directive/side-scroll"
+  "directive/side-scroll",
+  "utils/pollyfills",
+  "utils/scrollView"
 
 ], function(
   angular,
@@ -28,10 +30,10 @@ define([
   Payments,
   Accounts
 ){
-
-var consoleEl = $("#console");
+console.log("ran ap");
+//var consoleEl = $("#console");
 function mobileConsole(msg) {
-  consoleEl.css("display", "block").text(msg);
+//  consoleEl.css("display", "block").text(msg);
 }
 
 
@@ -39,16 +41,16 @@ function mobileConsole(msg) {
 RFZ.config(['$routeProvider', function($routeProvider) {
     $routeProvider.when('/overview',
                         {templateUrl: 'partials/overview.html',
-                         controller: Overview});
+                         controller: "Overview"});
     $routeProvider.when('/progress',
                         {templateUrl: 'partials/progress.html',
-                         controller: Progress});
+                         controller: "Progress"});
     $routeProvider.when("/payments",
                        {templateUrl: "partials/payments.html",
-                        controller: Payments})
+                        controller: "Payments"})
     $routeProvider.when("/accounts",
                        {templateUrl: "partials/accounts.html",
-                        controller: Accounts})
+                        controller: "Accounts"})
     $routeProvider.otherwise({redirectTo: '/overview'});
   }]);
 });

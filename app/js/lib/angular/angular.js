@@ -3391,7 +3391,7 @@ var $AnimatorProvider = function() {
 
               element.data(NG_ANIMATE_CONTROLLER, {running:true, done:done});
               element.addClass(className);
-              element.height();
+              element[0].getClientRects();
               beforeFn(element, parent, after);
               if (element.length == 0) return done();
 
@@ -3411,7 +3411,7 @@ var $AnimatorProvider = function() {
             }
 
             function beginAnimation() {
-              element.height();
+              element[0].getClientRects();
               element.addClass(activeClassName);
               if (polyfillStart) {
                 polyfillStart(element, done, memento);

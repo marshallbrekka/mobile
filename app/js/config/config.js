@@ -23,12 +23,14 @@ require.config({
     },
     waitSeconds: 15*/
   });
-  require( ["angular", "app", "jquery", "config/rfz"],
-    function(angular, app, $, RFZ) {
+  require( ["angular", "app", "config/rfz", "utils/scrollView"],
+    function(angular, app, RFZ, ScrollView) {
       console.log("RAN");
       angular.element(document).ready(function() {
 //         angular.module('RFZ', []);
          angular.bootstrap(document, ['RFZ']);
+/*        new ScrollView({container : document.getElementsByTagName("html")[0],
+                        content : document.getElementsByTagName("body")[0]});*/
        });
         //This function will be called when all the dependencies
         //listed above are loaded. Note that this function could

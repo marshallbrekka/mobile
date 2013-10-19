@@ -1,4 +1,4 @@
-define([], function() {
+define(["utils/events"], function(EVENTS) {
   function onTouch(element, fn) {
     function touchEnd() {
       removeClassAndEvents();
@@ -12,14 +12,14 @@ define([], function() {
 
     function removeClassAndEvents() {
       element.removeClass("touch-start");
-      element.unbind("touchend", touchEnd);
-      element.unbind("touchmove", removeClassAndEvents);
+      element.unbind(EVENTS.POINTER_END, touchEnd);
+      element.unbind(EVENTS.POINTER_MOVE, removeClassAndEvents);
     }
     
-    element.bind("touchstart", function(e) {
+    element.bind(EVENTS.POINTER_START, function(e) {
       element.addClass("touch-start");
-      element.bind("touchend", touchEnd);
-      element.bind("touchmove", removeClassAndEvents);
+      element.bind(EVENTS.POINTER_END, touchEnd);
+      element.bind(EVENTS.POINTER_MOVE, removeClassAndEvents);
     });
   }
   return {onTouch : onTouch};
