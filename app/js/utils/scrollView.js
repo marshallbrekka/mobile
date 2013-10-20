@@ -196,7 +196,7 @@ function(css, numb, Point, Axis, Edges, Indicator, EVENTS) {
           indicator.setAnchor(Indicator.ANCHOR_END);
           actualLength = Math.round(Math.max(actualLength + contentSize - containerSize - pos,
                                              Indicator.THICKNESS));
-          minPosition = -(offsets[props.end] + 2);
+          minPosition = (offsets[props.end] + 2);
         } else {
           indicator.setAnchor(Indicator.ANCHOR_START);
           minPosition = numb.clampNum(Math.round(pos / (contentSize - containerSize) *

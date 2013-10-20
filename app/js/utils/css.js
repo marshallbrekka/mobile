@@ -1,24 +1,46 @@
 define([
-"./point"
+"./point",
+"underscore"
 ], function(
-Point
+Point,
+_
 ) {
 
+  function elementToElements(element) {
+    if (element instanceof Node) {
+      return [element];
+    }
+    return element;
+  }
+
+  function setTransform(element, transform) {
+    _.each(elementToElements(element), function(el) {
+      el.style.webkitTransform = transform;
+    });
+  }
+
   function setTranslate(element, x, y, z) {
-    element.style.webkitTransform =
-      "translate3d(" + (x || 0) + "px," + (y || 0) + "px," + (z || 0) + "px)";
+    setTransform(element,
+                 "translate3d(" + (x || 0) + "px," + 
+                 (y || 0) + "px," + (z || 0) + "px)");
   }
 
   function setTransitionDuration(element, duration) {
-    element.style.webkitTransitionDuration = duration;
+    _.each(elementToElements(element), function(el) {
+      el.style.webkitTransitionDuration = duration;
+    });
   }
 
   function setTransitionProperties(element, properties) {
-    element.style.webkitTransitionProperty = properties.join(", ");
+    _.each(elementToElements(element), function(el) {
+      el.style.webkitTransitionProperty = properties.join(", ");
+    });
   }
 
   function setTransition(element, duration) {
-    element.style.webkitTransitionDuration = duration + "s";
+    _.each(elementToElements(element), function(el) {
+      el.style.webkitTransitionDuration = duration + "s";
+    });
   }
 
   function getPointFromTranslate(element) {
@@ -32,11 +54,19 @@ Point
     }
   }
 
+  function setTransformOrigin (element, origin) {
+    _.each(elementToElements(element), function(el) {
+      el.style.webkitTransformOrigin = origin;
+    });
+  }
+
   return {
+    setTransform : setTransform,
     setTranslate : setTranslate,
     setTransitionDuration : setTransitionDuration,
     setTransitionProperties : setTransitionProperties,
     setTransition : setTransition,
-    getPointFromTranslate : getPointFromTranslate
+    getPointFromTranslate : getPointFromTranslate,
+    setTransformOrigin : setTransformOrigin
   };
 });
