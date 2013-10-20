@@ -47,7 +47,7 @@ function(css, numb, Point, Axis, Edges, Indicator, EVENTS) {
       if (canScroll && showIndicator) {
         offsets[prop] = Indicator.THICKNESS + 1;
       }
-    }, this.canScroll, this.showIndicator, this.indicatorOffsets, new Axis("right", "bottom"));
+    }, this.canScroll.copy().swap(), this.showIndicator, this.indicatorOffsets, new Axis("right", "bottom"));
 
     // Internal use properties
     this.animating = false;
@@ -87,7 +87,7 @@ function(css, numb, Point, Axis, Edges, Indicator, EVENTS) {
   Scroll.PENETRATION_ACCELERATION = 5;
   Scroll.PAGING_ACCELERATION = 3.6E-4;
   Scroll.PAGING_DECELERATION = 0.9668;
-  Scroll.INDICATOR_DISPLAY_EVENT = "indicatorDeisplayEvent";
+  Scroll.INDICATOR_DISPLAY_EVENT = "indicatorDisplayEvent";
   Scroll.MOVE_TRANSITION_END_EVENT = "moveTransitionEndEvent";
   Scroll.CHANGE_POSITION_EVENT = "changePositionEvent";
   Scroll.END_DECELERATION_EVENT = "endDecelerationEvent";
@@ -214,7 +214,6 @@ function(css, numb, Point, Axis, Edges, Indicator, EVENTS) {
   }
 
   Scroll.prototype.touchStart = function(e) {
-    //  this.dragging = true;
     this.decelerating = false;
     this.firstScroll = true;
     var rect = this.container.getBoundingClientRect();
@@ -222,9 +221,12 @@ function(css, numb, Point, Axis, Edges, Indicator, EVENTS) {
     var point = Point.fromEvent(e);
 
     if (this.scrollTransitionActive) {
+      var midTransitionPosition = css.getPointFromTranslate(this.content).inverse();
       this.transitionEnded(e);
       this.toggleIndicators(true);
-      this.setPositionAnimated(css.getPointFromTranslate(this.content).inverse());
+      this.dragging = true;
+      this.setPositionAnimated(midTransitionPosition);
+      this.dragging = false;
     }
 
     this.tracking = [];
@@ -310,8 +312,8 @@ function(css, numb, Point, Axis, Edges, Indicator, EVENTS) {
   Scroll.prototype.transitionEnded = function(e) {
     if (this.scrollTransitionActive) {
       this.scrollTransitionActive = false;
-      this.removeEvents(EVENTS.TRANSITION_END)
-      css.setTransition(this.content, 0);
+      this.removeEvents(EVENTS.TRANSITION_END);
+      css.setTransitionDuration(this.content, "");
       this.toggleIndicators(false);
       this.callListeners(Scroll.MOVE_TRANSITION_END_EVENT);
     }
@@ -332,9 +334,9 @@ function(css, numb, Point, Axis, Edges, Indicator, EVENTS) {
       // the real translate values have to be negative, but we treat
       // scroll values as positive (zero being the top of the page,
       // positive n being further down the page).
-      if (!this.dragging) {
+//      if (!this.dragging) {
         css.setTranslate(this.content, -this.position.x,  -this.position.y);
-      }
+//      }
       if (animate) {
         this.scrollTransitionActive = true;
         this.addEvents(EVENTS.TRANSITION_END);
@@ -544,21 +546,5 @@ function(css, numb, Point, Axis, Edges, Indicator, EVENTS) {
     this.callListeners(Scroll.END_DECELERATION_EVENT);
   }
 
-  /*
-    var parent = document.getElementById("scroll-parent");
-    var content = document.getElementById("scroll-content");
-
-    y = new Scroll({container : parent,
-    content : content,
-    //               canScroll : false,
-    //               pagingEnabled : true,
-    bounces : false,
-    pageSizeFactor : 1});*/
-
-  /*x = new Scroll({container : document.getElementById("master-parent"),
-    content : document.getElementById("master-content"),
-    canScrollY : false});*/
-
   return Scroll;
-
 });

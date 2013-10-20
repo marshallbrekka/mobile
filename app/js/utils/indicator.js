@@ -13,9 +13,9 @@ define(["./css", "./dom", "./events"], function(css, dom, EVENTS) {
     this.element = this.dom.parent;
   }
 
-  Indicator.THICKNESS = 5;
-  Indicator.END_SIZE = 2;
-  Indicator.FADE_DURATION = ".25s";
+  Indicator.THICKNESS = 7;
+  Indicator.END_SIZE = 3;
+  Indicator.ANIMATION_DURATION = 0.25;
   Indicator.ANCHOR_START = 0;
   Indicator.ANCHOR_END = 1;
 
@@ -28,37 +28,34 @@ define(["./css", "./dom", "./events"], function(css, dom, EVENTS) {
     }
   }
 
-  Indicator.prototype.setAnimationMode = function(opacity, duration) {
-    if (this.opacityMode != opacity) {
-      this.opacityMode = opacity;
-      if (opacity) {
-        css.setTransitionProperties([this.dom.start, this.dom.middle, this.dom.end], [""]);
-        css.setTransitionDuration(this.element, duration || Indicator.FADE_DURATION);
-        css.setTransitionDuration([this.dom.start, this.dom.middle, this.dom.end], "");
-      } else {
+  Indicator.prototype.setAnimation = function(on, duration) {
+    if (this.animation != on) {
+      this.animation = on;
+      if (on) {
         css.setTransitionProperties([this.dom.start, this.dom.middle, this.dom.end],
                                     ["-webkit-transform"]);
-        css.setTransitionDuration([this.dom.start, this.dom.middle, this.dom.end],
-                                  duration || Indicator.FADE_DURATION);
+        css.setTransition([this.dom.start, this.dom.middle, this.dom.end],
+                          duration || Indicator.ANIMATION_DURATION);
+      } else {
+        css.setTransitionProperties([this.dom.start, this.dom.middle, this.dom.end], [""]);
+        css.setTransitionDuration([this.dom.start, this.dom.middle, this.dom.end], "");
       }
     } 
   }
 
   Indicator.prototype.show = function() {
-    this.setAnimationMode(true);
     this.fading = false;
     this.element.style.display = "block";
     this.element.style.opacity = "1";
   }
 
   Indicator.prototype.hide = function() {
-    this.setAnimationMode(true)
-    this.fading = true;
-    this.element.style.opacity = "0";
+//    this.fading = true;
+//    this.element.style.opacity = "0";
   }
 
   Indicator.prototype.setLength = function(length, animate, duration) {
-    this.setAnimationMode(!animate);
+    this.setAnimation(animate, duration);
     var scale = length - (Indicator.END_SIZE * 2);
     var endElement, endPosition, middleOffset;
     
@@ -83,7 +80,7 @@ define(["./css", "./dom", "./events"], function(css, dom, EVENTS) {
   }
 
   Indicator.prototype.setPosition = function(pos, animate, duration) {
-    this.setAnimationMode(!animate);
+    this.setAnimation(animate, duration);
     var styleAttr;
     if (this.anchor == Indicator.ANCHOR_START) {
       styleAttr = this.axis == "x" ? "left" : "top";
