@@ -298,30 +298,10 @@ body {
     right:0;
 /*    background:url("../img/ios-bg.png") 0 -64px;*/
     background-size:100%;
-    overflow-y: auto;
-/*    overflow-x:hidden;*/
-    -webkit-overflow-scrolling: touch;
-    -webkit-transform: translateZ(0);
 }
 
 #overlay-view .view {
     bottom:0px;
-}
-
-.subview {
-    -webkit-transform: translateZ(0);
-    height:100%;
-    overflow-y:auto;
-}
-
-.scrollarea {
-    overflow:auto;
-/*    overflow-y:auto;
-    overflow-x:hidden;*/
-    min-height:100%;
-    position:relative;
-    padding-bottom:1px;
-    -webkit-transform: translateZ(0);
 }
 
 #menu {
