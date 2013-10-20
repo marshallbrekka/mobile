@@ -50,8 +50,8 @@ define(["./css", "./dom", "./events"], function(css, dom, EVENTS) {
   }
 
   Indicator.prototype.hide = function() {
-//    this.fading = true;
-//    this.element.style.opacity = "0";
+    this.fading = true;
+    this.element.style.opacity = "0";
   }
 
   Indicator.prototype.setLength = function(length, animate, duration) {
