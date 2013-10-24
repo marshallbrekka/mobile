@@ -1,0 +1,30 @@
+RFZ.directive("rfzPaneHeaderButton", function() {
+  return {
+    restrict : "A",
+    require : "^rfzView",
+    compile : function(elem, attrs, link) {
+      if (true) {
+        elem.attr("compiled", true);
+o        elem.addClass("header-button");
+        elem.addClass(attrs.position);
+        if (attrs.type === "back") elem.addClass("back");
+        elem.removeAttr("position").removeAttr("type").removeAttr("action");
+      }
+    }
+  }
+});
+
+
+RFZ.directive("rfzPaneHeader", function() {
+  return {
+    restrict : "A",
+    compile : function(element, attrs) {
+      if(!attrs.compiled) {
+        element.attr("compiled", true);
+        element.append($("<div class='header-name'>" + attrs.rfzPaneHeader + "</div>"))
+               .removeAttr("rfzPaneHeader")
+               .addClass("header");
+      }
+    }
+  }
+});

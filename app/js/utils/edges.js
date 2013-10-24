@@ -12,5 +12,10 @@ define(["./axis"], function(Axis) {
                     {start : e.top, end : e.bottom});
   }
 
+  Edges.fromElement = function(el) {
+    var rect = el.getBoundingClientRect();
+    return new Edges(rect);
+  }
+
   return Edges;
 });

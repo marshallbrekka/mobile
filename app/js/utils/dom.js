@@ -18,9 +18,19 @@ define(["angular", "underscore"], function(angular, _) {
     });
   }
 
+  function addClass(element, klass) {
+    angular.element(element).addClass(klass);
+  }
+
+  function removeClass(element, klass) {
+    angular.element(element).removeClass(klass);
+  }
+
   return {
     createElement : createElement,
     appendChild : appendChild,
-    appendChildren : appendChildren
+    appendChildren : appendChildren,
+    addClass : addClass,
+    removeClass : removeClass
   };
 });

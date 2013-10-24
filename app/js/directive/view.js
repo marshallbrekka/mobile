@@ -1,4 +1,4 @@
-define(["config/rfz", "util"], function(RFZ, util){
+define(["config/rfz", "utils/events"], function(RFZ, Events){
 
 /**
 The following controller and directives make up all the pieces that
@@ -169,7 +169,7 @@ RFZ.directive("rfzChangePane", function() {
     restrict : "A", 
     require : "^rfzView",
     link : function(scope, element, attrs, ctrl) {
-      util.onTouch(element, function() {
+      new Events.PointerAction(element[0], function() {
         scope.$broadcast("rfzViewChange");
         ctrl.openPane(attrs.rfzChangePane, attrs.rfzChangeDirection);
       });

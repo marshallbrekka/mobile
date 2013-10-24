@@ -1,5 +1,14 @@
-define(["config/rfz", "utils/css", "utils/events", "utils/point"],
-function(RFZ, css, EVENTS, Point) {
+define([
+"config/rfz",
+"utils/css",
+"utils/events",
+"utils/point"
+],function(
+RFZ,
+css,
+EVENTS,
+Point
+) {
 
 RFZ.directive("toggle", function() {
   function setPosition(slider, percent) {
@@ -46,25 +55,24 @@ RFZ.directive("toggle", function() {
       }
 
       var sliding = false;
-      var startPosition
-      element.bind(EVENTS.POINTER_START, function(e) {
+      var startPosition;
+
+      function pointerStart (e) {
         sliding = false;
         toggleBackground(slider, true);
         startPosition = Point.fromEvent(e);
         element.addClass("touch-start");
-      });
+      }
 
-      element.bind(EVENTS.POINTER_MOVE, function(e) {
+      function pointerMove(e) {
         if(!sliding) {
           sliding = true;
           slider.addClass("no-transition");
         }
-        e.preventDefault();
-        e.stopPropagation();
         slide(Point.fromEvent(e).x - startPosition.x);
-      });
+      }
 
-      element.bind(EVENTS.POINTER_END, function() {
+      function pointerEnd() {
         slider.removeClass("no-transition");
         if (sliding) {
           if (slidePercent === 1) {
@@ -86,7 +94,9 @@ RFZ.directive("toggle", function() {
             setPosition(slider, 0);
           }
         }
-      });
+      }
+
+      new EVENTS.PointerSlide(element[0], pointerStart, pointerMove, pointerEnd);
     }
   }
 });

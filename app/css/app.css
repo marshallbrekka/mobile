@@ -74,8 +74,15 @@ body {
     right:0;
     bottom:49px;
     z-index:10;
-    background:url("../ios-images/gui_white_pattern_bg@2x.png") fixed;
-    background-size:100%;
+    background:url("/img/view-bg.png") fixed;
+    background-size:3px 2px;
+}
+
+@media only screen 
+and (-webkit-min-device-pixel-ratio: 2) {
+  .rfz-view {
+    background-image:url("/img/view-bg@2x.png");
+  }
 }
 
 
@@ -259,19 +266,19 @@ body {
     background-position:0 -60px;
 }
 
-.header-button.touch-start {
+.header-button.pointer-start {
     background-position-y:-30px;
 } 
 
-.header-button.touch-start:after {
+.header-button.pointer-start:after {
     background-position-y:-150px;
 }
 
-.header-button.touch-start:before {
+.header-button.pointer-start:before {
     background-position-y:-150px;
 }
 
-.header-button.back.touch-start:before {
+.header-button.back.pointer-start:before {
     background-position-y:-90px;
 }
 
@@ -296,8 +303,6 @@ body {
     bottom:0;
     left:0;
     right:0;
-/*    background:url("../img/ios-bg.png") 0 -64px;*/
-    background-size:100%;
 }
 
 #overlay-view .view {
@@ -530,7 +535,7 @@ body {
     overflow:hidden;
 }
 
-.table-solid .row.touch-start {
+.table-solid .row.pointer-start {
     background:#ebf0fa;
 }
 
@@ -781,7 +786,7 @@ body {
 and (-webkit-min-device-pixel-ratio: 2) {
   .scroll-indicator > div {
       background:url("/img/ios-scroll-indicator@2x.png") no-repeat;
-      background-size:100%;
+      background-size:7px;
   }
 }
 
