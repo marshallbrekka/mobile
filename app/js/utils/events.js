@@ -52,11 +52,11 @@ Edges
   }
 
   function pointerStart(self) {
-    bind(window, self, [events.POINTER_MOVE, events.POINTER_END]);
+    bind(window, self, [events.POINTER_MOVE, events.POINTER_END], true);
   }
 
   function pointerEnd(self) {
-    unbind(window, self, [events.POINTER_MOVE, events.POINTER_END]);
+    unbind(window, self, [events.POINTER_MOVE, events.POINTER_END], true);
   }
 
   function inElementRange(element, event) {
