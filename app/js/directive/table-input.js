@@ -1,4 +1,10 @@
-define(["config/rfz"], function(RFZ){
+define([
+  "config/rfz",
+  "utils/events"
+], function(
+  RFZ,
+  Events
+){
 
 RFZ.directive("rfzTableInput", function() {
   return {
@@ -19,14 +25,18 @@ RFZ.directive("rfzTableInput", function() {
         }
       });
       var input = element.find("input");
-      element.bind("touchend", function() {
+      function pointerEnd() {
         element.addClass("edit-mode");
-        input.focus();
-      });
-      input.bind("blur", function() {
+        input[0].focus();
+      }
+
+      function blur() {
         console.log(scope.rfzTableInput);
         element.removeClass("edit-mode");
-      });
+      }
+
+      Events.bind(element[0], pointerEnd, [Events.POINTER_END]);
+      Events.bind(input[0], blur, ["blur"]);
     }
   }
 });
