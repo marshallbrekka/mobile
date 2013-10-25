@@ -216,7 +216,7 @@ Events) {
   }
 
   Scroll.prototype.touchStart = function(e) {
-    if (this.decelerating) {
+    if (this.decelerating || this.scrollTransitionActive) {
       e.stopPropagation();
     }
     this.decelerating = false;
