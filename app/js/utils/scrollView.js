@@ -1,5 +1,19 @@
-define(["./css", "./numb", "./point", "./axis", "./edges", "./indicator", "./events"],
-function(css, numb, Point, Axis, Edges, Indicator, EVENTS) {
+define([
+"./css",
+"./numb",
+"./point",
+"./axis",
+"./edges",
+"./indicator",
+"./events"
+], function(
+css,
+numb,
+Point,
+Axis,
+Edges,
+Indicator,
+Events) {
 
   function merge(obj1, obj2) {
     var re = {};
@@ -59,8 +73,8 @@ function(css, numb, Point, Axis, Edges, Indicator, EVENTS) {
     this.startPosition = null;
     this.startScroll = null;
     this.tracking = null;
+    Events.bind(this.container, this, [Events.POINTER_START], true);
 
-    this.addEvents(EVENTS.POINTER_START);
     var self = this;
     this.frameSetTranslate = function() {
       if (self.dragging && !self.deceleration) {
@@ -95,33 +109,21 @@ function(css, numb, Point, Axis, Edges, Indicator, EVENTS) {
   Scroll.prototype.handleEvent = function(e) {
     e.preventDefault();
     switch(e.type) {
-    case EVENTS.POINTER_START:
+    case Events.POINTER_START:
       this.touchStart(e);
       break;
-    case EVENTS.POINTER_MOVE:
+    case Events.POINTER_MOVE:
       this.touchMove(e);
       break;
-    case EVENTS.POINTER_END:
+    case Events.POINTER_END:
       this.touchEnd(e);
       break;
-    case EVENTS.POINTER_CANCEL:
+    case Events.POINTER_CANCEL:
       this.touchCancelled(e);
       break;
-    case EVENTS.TRANSITION_END:
+    case Events.TRANSITION_END:
       this.transitionEnded(e);
       break;
-    }
-  }
-
-  Scroll.prototype.addEvents = function() {
-    for (var i = 0; i < arguments.length; i++) {
-      this.container.addEventListener(arguments[i], this);    
-    }
-  }
-
-  Scroll.prototype.removeEvents = function() {
-    for (var i = 0; i < arguments.length; i++) {
-      this.container.removeEventListener(arguments[i], this);
     }
   }
 
@@ -214,6 +216,9 @@ function(css, numb, Point, Axis, Edges, Indicator, EVENTS) {
   }
 
   Scroll.prototype.touchStart = function(e) {
+    if (this.decelerating) {
+      e.stopPropagation();
+    }
     this.decelerating = false;
     this.firstScroll = true;
     var rect = this.container.getBoundingClientRect();
@@ -254,7 +259,8 @@ function(css, numb, Point, Axis, Edges, Indicator, EVENTS) {
     if (this.pagingEnabled) {
       this.pageSize = new Point(rect.width, rect.height).multiply(this.pageSizeFactor);
     }
-    this.addEvents(EVENTS.POINTER_MOVE, EVENTS.POINTER_END, EVENTS.POINTER_CANCEL);
+    Events.bind(this.container, this,
+                [Events.POINTER_MOVE, Events.POINTER_END, Events.POINTER_CANCEL]);
   }
 
   Scroll.prototype.touchMove = function(e) {
@@ -298,7 +304,8 @@ function(css, numb, Point, Axis, Edges, Indicator, EVENTS) {
 
   Scroll.prototype.touchEnd = function(e) {
     e.preventDefault();
-    this.removeEvents(EVENTS.POINTER_MOVE, EVENTS.POINTER_END, EVENTS.POINTER_CANCEL);
+    Events.unbind(this.container, this,
+                  [Events.POINTER_MOVE, Events.POINTER_END, Events.POINTER_CANCEL]);
     this.dragging = false;
     this.startDeceleration();
     // If the deceleration function determined we weren't going to
@@ -312,7 +319,7 @@ function(css, numb, Point, Axis, Edges, Indicator, EVENTS) {
   Scroll.prototype.transitionEnded = function(e) {
     if (this.scrollTransitionActive) {
       this.scrollTransitionActive = false;
-      this.removeEvents(EVENTS.TRANSITION_END);
+      Events.unbind(this.container, this, [Events.TRANSITION_END]);
       css.setTransitionDuration(this.content, "");
       this.toggleIndicators(false);
       this.callListeners(Scroll.MOVE_TRANSITION_END_EVENT);
@@ -339,7 +346,7 @@ function(css, numb, Point, Axis, Edges, Indicator, EVENTS) {
 //      }
       if (animate) {
         this.scrollTransitionActive = true;
-        this.addEvents(EVENTS.TRANSITION_END);
+        Events.bind(this.container, this, [Events.TRANSITION_END]);
         css.setTransition(this.content, duration || Scroll.PAGE_TRANSITION_DURATION);
         this.positionIndicators(true, duration || Scroll.PAGE_TRANSITION_DURATION);
         // TODO animate scroll indicators getting larger again

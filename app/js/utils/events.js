@@ -20,14 +20,14 @@ Edges
                 TRANSITION_END : "webkitTransitionEnd"};
 
   function bind(element, obj, events, capture) {
-    capture = capture ? false : capture;
+    capture = capture ? true : false;
     _.each(events, function(event) {
       element.addEventListener(event, obj, capture);
     });
   }
 
   function unbind(element, obj, events, capture) {
-    capture = capture ? false : capture;
+    capture = capture ? true : false;
     _.each(events, function(event) {
       element.removeEventListener(event, obj, capture);
     });
@@ -52,11 +52,11 @@ Edges
   }
 
   function pointerStart(self) {
-    bind(window, self, [events.POINTER_MOVE, events.POINTER_END], true);
+    bind(document.body, self, [events.POINTER_MOVE, events.POINTER_END], true);
   }
 
   function pointerEnd(self) {
-    unbind(window, self, [events.POINTER_MOVE, events.POINTER_END], true);
+    unbind(document.body, self, [events.POINTER_MOVE, events.POINTER_END], true);
   }
 
   function inElementRange(element, event) {
@@ -147,6 +147,7 @@ Edges
   PointerSlide.prototype.handleEvent = handleEvent;
 
   PointerSlide.prototype.pointerStart = function(e) {
+    e.stopPropagation();
     pointerStart(this);
     dom.addClass(this.element, "pointer-start");
     this.fnStart(e);
