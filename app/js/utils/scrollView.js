@@ -129,13 +129,14 @@ Events) {
 
   Scroll.prototype.addListener = function(obj) {
     this.listeners = this.listeners || [];
+    this.listeners.push(obj);
   }
 
   Scroll.prototype.callListeners = function(evt, args) {
     if (!this.callingListeners && this.listeners) {
       this.callingListeners = true;
       for (var i = 0; i < this.listeners.length; i++) {
-        this.listeners[i].handleScrollEvent(evt, args);
+        this.listeners[i].handleScrollEvent(evt, this, args);
       }
       this.callingListeners = false;
     }
@@ -259,7 +260,7 @@ Events) {
     if (this.pagingEnabled) {
       this.pageSize = new Point(rect.width, rect.height).multiply(this.pageSizeFactor);
     }
-    Events.bind(this.container, this,
+    Events.bind(window, this,
                 [Events.POINTER_MOVE, Events.POINTER_END, Events.POINTER_CANCEL]);
   }
 
@@ -304,7 +305,7 @@ Events) {
 
   Scroll.prototype.touchEnd = function(e) {
     e.preventDefault();
-    Events.unbind(this.container, this,
+    Events.unbind(window, this,
                   [Events.POINTER_MOVE, Events.POINTER_END, Events.POINTER_CANCEL]);
     this.dragging = false;
     this.startDeceleration();
