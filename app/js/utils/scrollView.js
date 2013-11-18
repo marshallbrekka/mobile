@@ -355,7 +355,11 @@ define([
     }
   }
 
+  /*
+  Used externally for calls from listeners.
+  */
   Scroll.prototype.setPosition = function(point) {
+    this.transitionEnded();
     (this.position = point.copy()).roundToPx();
     css.setTranslate(this.content, -this.position.x,  -this.position.y);
   }
