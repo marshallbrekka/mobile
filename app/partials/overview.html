@@ -11,19 +11,19 @@
      rfz-scroll-view
      scroll-view-name="main"
      can-scroll-x="false">
-  <div class="status-text">Last Updated: Today, 13:04am{{lastUpdated}}</div>
-  <div class="pane transparent" id="overview-assets">
-    <div class="left" rfz-tap="refresh()">
-      <div class="pane-header">Cash</div>
-      <div class="text-large positive">{{cash | currency}}</div>
+  <div rfz-scroll-view-body>
+    <div class="status-text">Last Updated: Today, 13:04am{{lastUpdated}}</div>
+    <div class="pane transparent" id="overview-assets">
+      <div class="left" rfz-tap="refresh()">
+        <div class="pane-header">Cash</div>
+        <div class="text-large positive">{{cash | currency}}</div>
+      </div>
+      <div class="right text-right">
+        <div class="pane-header">Daily Interest</div>
+        <div class="text-large negative">{{dailyInterest | currency}}</div>
+      </div>
     </div>
-    <div class="right text-right">
-      <div class="pane-header">Daily Interest</div>
-      <div class="text-large negative">{{dailyInterest | currency}}</div>
-    </div>
+    <div progress account="targetAccount()"></div>
+    <div class="status-text text-medium">Activity Updates</div>
   </div>
-  
-  <div progress account="targetAccount()"></div>
-  
-  <div class="status-text text-medium">Activity Updates</div>
 </div>

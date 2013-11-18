@@ -1,19 +1,20 @@
 define([
-"./css",
-"./numb",
-"./point",
-"./axis",
-"./edges",
-"./indicator",
-"./events"
+  "./css",
+  "./numb",
+  "./point",
+  "./axis",
+  "./edges",
+  "./indicator",
+  "./events"
 ], function(
-css,
-numb,
-Point,
-Axis,
-Edges,
-Indicator,
-Events) {
+  css,
+  numb,
+  Point,
+  Axis,
+  Edges,
+  Indicator,
+  Events
+) {
 
   function merge(obj1, obj2) {
     var re = {};
@@ -31,15 +32,16 @@ Events) {
   }
 
   function Scroll(opts) {
-    var opts = merge(
-      {bounces        : true,
-       canScrollX     : true,
-       canScrollY     : true,
-       showIndicatorX : true,
-       showIndicatorY : true,
-       pageSizeFactor : 1,
-       pagingEnabled  : false},
-      opts);
+    var opts = merge({
+      bounces          : true,
+      canScrollX       : true,
+      canScrollY       : true,
+      showIndicatorX   : true,
+      showIndicatorY   : true,
+      pageSizeFactor   : 1,
+      pagingEnabled    : false,
+      autoPageHeight : false
+    }, opts);
 
     if (!opts.container) {
       throw new Error("Scroll view requires a container");
@@ -52,6 +54,7 @@ Events) {
     this.container = opts.container;
     this.content = opts.content;
     this.bounces = opts.bounces;
+    this.autoPageHeight = opts.autoPageHeight;
     this.pageSizeFactor = opts.pageSizeFactor;
     this.canScroll = new Axis(opts.canScrollX, opts.canScrollY);
     this.showIndicator = new Axis(opts.showIndicatorX, opts.showIndicatorY);
@@ -139,6 +142,31 @@ Events) {
         this.listeners[i].handleScrollEvent(evt, this, args);
       }
       this.callingListeners = false;
+    }
+  }
+
+  Scroll.prototype.calculateMaxPoint = function() {
+    this.containerRect = this.container.getBoundingClientRect();
+    var rect = this.containerRect;
+    this.maxPoint = Point.applyFn(function(max) {
+      return max < 0 ? 0 : max;
+    }, new Point(this.content.clientWidth - rect.width,
+                 this.content.clientHeight - rect.height));
+  }
+
+  Scroll.prototype.calculatePageSize = function() {
+    this.containerRect = this.container.getBoundingClientRect();
+    var rect = this.containerRect;
+    this.pageSize = new Point(rect.width, rect.height).multiply(this.pageSizeFactor);
+  }
+
+  Scroll.prototype.adjustHeight = function() {
+    if (this.canScroll.x) {
+      this.calculatePageSize();
+//      var totalPages = this.content.clientWidth / this.pageSize.x;
+      var pageNumber = Math.round(this.position.x / this.pageSize.x);
+      var pagesElement = this.content.children[pageNumber];
+      this.container.style.height = pagesElement.clientHeight + "px";
     }
   }
 
@@ -240,10 +268,7 @@ Events) {
     this.startScroll = point.copy();
     this.trackPosition(point);
     this.containerRect = rect;
-    this.maxPoint = Point.applyFn(function(max) {
-      return max < 0 ? 0 : max;
-    }, new Point(this.content.clientWidth - rect.width,
-                 this.content.clientHeight - rect.height));
+    this.calculateMaxPoint();
 
     if (this.bounces) {
       // If the scroll content was pulled out beyond the edges and was
@@ -258,7 +283,7 @@ Events) {
     }
 
     if (this.pagingEnabled) {
-      this.pageSize = new Point(rect.width, rect.height).multiply(this.pageSizeFactor);
+      this.calculatePageSize();
     }
     Events.bind(window, this,
                 [Events.POINTER_MOVE, Events.POINTER_END, Events.POINTER_CANCEL]);
@@ -323,8 +348,16 @@ Events) {
       Events.unbind(this.container, this, [Events.TRANSITION_END]);
       css.setTransitionDuration(this.content, "");
       this.toggleIndicators(false);
+      if (this.autoPageHeight) {
+        this.adjustHeight();
+      }
       this.callListeners(Scroll.MOVE_TRANSITION_END_EVENT);
     }
+  }
+
+  Scroll.prototype.setPosition = function(point) {
+    (this.position = point.copy()).roundToPx();
+    css.setTranslate(this.content, -this.position.x,  -this.position.y);
   }
 
   Scroll.prototype.setPositionAnimated = function(point, animate, duration) {
@@ -550,6 +583,9 @@ Events) {
       }, this.position, this.pageSize));
     }
     this.snapPositionToBounds(false);
+    if (this.autoPageHeight) {
+      this.adjustHeight();
+    }
     this.toggleIndicators(false);
     this.callListeners(Scroll.END_DECELERATION_EVENT);
   }

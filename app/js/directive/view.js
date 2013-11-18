@@ -1,4 +1,10 @@
-define(["config/rfz", "utils/events"], function(RFZ, Events){
+define([
+  "config/rfz",
+  "utils/events"
+], function(
+  RFZ,
+  Events
+) {
 
 /**
 The following controller and directives make up all the pieces that
@@ -154,7 +160,7 @@ RFZ.directive("rfzPaneBody", function() {
     restrict : "A",
     priority : 1000,
     link : function(scope, element, attrs) {
-      element.addClass("rfz-pane-body");
+      element.addClass("rfz-pane-body view");
     }
   }
 });

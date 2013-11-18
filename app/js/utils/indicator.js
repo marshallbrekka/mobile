@@ -11,6 +11,7 @@ define(["./css", "./dom", "./events"], function(css, dom, EVENTS) {
     this.dom.parent.addEventListener(EVENTS.TRANSITION_END, this);
     this.anchor = Indicator.ANCHOR_START;
     this.element = this.dom.parent;
+    this.animation = false;
   }
 
   Indicator.THICKNESS = 7;
@@ -29,6 +30,7 @@ define(["./css", "./dom", "./events"], function(css, dom, EVENTS) {
   }
 
   Indicator.prototype.setAnimation = function(on, duration) {
+    on = on ? true : false;
     if (this.animation != on) {
       this.animation = on;
       if (on) {
@@ -44,12 +46,14 @@ define(["./css", "./dom", "./events"], function(css, dom, EVENTS) {
   }
 
   Indicator.prototype.show = function() {
+    this.setAnimation(false);
     this.fading = false;
     this.element.style.display = "block";
     this.element.style.opacity = "1";
   }
 
   Indicator.prototype.hide = function() {
+    this.setAnimation(false);
     this.fading = true;
     this.element.style.opacity = "0";
   }

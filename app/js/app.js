@@ -15,6 +15,7 @@ define([
   "directive/toggle",
   "directive/view",
   "directive/scroll-view",
+  "directive/paralax-scroll",
   "directive/table-input",
   "directive/side-scroll",
   "utils/pollyfills",

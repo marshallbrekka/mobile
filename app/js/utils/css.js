@@ -20,9 +20,10 @@ _
   }
 
   function setTranslate(element, x, y, z) {
-    setTransform(element,
-                 "translate3d(" + (x || 0) + "px," + 
-                 (y || 0) + "px," + (z || 0) + "px)");
+
+    setTransform(element, 
+                 "matrix3d(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, "
+                 + (x || 0) + ", " + (y || 0) + "," + (z || 0) + " , 1)");
   }
 
   function setTransitionDuration(element, duration) {

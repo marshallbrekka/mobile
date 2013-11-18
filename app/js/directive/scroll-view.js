@@ -6,17 +6,9 @@ define([
   RFZ,
   ScrollView,
   attrsUtils
-){
+) {
 
-RFZ.controller("rfzScrollView", function() {
-  return {
-    height : function() {
-      return 0;
-    }
-  }
-});
-
-RFZ.controller("rfzScrollViewListenerCtrl", function() {
+RFZ.controller("rfzScrollViewListener", function() {
   var scrollViews = {};
   var cb;
   return {
@@ -33,9 +25,12 @@ RFZ.controller("rfzScrollViewListenerCtrl", function() {
   }
 });
 
+
 RFZ.directive("rfzScrollViewListener", function() {
   return {
-    controller : "rfzScrollViewListenerCtrl"
+    controller : "rfzScrollViewListener",
+    require : "rfzScrollViewListener",
+    scope : true
   };
 });
 
@@ -44,26 +39,56 @@ RFZ.directive("rfzScrollView", function() {
     restrict : "A",
     require : "?^rfzScrollViewListener",
     replace : true,
-    transclude : "element",
+    transclude : true,
     templateUrl : "/partials/scroll-view2.html",
-    compile : function() {
+    compile : function(tElement, attrs) {
       var scroll = 0;
-      return function(scope, element, attrs, ctrl) {
+      return {post : function(scope, element, attrs, ctrl) {
         var el = element[0];
+        var content = element.children();
+        if (content.attr("rfz-scroll-view-body") === undefined) {
+          throw new Error("rfz-scroll-view requires an rfz-scroll-view-body");
+        } else {
+          content = content[0];
+        }
         var scroll = new ScrollView({
-          container : el.children[0],
-          content : el.children[0].children[0],
+          container : el,
+          content : content,
           canScrollX : attrsUtils.get(attrs, "canScrollX", true, attrsUtils.toBoolean),
           canScrollY : attrsUtils.get(attrs, "canScrollY", true, attrsUtils.toBoolean),
           showIndicatorX : attrsUtils.get(attrs, "showIndicatorX", true, attrsUtils.toBoolean),
           showIndicatorY : attrsUtils.get(attrs, "showIndicatorY", true, attrsUtils.toBoolean),
           pageSizeFactor : attrsUtils.get(attrs, "pageSizeFactor", 1, parseFloat),
-          pagingEnabled : attrsUtils.get(attrs, "pagingEnabled", false, attrsUtils.toBoolean)
+          pagingEnabled : attrsUtils.get(attrs, "pagingEnabled", false, attrsUtils.toBoolean),
+          autoPageHeight : attrsUtils.get(attrs, "autoPageHeight", false, attrsUtils.toBoolean)
         });
-        if (ctrl && attrs.scrollViewName) {
-          ctrl.registerScrollView(attrs.scrollViewName, scroll);
+        if (ctrl && attrs.rfzScrollView) {
+          ctrl.registerScrollView(attrs.rfzScrollView, scroll);
         }
-      }
+
+        // adjust height on next tick to ensure that all content has
+        // been inserted according to angulars watch/digest lifecycle.
+        setTimeout(function() {
+          if (scroll.autoPageHeight) {
+            scroll.adjustHeight();
+          }
+          scroll.calculateMaxPoint();
+        }, 4);
+
+
+      }}
+    }
+  }
+});
+
+RFZ.directive("rfzScrollViewBody", function() {
+  return {
+    restrict : "A",
+    replace : true,
+    transclude : true,
+    template : "<div class='scroll-content' ng-transclude></div>",
+    link : function(scope) {
+      console.log(arguments);
     }
   }
 });

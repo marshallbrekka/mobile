@@ -10,5 +10,9 @@
 <div rfz-pane-body
      rfz-scroll-view
      can-scroll-x="false">
-  <div ng-repeat="acct in debtAccounts()" progress account="acct"></div>
+  <div rfz-scroll-view-body>
+    <div ng-repeat="acct in debtAccounts()"
+         progress
+         account="acct"></div>
+  </div>
 </div>

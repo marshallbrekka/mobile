@@ -297,7 +297,7 @@ and (-webkit-min-device-pixel-ratio: 2) {
     -webkit-font-smoothing: antialiased;
 }
 
-.view {
+.rfz-view .view {
     position:absolute;
     top:44px;
     bottom:0;
@@ -567,6 +567,7 @@ and (-webkit-min-device-pixel-ratio: 2) {
 }
 
 .payment-month {
+    float:left;
     color:#585453;
     font-size:20px;
     font-weight:normal;
@@ -723,13 +724,24 @@ and (-webkit-min-device-pixel-ratio: 2) {
     overflow:hidden;
  }
 
-.side-scroll.parralax {
+.months-header {
     text-align:center;
     -webkit-mask-image: -webkit-linear-gradient(left, transparent 5%, 
                                                 white 18%, white 82%, transparent 95%);
+    position:relative;
+    height:56px;
 }
 
-.side-scroll.parralax .side-scroll-container {
+.payment-table {
+    position:relative !important;
+    bottom:auto !important;
+}
+
+.payments-page {
+    float:left;
+}
+
+.parralax .side-scroll-container {
     padding:0 25%;
 }
 
