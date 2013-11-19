@@ -21,6 +21,7 @@ Edges
 
   function bind(element, obj, events, capture) {
     capture = capture ? true : false;
+    events = Array.isArray(events) ? events : [events];
     _.each(events, function(event) {
       element.addEventListener(event, obj, capture);
     });
@@ -28,6 +29,7 @@ Edges
 
   function unbind(element, obj, events, capture) {
     capture = capture ? true : false;
+    events = Array.isArray(events) ? events : [events];
     _.each(events, function(event) {
       element.removeEventListener(event, obj, capture);
     });

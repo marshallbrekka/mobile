@@ -68,6 +68,9 @@ RFZ.directive("rfzScrollView", function() {
 
         // adjust height on next tick to ensure that all content has
         // been inserted according to angulars watch/digest lifecycle.
+        // Update: this might actually be due to a bug in the
+        // animation module in the RC version we are using.
+        // TODO: after updating version check if issues still exists.
         setTimeout(function() {
           if (scroll.autoPageHeight) {
             scroll.adjustHeight();

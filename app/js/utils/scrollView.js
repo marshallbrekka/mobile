@@ -116,7 +116,11 @@ define([
       this.touchStart(e);
       break;
     case Events.POINTER_MOVE:
-      this.touchMove(e);
+      if (e.eventPhase == 1) {
+        this.touchPreMove(e);
+      } else {
+        this.touchMove(e);
+      }
       break;
     case Events.POINTER_END:
       this.touchEnd(e);
@@ -285,8 +289,43 @@ define([
     if (this.pagingEnabled) {
       this.calculatePageSize();
     }
-    Events.bind(window, this,
-                [Events.POINTER_MOVE, Events.POINTER_END, Events.POINTER_CANCEL]);
+    Events.bind(this.container, this, Events.POINTER_MOVE, true);
+    Events.bind(this.container, this, Events.POINTER_MOVE);
+    Events.bind(window, this, [Events.POINTER_END, Events.POINTER_CANCEL]);
+  }
+
+
+// Add a preTouchMove fn that is called in the capture phase for the
+// event, if it determines that it should have a "lock" on the scroll
+// then it stops propagation
+
+  Scroll.prototype.touchPreMove = function(e) {
+    Events.unbind(this.container, this, Events.POINTER_MOVE, true);
+    if (this.dragging) {
+      this.firstScroll = true;
+    } else if (!this.firstScroll) {
+      return;
+    }
+
+    var point = Point.fromEvent(e),
+    diff = Point.difference(this.startScroll, point);
+    if (this.firstScroll) {
+      var abs = diff.copy().abs();
+//      abs.x = abs.y;
+      if (abs.x == abs.y) abs.x += 0.01;
+      if ((abs.x > abs.y && this.canScroll.x) ||
+          (abs.y > abs.x && this.canScroll.y) ||
+          (abs.x == abs.y)) {
+        e.stopPropagation();
+        this.firstScroll = false;
+        this.dragging = true;
+        this.toggleIndicators(true);
+        window.requestAnimationFrame(this.frameSetTranslate);
+        Events.unbind(this.container, this, Events.POINTER_MOVE);
+        Events.bind(window, this, Events.POINTER_MOVE);
+        this.touchMove(e);
+      }
+    }
   }
 
   Scroll.prototype.touchMove = function(e) {
@@ -294,23 +333,22 @@ define([
       e.stopPropagation();
     } else if (!this.firstScroll) {
       return;
+    } else if (this.firstScroll && e.currentTarget !== window) {
+      return;
     }
+
+    if (this.firstScroll) {
+      e.stopPropagation();
+      this.firstScroll = false;
+      this.dragging = true;
+      this.toggleIndicators(true);
+      window.requestAnimationFrame(this.frameSetTranslate);
+      Events.unbind(this.container, this, Events.POINTER_MOVE);
+      Events.bind(window, this, Events.POINTER_MOVE);
+    }
+
     var point = Point.fromEvent(e),
     diff = Point.difference(this.startScroll, point);
-    if (this.firstScroll) {
-      var abs = diff.copy().abs();
-      if ((abs.x > abs.y && this.canScroll.x) ||
-          (abs.y > abs.x && this.canScroll.y) || 
-          (abs.x == abs.y)) {
-        e.stopPropagation();
-        this.firstScroll = false;
-        this.dragging = true;
-        this.toggleIndicators(true);
-        window.requestAnimationFrame(this.frameSetTranslate);
-      } else {
-        this.firstScroll = false;
-      }
-    }
     this.trackPosition(point);
     point = Point.add(this.startPosition, diff);
     if (!this.canScroll.y) point.y = 0;
@@ -330,6 +368,7 @@ define([
 
   Scroll.prototype.touchEnd = function(e) {
     e.preventDefault();
+    Events.unbind(this.container, this, Events.POINTER_MOVE);
     Events.unbind(window, this,
                   [Events.POINTER_MOVE, Events.POINTER_END, Events.POINTER_CANCEL]);
     this.dragging = false;
