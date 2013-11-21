@@ -308,13 +308,10 @@ define([
     if (!this._preMoveCalled) {
       this._preMoveCalled = true;
     } else {
-      Events.unbind(this.container, this, Events.POINTER_MOVE, true);
       this.firstScroll = false;
     }
 
-    if (this.dragging) {
-      this.firstScroll = true;
-    } else if (!this.firstScroll) {
+    if (!this.firstScroll) {
       return;
     }
 
@@ -335,6 +332,9 @@ define([
         Events.bind(window, this, Events.POINTER_MOVE);
         this.touchMove(e);
       }
+    } else if (this.dragging) {
+      e.stopPropagation();
+      this.touchMove(e);
     }
   }
 
@@ -342,8 +342,6 @@ define([
     if (this.dragging) {
       e.stopPropagation();
     } else if (!this.firstScroll) {
-      return;
-    } else if (false && this.firstScroll && e.currentTarget !== window) {
       return;
     }
 
@@ -631,6 +629,7 @@ define([
   }
 
   Scroll.prototype.decelerationCompleted = function() {
+    this.decelerating = false;
     if (this.pagingEnabled) {
       this.setPositionAnimated(Point.applyFn(function(curPos, pageSize) {
         return (Math.round(curPos / pageSize) * pageSize);
