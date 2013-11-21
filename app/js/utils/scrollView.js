@@ -76,7 +76,8 @@ define([
     this.startPosition = null;
     this.startScroll = null;
     this.tracking = null;
-    Events.bind(this.container, this, [Events.POINTER_START], true);
+    Events.bind(this.container, this, Events.POINTER_START, true);
+    Events.bind(this.container, this, Events.POINTER_START, false);
 
     var self = this;
     this.frameSetTranslate = function() {
@@ -113,7 +114,11 @@ define([
     e.preventDefault();
     switch(e.type) {
     case Events.POINTER_START:
-      this.touchStart(e);
+      if (e.eventPhase == 1) {
+        this.touchPreStart(e);
+      } else {
+        this.touchStart(e);
+      }
       break;
     case Events.POINTER_MOVE:
       if (e.eventPhase == 1) {
@@ -201,7 +206,7 @@ define([
       var distance = Point.difference(lastScroll.point, firstScroll.point).inverse();
       var acceleration = (lastScroll.time - firstScroll.time) / 1E3;
       return distance.divide(acceleration);
-    } 
+    }
   }
 
   Scroll.prototype.toggleIndicators = function(show) {
@@ -248,10 +253,15 @@ define([
                   this.position, this.maxPoint);
   }
 
-  Scroll.prototype.touchStart = function(e) {
+  Scroll.prototype.touchPreStart = function(e) {
     if (this.decelerating || this.scrollTransitionActive) {
       e.stopPropagation();
+      this.touchStart(e);
     }
+  }
+
+  Scroll.prototype.touchStart = function(e) {
+    this._preMoveCalled = false;
     this.decelerating = false;
     this.firstScroll = true;
     var rect = this.container.getBoundingClientRect();
@@ -294,13 +304,14 @@ define([
     Events.bind(window, this, [Events.POINTER_END, Events.POINTER_CANCEL]);
   }
 
-
-// Add a preTouchMove fn that is called in the capture phase for the
-// event, if it determines that it should have a "lock" on the scroll
-// then it stops propagation
-
   Scroll.prototype.touchPreMove = function(e) {
-    Events.unbind(this.container, this, Events.POINTER_MOVE, true);
+    if (!this._preMoveCalled) {
+      this._preMoveCalled = true;
+    } else {
+      Events.unbind(this.container, this, Events.POINTER_MOVE, true);
+      this.firstScroll = false;
+    }
+
     if (this.dragging) {
       this.firstScroll = true;
     } else if (!this.firstScroll) {
@@ -311,7 +322,6 @@ define([
     diff = Point.difference(this.startScroll, point);
     if (this.firstScroll) {
       var abs = diff.copy().abs();
-//      abs.x = abs.y;
       if (abs.x == abs.y) abs.x += 0.01;
       if ((abs.x > abs.y && this.canScroll.x) ||
           (abs.y > abs.x && this.canScroll.y) ||
@@ -333,7 +343,7 @@ define([
       e.stopPropagation();
     } else if (!this.firstScroll) {
       return;
-    } else if (this.firstScroll && e.currentTarget !== window) {
+    } else if (false && this.firstScroll && e.currentTarget !== window) {
       return;
     }
 
@@ -353,7 +363,7 @@ define([
     point = Point.add(this.startPosition, diff);
     if (!this.canScroll.y) point.y = 0;
     if (!this.canScroll.x) point.x = 0;
-    
+
 
     // If bounces is enabled, adjust the point if it is outside the min
     // or max, otherwise clamp the point.
@@ -368,6 +378,7 @@ define([
 
   Scroll.prototype.touchEnd = function(e) {
     e.preventDefault();
+    Events.unbind(this.container, this, Events.POINTER_MOVE, true);
     Events.unbind(this.container, this, Events.POINTER_MOVE);
     Events.unbind(window, this,
                   [Events.POINTER_MOVE, Events.POINTER_END, Events.POINTER_CANCEL]);
@@ -411,7 +422,7 @@ define([
         // view from being scrolled beyond the content edges.
         this.position.clamp(this.minPoint, this.maxPoint);
       }
-      
+
       // Prevent traditional scrolling from happening.
       this.container.scrollTop = this.container.scrollLeft = 0;
 
@@ -465,7 +476,7 @@ define([
         if (!this.canScroll.x) velocity.x = 0;
         this.minDecelerationPoint = new Point();
         this.maxDecelerationPoint = this.maxPoint.copy();
-        
+
         if (this.pagingEnabled) {
           // Set the minDecelerationPoint to the nearest pageEdge that
           // is < current position, the the maxDecleration point to the
@@ -516,7 +527,7 @@ define([
             * (nextPagePosition - position);
           return velocity * Scroll.PAGING_DECELERATION;
         }, this.decelerationVelocity, this.animatedPosition, this.nextPagePosition);
-      
+
       this.animatedPosition = Point.applyFn(function(curPos, velocity) {
         return curPos + velocity / 1E3;
       }, this.animatedPosition, this.decelerationVelocity);
@@ -558,12 +569,12 @@ define([
         this.decelerationVelocity = Point.applyFn(function(curPos, clamped, velocity) {
           return curPos != clamped ? 0 : velocity;
         }, this.animatedPosition, clampedPosition, this.decelerationVelocity);
-        
+
         if (!clampedPosition.equals(this.animatedPosition)) {
           this.animatedPosition = clampedPosition;
         };
       }
-      
+
       this.setPositionAnimated(this.animatedPosition.copy());
       var belowMinVelocity = Point.applyFn(function(vel, curPos, minPos, maxPos) {
         if (curPos >= minPos && curPos <= maxPos) {
@@ -583,7 +594,7 @@ define([
       var donePaging = this.pagingEnabled && belowMinVelocity &&
         Point.difference(this.nextPagePosition, this.animatedPosition)
         .test(function(v) {return v <= 1;});
-      
+
       if ((!this.pagingEnabled && belowMinVelocity) || donePaging) {
         this.decelerationCompleted();
       } else {
@@ -597,7 +608,7 @@ define([
             else if (animated > max) return max - animated;
             return 0;
           }, this.animatedPosition, this.minPoint, this.maxPoint);
-          
+
           var overflowDecelerationVelocity = Point.applyFn(function(overflow, decelerationVelocity) {
             if (overflow == 0) {
               return decelerationVelocity;
