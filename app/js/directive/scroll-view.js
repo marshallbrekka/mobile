@@ -91,7 +91,7 @@ RFZ.directive("rfzScrollViewBody", function() {
     transclude : true,
     template : "<div class='scroll-content' ng-transclude></div>",
     link : function(scope) {
-      console.log(arguments);
+/*      console.log(arguments);*/
     }
   }
 });

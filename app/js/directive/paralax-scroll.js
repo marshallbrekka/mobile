@@ -55,9 +55,6 @@ RFZ.directive("rfzParalaxScroll", function() {
             views.container.calculateMaxPoint();
             views.container.snapPositionToBounds(true);
           }
-          console.log(viewName);
-          console.log(e);
-          console.log(args);
         }
       }
       
