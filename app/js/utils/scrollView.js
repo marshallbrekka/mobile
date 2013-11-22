@@ -307,12 +307,8 @@ define([
   Scroll.prototype.touchPreMove = function(e) {
     if (!this._preMoveCalled) {
       this._preMoveCalled = true;
-    } else {
+    } else if (this.firstScroll) {
       this.firstScroll = false;
-    }
-
-    if (!this.firstScroll) {
-      return;
     }
 
     var point = Point.fromEvent(e),
