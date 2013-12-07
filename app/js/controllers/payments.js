@@ -141,8 +141,15 @@ define(["config/rfz"], function(RFZ) {
                          created : new Date(),
                          accountId : 1,
                          status : "paid"}]];
+    $scope.startPage = $scope.payments.length - 1;
+
     $scope.paymentAccount = function(payment) {
       return {name : "Citi ThankYou Preferred Card 2 (7874)"};
+    }
+
+    $scope.scrollToMonth = function(month) {
+      var index = $scope.payments.indexOf(month);
+      $scope.startPage = index;
     }
   }]);
 });

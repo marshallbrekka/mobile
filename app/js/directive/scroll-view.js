@@ -41,6 +41,9 @@ RFZ.directive("rfzScrollView", function() {
     replace : true,
     transclude : true,
     templateUrl : "/partials/scroll-view2.html",
+    scope : {
+      startPage : "="
+    },
     compile : function(tElement, attrs) {
       var scroll = 0;
       return {post : function(scope, element, attrs, ctrl) {
@@ -74,6 +77,12 @@ RFZ.directive("rfzScrollView", function() {
         setTimeout(function() {
           if (scroll.autoPageHeight) {
             scroll.adjustHeight();
+          }
+          if (scope.startPage) {
+            scroll.scrollToPage(scope.startPage);
+            scope.$watch("startPage", function(newVal, oldVal) {
+              scroll.scrollToPage(newVal, true);
+            });
           }
           scroll.calculateMaxPoint();
         }, 4);

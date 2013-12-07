@@ -172,10 +172,19 @@ define([
   Scroll.prototype.adjustHeight = function() {
     if (this.canScroll.x) {
       this.calculatePageSize();
-//      var totalPages = this.content.clientWidth / this.pageSize.x;
       var pageNumber = Math.round(this.position.x / this.pageSize.x);
       var pagesElement = this.content.children[pageNumber];
       this.container.style.height = pagesElement.clientHeight + "px";
+    }
+  }
+
+  Scroll.prototype.scrollToPage = function(pageNumber, animate) {
+    if (this.canScroll.x) {
+      this.calculatePageSize();
+      this.calculateMaxPoint();
+      var pagesElement = this.content.children[pageNumber];
+      this.container.style.height = pagesElement.clientHeight + "px";
+      this.setPositionAnimated(new Point(this.pageSize.x * pageNumber, this.position.y), animate);
     }
   }
 
