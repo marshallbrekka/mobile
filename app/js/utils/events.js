@@ -170,14 +170,73 @@ Edges
 
 
   /*
-  This should bind the pointerStart and pointerMove events both the
-  capture and bubbling phases. 
+  PointerNested is used to allow an element to claim the
+  start-move-end event cycle at either the start or move
+  events, without the need for it to communicate directly
+  with any other listeners either on the target element,
+  or on any of its parent elements.
+
+  The entire possible event cycle is as follows
+  preStart - called once
+  start    - called once
+  preMove  - called zero or more times
+  move     - called zero or more times
+  end      - called zero or one times
+  lost     - called the opposite of end. If end was called lost is
+             not, and viceversa.
+
+  Each listener can register a preStart and preMove fn,
+  which will be called with the event object.
+  If the pre* fn returns true, then it has "claimed" the
+  event. If it returns false, its corresponding non-pre
+  handler will only be called if no other listener claimed
+  the event. In the case of preMove, its move listener
+  will only be called if no handlers claimed the event and
+  it was the deepest listener in the dom heiarchy.
+
+  Its worth noting that even if a pre* fn claims the event,
+  it does not guarantee that the event has been claimed.
+  The pre* fns are called from the most outer dom node to
+  the deepest, so any pre* fn that is deeper than the one
+  before it can claim an already claimed event.
+
+  preStart:
+  In most cases the preStart handler is not needed. If a
+  listener claims the event at preStart, none of the other
+  start event listeners will be called, and none of them will
+  have any further stage called. In most cases you want all
+  of the event handlers to recieve the start event,
+  and then perform the claiming in the "move" stage.
+
+  A good example of using preStart is for a scroll view. If
+  the scroll view was already in motion, it should not be
+  possible to accidently interact with any controls while
+  continually touching and moving to scroll. In that case when
+  the scroll views preStart handler is called, it would check if
+  the view is moving, and then return true to claim the entire
+  event cycle.
+
+  preMove:
+  Unlike preStart, if no listeners claim the event from preMove,
+  then the deepest listener auto claims it.
+  If preMove does claim the event, then a few things happen.
+  The move listener is called, then it stops listening for move events
+  on the original element, and rebinds the listener to the document.
+  This is done so that we still recieve move events when the pointer
+  is outside the bounds of the target element.
+
+  If preStart returns false on any subsequent call after it has
+  returned true, then its event listeners will be removed and the
+  "lost" stage will be called. At this point any remaning listeners
+  will be called and a new listener can claim the event.
+
+
   Takes the el to bind to, and a map of the fns to call for each
   stage.
   preStart : (optional) takes the event obj as an argument. Should
              return true if event handler should take control of
              the event.
-  start    : (optional) takes the event obj as an argument. Is only 
+  start    : (optional) takes the event obj as an argument. Is only
              called if preStart returned true, or if no other
              listeners claimed the event.
   preMove  : (optional) takes the event obj as an argument. Should
@@ -192,7 +251,7 @@ Edges
   lost     : (optional) Is called with no arguments, used to cleanup
              after "start" and "move". It is called when another
              listener has claimed the event.
-  
+
   */
   function PointerNested(el, opts) {
     this.el = el;
