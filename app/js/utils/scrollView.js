@@ -81,14 +81,18 @@ define([
 
     var self = this;
     this.frameSetTranslate = function() {
-      if (self.dragging && !self.deceleration) {
+      if (this.unrendered && !self.deceleration) {
         css.setTranslate(self.content, -self.position.x, -self.position.y);
+        this.unrendered = false;
         window.requestAnimationFrame(self.frameSetTranslate);
       }
     }
+
+    this.unrendered = false;
     this.indicator = new Axis(new Indicator("x"), new Indicator("y"));
-    this.container.appendChild(this.indicator.x.element);
-    this.container.appendChild(this.indicator.y.element);
+    Point.applyFn(function(canScroll, indicator) {
+      if (canScroll) self.container.appendChild(indicator.element);
+    }, this.canScroll, this.indicator);
   }
 
   Scroll.MAX_TRACKING_TIME = 100;
@@ -433,16 +437,18 @@ define([
       // scroll values as positive (zero being the top of the page,
       // positive n being further down the page).
 //      if (!this.dragging) {
-        css.setTranslate(this.content, -this.position.x,  -this.position.y);
+
 //      }
       if (animate) {
         this.scrollTransitionActive = true;
         Events.bind(this.container, this, [Events.TRANSITION_END]);
+        css.setTranslate(this.content, -this.position.x,  -this.position.y);
         css.setTransition(this.content, duration || Scroll.PAGE_TRANSITION_DURATION);
         this.positionIndicators(true, duration || Scroll.PAGE_TRANSITION_DURATION);
         // TODO animate scroll indicators getting larger again
         this.callListeners(Scroll.CHANGE_POSITION_EVENT, duration || Scroll.PAGE_TRANSITION_DURATION);
       } else {
+        css.setTranslate(this.content, -this.position.x,  -this.position.y);
         this.callListeners(Scroll.CHANGE_POSITION_EVENT);
         this.positionIndicators();
       }

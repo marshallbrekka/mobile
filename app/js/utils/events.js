@@ -346,7 +346,7 @@ Edges
 
   PointerNested.prototype.move = function(e) {
     // if we are getting called on document after we
-    // unbound from el and bound to document, return  
+    // unbound from el and bound to document, return
     if (e.moveStage && e.moveStage[this]) {
       return;
     } else if (e._pointerNested) {

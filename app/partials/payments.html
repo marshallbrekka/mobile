@@ -5,9 +5,9 @@
   <div rfz-pane-header-button position="left">Refresh</div>
 </div>
 <div rfz-scroll-view-listener
-     rfz-paralax-scroll>
-  <div rfz-pane-body
-       rfz-scroll-view="container"
+     rfz-paralax-scroll
+     rfz-pane-body>
+  <div rfz-scroll-view="container"
        style="display:block;"
        can-scroll-x="false">
     <div rfz-scroll-view-body
@@ -18,6 +18,7 @@
              show-indicator-x="false"
              paging-enabled="true"
              page-size-factor="0.5"
+             start-page="startPage"
              class="month-body">
           <div rfz-scroll-view-body
                class="months-container"
@@ -25,7 +26,8 @@
                       width : {{((payments.length) / 2) * 100}}%">
             <div ng-repeat="month in payments"
                  class="my-payment payment-month"
-                 style="width:{{100 / payments.length}}%">
+                 style="width:{{100 / payments.length}}%"
+                 rfz-tap="scrollToMonth(month)">
               {{month[0].created | date:'MMM yyyy'}}
             </div>
           </div>
