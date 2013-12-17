@@ -1,17 +1,16 @@
 define([
-"underscore",
-"./dom",
-"./point",
-"./edges"
+  "underscore",
+  "./dom",
+  "./point",
+  "./edges"
 ], function(
-_,
-dom,
-Point,
-Edges
-){
+  _,
+  dom,
+  Point,
+  Edges
+) {
   var supportsTouch = "createTouch" in document;
 
-  
 
   var events = {POINTER_START : supportsTouch ? "touchstart" : "mousedown",
                 POINTER_MOVE : supportsTouch ? "touchmove" : "mousemove",
@@ -61,6 +60,7 @@ Edges
     unbind(document.body, self, [events.POINTER_MOVE, events.POINTER_END], true);
   }
 
+
   function inElementRange(element, event) {
     var position = Point.fromEvent(event);
     var elEdges = Edges.fromElement(element);
@@ -87,7 +87,7 @@ Edges
   }
 
   PointerAction.prototype.handleEvent = handleEvent;
-  
+
   PointerAction.prototype.pointerStart = function(e) {
     pointerStart(this);
     this.cancelled = false;
@@ -104,7 +104,6 @@ Edges
       }, 100);
     }
   }
-
   PointerAction.prototype.pointerMove = function(e) {
     if (this.moveCancels) {
       this.cancelled = true;
@@ -260,6 +259,10 @@ Edges
     bind(el, this, events.POINTER_START, true);
   }
 
+  PointerNested.prototype.log = function(msg) {
+    console.log(this.el.className + " : " + msg);
+  }
+
   PointerNested.prototype.phaseDispatch = function(e, capture, bubble) {
     if (e.eventPhase == 1) {
       capture.call(this, e);
@@ -292,17 +295,33 @@ Edges
     }
   };
 
-  PointerNested.prototype.bindEvents = function(bindToDocument) {
-    var bindEl = bindToDocument ? document : this.el;
-    bind(bindEl, this, [events.POINTER_MOVE, events.POINTER_END]);
-    bind(bindEl, this, events.POINTER_MOVE, true);
-  };
+  PointerNested.prototype.setEndListener = function(shouldBind) {
+    var fn = shouldBind ? bind : unbind;
+    fn(document, this, events.POINTER_END);
+  }
 
-  PointerNested.prototype.unbindEvents = function(bindToDocument) {
-    var bindEl = bindToDocument ? document : this.el;
-    unbind(bindEl, this, [events.POINTER_MOVE, events.POINTER_END]);
-    unbind(bindEl, this, events.POINTER_MOVE, true);
-  };
+  PointerNested.prototype.setMoveListener = function(shouldBind, toDocument) {
+    if (shouldBind) {
+      if (this._boundElement) {
+        if (this._boundElement !== document) {
+          unbind(this._boundElement, this, events.POINTER_MOVE);
+          unbind(this._boundElement, this, events.POINTER_MOVE, true);
+          bind(document, this, events.POINTER_MOVE);
+          bind(document, this, events.POINTER_MOVE, true);
+          this._boundElement = document;
+        }
+      } else {
+        bind(this.el, this, events.POINTER_MOVE);
+        bind(this.el, this, events.POINTER_MOVE, true);
+        this._boundElement = this.el;
+      }
+    } else {
+      unbind(this._boundElement, this, events.POINTER_MOVE);
+      unbind(this._boundElement, this, events.POINTER_MOVE, true);
+      this._boundElement = null;
+    }
+  }
+
 
   PointerNested.prototype.callStage = function(stage, args) {
     if (this.opts[stage]) {
@@ -311,71 +330,96 @@ Edges
   };
 
   PointerNested.prototype.preStart = function(e) {
+    this.log("preStart");
     this.owns = {};
-    this.fistMove = false;
+    this.calledPreMove = false;
+    this.firstMove = false;
     if (this.callStage("preStart", e)) {
+      this.log("preStart claimed");
       e._pointerNested = this;
       this.owns.preStart = true;
     }
   };
 
   PointerNested.prototype.start = function(e) {
+    this.log("start");
+    this.firstMove = true;
     if (e._pointerNested) {
       if (e._pointerNested === this) {
-        this.bindEvents()
+        this.log("start owner");
+        this.setEndListener(true);
+        this.setMoveListener(true);
         this.callStage("start", e);
       }
     } else {
-      this.bindEvents();
+      this.log("start no owner");
+      this.setEndListener(true);
+      this.setMoveListener(true);
       this.callStage("start", e);
     }
   };
 
   PointerNested.prototype.preMove = function(e) {
+    this.log("preMove");
     this.calledPreMove = true;
     if (e._pointerNested && e._pointerNested.owns.move) {
+      this.log("preMove bail early");
       return;
     } else if (this.callStage("preMove", e)) {
+      this.log("preMove claim");
       e._pointerNested = this;
       this.owns.preMove = true;
     } else if (this.owns.preMove) {
-      this.unbindEvents(true);
+      this.log("preMove lost");
+      this.setEndListener(false);
+      this.setMoveListener(false);
       this.callStage("lost");
     }
   };
 
   PointerNested.prototype.move = function(e) {
+      this.log("move");
     // if we are getting called on document after we
     // unbound from el and bound to document, return
     if (e.moveStage && e.moveStage[this]) {
+      this.log("move 2nd call in an event");
       return;
     } else if (e._pointerNested) {
       if (e._pointerNested == this) {
+        this.log("move own");
         this.callStage("move", e);
-        this.unbindEvents();
-        this.bindEvents(true);
+        if (this.firstMove) {
+          this.firstMove = false;
+          this.setMoveListener(true);
+        }
         e.moveStage = e.moveStage || {};
         e.moveStage[this] = true;
         this.owns.move = true;
       } else if (this.owns.preMove) {
-        this.firstMove ? this.unbindEvents() : this.unbindEvents(true);
+        this.log("move lost");
+        this.setEndListener(false);
+        this.setMoveListener(false);
         this.callStage("lost");
       }
     } else {
+      this.log("move called without any owner");
       e._pointerNested = this;
       this.move(e);
     }
   };
 
   PointerNested.prototype.end = function(e) {
+    this.log("end");
     if (this.calledPreMove && !this.owns.move) {
+      this.log("end lost");
       this.callStage("lost");
     } else {
+      this.log("end called");
       this.callStage("end", e);
     }
-    this.firstMove ? this.unbindEvents() : this.unbindEvents(true);
+    this.setEndListener(false);
+    this.setMoveListener(false);
   };
-
 
   events.PointerSlide = PointerSlide;
   events.PointerAction = PointerAction;

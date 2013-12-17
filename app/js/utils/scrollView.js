@@ -1,4 +1,5 @@
 define([
+  "underscore",
   "./css",
   "./numb",
   "./point",
@@ -7,6 +8,7 @@ define([
   "./indicator",
   "./events"
 ], function(
+  _,
   css,
   numb,
   Point,
@@ -76,8 +78,6 @@ define([
     this.startPosition = null;
     this.startScroll = null;
     this.tracking = null;
-    Events.bind(this.container, this, Events.POINTER_START, true);
-    Events.bind(this.container, this, Events.POINTER_START, false);
 
     var self = this;
     this.frameSetTranslate = function() {
@@ -93,6 +93,15 @@ define([
     Point.applyFn(function(canScroll, indicator) {
       if (canScroll) self.container.appendChild(indicator.element);
     }, this.canScroll, this.indicator);
+
+    new Events.PointerNested(this.container, {
+      preStart : _.bind(this.pointerPreStart, this),
+      start    : _.bind(this.pointerStart, this),
+      preMove  : _.bind(this.pointerPreMove, this),
+      move     : _.bind(this.pointerMove, this),
+      end      : _.bind(this.pointerEnd, this),
+      lost     : _.bind(this.pointerLost, this)
+    });
   }
 
   Scroll.MAX_TRACKING_TIME = 100;
@@ -114,29 +123,45 @@ define([
   Scroll.CHANGE_POSITION_EVENT = "changePositionEvent";
   Scroll.END_DECELERATION_EVENT = "endDecelerationEvent";
 
+  Scroll.prototype.pointerPreStart = function(e) {
+    if (this.decelerating || this.scrollTransitionActive) {
+      return true;
+    }
+  }
+
+  Scroll.prototype.pointerPreMove = function(e) {
+    if (this.firstScroll) {
+      var point = Point.fromEvent(e),
+          diff = Point.difference(this.startScroll, point),
+          abs = diff.copy().abs();
+      if (abs.x === abs.y) abs.x += 0.01;
+      if ((abs.x > abs.y && this.canScroll.x) ||
+          (abs.y > abs.x && this.canScroll.y)) {
+        return true;
+      }
+    } else {
+      // If its not our first scroll, then we can assume that
+      // we are only being called because this is our 2nd+ time
+      // being called after claiming, or its our 2nd+ time being
+      // called after another element lost its claim.
+      return true;
+    }
+  }
+
+  Scroll.prototype.pointerLost = function() {
+    this.dragging = false;
+    this.startDeceleration();
+    // If the deceleration function determined we weren't going to
+    // decelerate then decelerating is false and we should snap to
+    // the bounds of minPoint and maxPoint
+    if (!this.decelerating) {
+      this.snapPositionToBounds(true);
+    }
+  }
+
   Scroll.prototype.handleEvent = function(e) {
     e.preventDefault();
     switch(e.type) {
-    case Events.POINTER_START:
-      if (e.eventPhase == 1) {
-        this.touchPreStart(e);
-      } else {
-        this.touchStart(e);
-      }
-      break;
-    case Events.POINTER_MOVE:
-      if (e.eventPhase == 1) {
-        this.touchPreMove(e);
-      } else {
-        this.touchMove(e);
-      }
-      break;
-    case Events.POINTER_END:
-      this.touchEnd(e);
-      break;
-    case Events.POINTER_CANCEL:
-      this.touchCancelled(e);
-      break;
     case Events.TRANSITION_END:
       this.transitionEnded(e);
       break;
@@ -189,6 +214,13 @@ define([
       var pagesElement = this.content.children[pageNumber];
       this.container.style.height = pagesElement.clientHeight + "px";
       this.setPositionAnimated(new Point(this.pageSize.x * pageNumber, this.position.y), animate);
+    }
+  }
+
+  Scroll.prototype.currentPage = function() {
+    if (this.canScroll.x) {
+      this.calculatePageSize();
+      return Math.round(this.position.x / this.pageSize);
     }
   }
 
@@ -266,15 +298,7 @@ define([
                   this.position, this.maxPoint);
   }
 
-  Scroll.prototype.touchPreStart = function(e) {
-    if (this.decelerating || this.scrollTransitionActive) {
-      e.stopPropagation();
-      this.touchStart(e);
-    }
-  }
-
-  Scroll.prototype.touchStart = function(e) {
-    this._preMoveCalled = false;
+  Scroll.prototype.pointerStart = function(e) {
     this.decelerating = false;
     this.firstScroll = true;
     var rect = this.container.getBoundingClientRect();
@@ -303,8 +327,10 @@ define([
       // nearest edge, then we need to adjust our startScroll to a
       // position that would have resulted in the current out of bounds
       // position had we never let go.
-      adjustedDiff = Point.difference(this.position, this.position.copy()
-                                      .adjustIfOutsideRange(this.minPoint, this.maxPoint, Scroll.OUT_OF_BOUNDS_FRICTION))
+      adjustedDiff = Point.difference(
+        this.position, 
+        this.position.copy().adjustIfOutsideRange(this.minPoint, this.maxPoint,
+                                                  Scroll.OUT_OF_BOUNDS_FRICTION))
         .multiply(1 / Scroll.OUT_OF_BOUNDS_FRICTION);
       this.startScroll = Point.add(this.startScroll, adjustedDiff);
     }
@@ -312,56 +338,15 @@ define([
     if (this.pagingEnabled) {
       this.calculatePageSize();
     }
-    Events.bind(this.container, this, Events.POINTER_MOVE, true);
-    Events.bind(this.container, this, Events.POINTER_MOVE);
-    Events.bind(window, this, [Events.POINTER_END, Events.POINTER_CANCEL]);
   }
 
-  Scroll.prototype.touchPreMove = function(e) {
-    if (!this._preMoveCalled) {
-      this._preMoveCalled = true;
-    } else if (this.firstScroll) {
-      this.firstScroll = false;
-    }
-
-    var point = Point.fromEvent(e),
-    diff = Point.difference(this.startScroll, point);
+  Scroll.prototype.pointerMove = function(e) {
+    e.preventDefault();
     if (this.firstScroll) {
-      var abs = diff.copy().abs();
-      if (abs.x == abs.y) abs.x += 0.01;
-      if ((abs.x > abs.y && this.canScroll.x) ||
-          (abs.y > abs.x && this.canScroll.y) ||
-          (abs.x == abs.y)) {
-        e.stopPropagation();
-        this.firstScroll = false;
-        this.dragging = true;
-        this.toggleIndicators(true);
-        window.requestAnimationFrame(this.frameSetTranslate);
-        Events.unbind(this.container, this, Events.POINTER_MOVE);
-        Events.bind(window, this, Events.POINTER_MOVE);
-        this.touchMove(e);
-      }
-    } else if (this.dragging) {
-      e.stopPropagation();
-      this.touchMove(e);
-    }
-  }
-
-  Scroll.prototype.touchMove = function(e) {
-    if (this.dragging) {
-      e.stopPropagation();
-    } else if (!this.firstScroll) {
-      return;
-    }
-
-    if (this.firstScroll) {
-      e.stopPropagation();
       this.firstScroll = false;
       this.dragging = true;
       this.toggleIndicators(true);
       window.requestAnimationFrame(this.frameSetTranslate);
-      Events.unbind(this.container, this, Events.POINTER_MOVE);
-      Events.bind(window, this, Events.POINTER_MOVE);
     }
 
     var point = Point.fromEvent(e),
@@ -383,12 +368,8 @@ define([
     this.positionIndicators();
   }
 
-  Scroll.prototype.touchEnd = function(e) {
+  Scroll.prototype.pointerEnd = function(e) {
     e.preventDefault();
-    Events.unbind(this.container, this, Events.POINTER_MOVE, true);
-    Events.unbind(this.container, this, Events.POINTER_MOVE);
-    Events.unbind(window, this,
-                  [Events.POINTER_MOVE, Events.POINTER_END, Events.POINTER_CANCEL]);
     this.dragging = false;
     this.startDeceleration();
     // If the deceleration function determined we weren't going to
