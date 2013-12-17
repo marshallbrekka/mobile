@@ -96,7 +96,14 @@ RFZ.directive("toggle", function() {
         }
       }
 
-      new EVENTS.PointerSlide(element[0], pointerStart, pointerMove, pointerEnd);
+      new EVENTS.PointerNested(element[0], {
+        start : pointerStart,
+        preMove : function() {
+          return true;
+        },
+        move : pointerMove,
+        end : pointerEnd
+      });
     }
   }
 });
