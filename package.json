@@ -1,0 +1,7 @@
+{ "name" : "rfz-mobile",
+  "version" : "0.0.1",
+  "devDependencies": {
+    "karma" : "0.10.5",
+    "karma-ng-html2js-preprocessor": "*"
+  }
+}
