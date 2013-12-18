@@ -25,6 +25,7 @@ RFZ.directive("rfzTableInput", function() {
         }
       });
       var input = element.find("input");
+
       function pointerEnd() {
         element.addClass("edit-mode");
         input[0].focus();
@@ -35,7 +36,9 @@ RFZ.directive("rfzTableInput", function() {
         element.removeClass("edit-mode");
       }
 
-      Events.bind(element[0], pointerEnd, [Events.POINTER_END]);
+      new Events.PointerNested(element[0], {
+        end : pointerEnd
+      });
       Events.bind(input[0], blur, ["blur"]);
     }
   }

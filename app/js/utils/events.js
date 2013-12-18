@@ -260,6 +260,7 @@ define([
   }
 
   PointerNested.prototype.log = function(msg) {
+    return;
     console.log(this.el.className + " : " + msg);
   }
 
@@ -296,11 +297,13 @@ define([
   };
 
   PointerNested.prototype.setEndListener = function(shouldBind) {
+    this.log("set end listener " + shouldBind);
     var fn = shouldBind ? bind : unbind;
     fn(document, this, events.POINTER_END);
   }
 
-  PointerNested.prototype.setMoveListener = function(shouldBind, toDocument) {
+  PointerNested.prototype.setMoveListener = function(shouldBind) {
+    this.log("set move listener " + shouldBind);
     if (shouldBind) {
       if (this._boundElement) {
         if (this._boundElement !== document) {
@@ -369,6 +372,12 @@ define([
       this.log("preMove claim");
       e._pointerNested = this;
       this.owns.preMove = true;
+      e._pointerNestedHardClaim = true;
+    } else if (this.opts.preMove) {
+      if (!e._pointerNestedHardClaim) {
+        e._pointerNested = this;
+        this.owns.preMove = true;
+      }
     } else if (this.owns.preMove) {
       this.log("preMove lost");
       this.setEndListener(false);

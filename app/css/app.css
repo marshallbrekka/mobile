@@ -12,6 +12,10 @@
     -webkit-user-select: none; /* Disable selection/copy in UIWebView */
 }
 
+input {
+   -webkit-user-select: text;
+}
+
 li {
     list-style-type:none;
 }

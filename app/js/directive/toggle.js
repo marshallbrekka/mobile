@@ -65,6 +65,7 @@ RFZ.directive("toggle", function() {
       }
 
       function pointerMove(e) {
+        e.preventDefault();
         if(!sliding) {
           sliding = true;
           slider.addClass("no-transition");
