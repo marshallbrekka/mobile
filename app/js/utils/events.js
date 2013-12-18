@@ -254,7 +254,9 @@ define([
   */
   function PointerNested(el, opts) {
     this.el = el;
-    this.opts = opts;
+    this.opts = _.defaults(opts, {movePreventDefault : true,
+                                  endPreventDefault : true,
+                                  startPreventDefault : true});
     bind(el, this, events.POINTER_START);
     bind(el, this, events.POINTER_START, true);
   }
@@ -353,12 +355,18 @@ define([
         this.setEndListener(true);
         this.setMoveListener(true);
         this.callStage("start", e);
+        if (this.opts.startPreventDefault) {
+          e.preventDefault();
+        }
       }
     } else {
       this.log("start no owner");
       this.setEndListener(true);
       this.setMoveListener(true);
       this.callStage("start", e);
+      if (this.opts.startPreventDefault) {
+        e.preventDefault();
+      }
     }
   };
 
@@ -404,6 +412,9 @@ define([
         e.moveStage = e.moveStage || {};
         e.moveStage[this] = true;
         this.owns.move = true;
+        if (this.opts.movePreventDefault) {
+          e.preventDefault();
+        }
       } else if (this.owns.preMove) {
         this.log("move lost");
         this.setEndListener(false);
@@ -425,6 +436,9 @@ define([
     } else {
       this.log("end called");
       this.callStage("end", e);
+      if (this.opts.endPreventDefault) {
+        e.preventDefault();
+      }
     }
     this.setEndListener(false);
     this.setMoveListener(false);
