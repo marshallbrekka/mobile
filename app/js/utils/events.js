@@ -10,14 +10,18 @@ define([
   Edges
 ) {
   var supportsTouch = "createTouch" in document;
-
-
   var events = {POINTER_START : supportsTouch ? "touchstart" : "mousedown",
                 POINTER_MOVE : supportsTouch ? "touchmove" : "mousemove",
                 POINTER_END : supportsTouch ? "touchend" : "mouseup",
                 POINTER_CANCEL : "touchcancel",
                 TRANSITION_END : "webkitTransitionEnd"};
 
+  /*
+  Given an element to bind to, an object/fn to listen for the event(s),
+  a single event name or an array of event names, and an optional
+  boolean indicating if the event should bind to the capture (true)
+  or bubbling (false) phase, registers the event listener(s).
+  */
   function bind(element, obj, events, capture) {
     capture = capture ? true : false;
     events = Array.isArray(events) ? events : [events];
@@ -26,6 +30,9 @@ define([
     });
   }
 
+  /*
+  Just like bind, except removes the event listener(s).
+  */
   function unbind(element, obj, events, capture) {
     capture = capture ? true : false;
     events = Array.isArray(events) ? events : [events];
@@ -34,139 +41,26 @@ define([
     });
   }
 
-  function handleEvent(e) {
-    e.preventDefault();
-    switch(e.type) {
-    case events.POINTER_START:
-      this.pointerStart(e);
-      break;
-    case events.POINTER_MOVE:
-      this.pointerMove(e);
-      break;
-    case events.POINTER_END:
-      this.pointerEnd(e);
-      break;
-    case events.POINTER_CANCEL:
-      this.pointerCancel(e);
-      break;
-    }
-  }
-
-  function pointerStart(self) {
-    bind(document.body, self, [events.POINTER_MOVE, events.POINTER_END], true);
-  }
-
-  function pointerEnd(self) {
-    unbind(document.body, self, [events.POINTER_MOVE, events.POINTER_END], true);
-  }
-
-
-  function inElementRange(element, event) {
+  /*
+  Given an element, a pointer event, and a distance, returns true
+  if the pointer was within <distance> of the elements bounds.
+  */
+  function inElementRange(element, event, distance) {
     var position = Point.fromEvent(event);
     var elEdges = Edges.fromElement(element);
+    distance = distance || 50;
     elEdges = Edges.toAxis(elEdges);
     return Point.applyFn(function(pointer, edge) {
       if (pointer < edge.start) {
-        return pointer < edge.start - 50 ? 0 : 1;
+        return pointer < edge.start - distance ? 0 : 1;
       } else if (pointer > edge.end) {
-        return pointer > edge.end + 50 ? 0 : 1;
+        return pointer > edge.end + distance ? 0 : 1;
       }
       return 1;
     }, position, elEdges).test(function(point) {
       return point == 1;
     }, true);
   }
-  
-  function PointerAction(element, fn, moveCancels) {
-    this.element = element;
-    this.fn = fn;
-    this.moveCancels = moveCancels;
-    this.cancelled = false;
-    this.inRange = true;
-    bind(element, this, [events.POINTER_START]);
-  }
-
-  PointerAction.prototype.handleEvent = handleEvent;
-
-  PointerAction.prototype.pointerStart = function(e) {
-    pointerStart(this);
-    this.cancelled = false;
-    this.inRange = true;
-    if (!this.moveCancels) {
-      dom.addClass(this.element, "pointer-start");
-    } else {
-      var self = this;
-      setTimeout(function() {
-        if (!self.cancelled) {
-          this.moveCancels = false;
-          dom.addClass(self.element, "pointer-start");
-        }
-      }, 100);
-    }
-  }
-  PointerAction.prototype.pointerMove = function(e) {
-    if (this.moveCancels) {
-      this.cancelled = true;
-      pointerEnd(this);
-      dom.removeClass(this.element, "pointer-start");
-    } else {
-      if (inElementRange(this.element, e)) {
-        if (!this.inRange) {
-          this.inRange = true;
-          dom.addClass(this.element, "pointer-start");
-        }
-      } else {
-        if (this.inRange) {
-          this.inRange = false;
-          dom.removeClass(this.element, "pointer-start");
-        }
-      }
-    }
-  }
-
-  PointerAction.prototype.pointerEnd = function(e) {
-    pointerEnd(this);
-    if (this.inRange) {
-      dom.removeClass(this.element, "pointer-start");
-      this.fn(e);
-    }
-  }
-
-  PointerAction.prototype.pointerCancel = function() {
-    pointerEnd();
-    dom.removeClass(this.element, "pointer-start");
-  }
-
-  function PointerSlide(element, fnStart, fnMove, fnEnd) {
-    this.element = element;
-    this.fnStart = fnStart;
-    this.fnMove = fnMove;
-    this.fnEnd = fnEnd;
-    bind(element, this, [events.POINTER_START]);
-  }
-
-  PointerSlide.prototype.handleEvent = handleEvent;
-
-  PointerSlide.prototype.pointerStart = function(e) {
-    e.stopPropagation();
-    pointerStart(this);
-    dom.addClass(this.element, "pointer-start");
-    this.fnStart(e);
-  }
-
-  PointerSlide.prototype.pointerMove = function(e) {
-    e.stopPropagation();
-    this.fnMove(e);
-  }
-
-  PointerSlide.prototype.pointerEnd = function(e) {
-    pointerEnd(this);
-    dom.removeClass(this.element, "pointer-start");
-    this.fnEnd(e);
-  }
-
-  PointerSlide.prototype.pointerCancel = PointerSlide.prototype.pointerEnd;
-
 
   /*
   PointerNested is used to allow an element to claim the
@@ -262,10 +156,14 @@ define([
   }
 
   PointerNested.prototype.log = function(msg) {
-    return;
+    return; // remove to enable verbose logging.
     console.log(this.el.className + " : " + msg);
   }
 
+  /*
+  Given an event calls the provided capture or bubbling fn
+  depending on what phase the event is in.
+  */
   PointerNested.prototype.phaseDispatch = function(e, capture, bubble) {
     if (e.eventPhase == 1) {
       capture.call(this, e);
@@ -298,12 +196,26 @@ define([
     }
   };
 
+  /*
+  Adds or removes the pointer end event listener.
+  */
   PointerNested.prototype.setEndListener = function(shouldBind) {
     this.log("set end listener " + shouldBind);
     var fn = shouldBind ? bind : unbind;
     fn(document, this, events.POINTER_END);
   }
 
+  /*
+  Adds or removes the pointer move event listener.
+  The first time it is called with a true argument, it binds
+  to the element that PointerNested was created with, the 2nd time
+  it removes the listener on the supplied element, and binds to the
+  document.
+
+  This is done so that we can maintain an execution heirarchy for the
+  move events, but also so that when the pointer moves outside the
+  bounds of the given element we still recieve the events.
+  */
   PointerNested.prototype.setMoveListener = function(shouldBind) {
     this.log("set move listener " + shouldBind);
     if (shouldBind) {
@@ -327,7 +239,10 @@ define([
     }
   }
 
-
+  /*
+  Calls the user provided fn (if any) for the given stage (preStart,
+  start, etc)
+  */
   PointerNested.prototype.callStage = function(stage, args) {
     if (this.opts[stage]) {
       return this.opts[stage].apply(this, Array.prototype.slice.call(arguments, 1));
@@ -444,12 +359,128 @@ define([
     this.setMoveListener(false);
   };
 
-  events.PointerSlide = PointerSlide;
+  PointerNested.prototype.lost = function(e) {
+    this.log("lost");
+    this.callStage("lost");
+    this.setEndListener(false);
+    this.setMoveListener(false);
+  }
+
+  /*
+  PointerAction is a simple wrapper around PointerNested for
+  ineractions that only need to know when a "click" has happened on
+  the provided element.
+
+  Takes an element, a cb to call with the event for the POINTER_END
+  event, and a map of options that allow customizing its behavior.
+
+  opts are:
+  activeClass  : the class that gets applied after a POINTER_START
+                 event, defaults to pointer-start.
+  claim(X/y)   : if true will claim any POINTER_MOVE events where
+                 the primary direction of movement is along the (x/y)
+                 axis. defaults to false.
+  delayedClaim : The number of ms to wait before claiming all move
+                 events. default null.
+  elementRange : the distance (in px) from the elements bounds that
+                 the pointer can be and still register as a hit on
+                 a POINTER_END event. Default 50.
+  */
+  function PointerAction(element, cb, opts) {
+    this.element = element;
+    this.opts = _.defaults(opts || {}, {
+      activeClass  : "pointer-start",
+      claimX       : false,
+      claimY       : false,
+      delayedClaim : null,
+      elementRange : 50
+    });
+    this.opts.cb = cb;
+
+    var eventHandlers = {
+      start : _.bind(this.start, this),
+      move  : _.bind(this.move,  this),
+      end   : _.bind(this.end, this),
+      lost  : _.bind(this.lost, this)
+    };
+
+    if (this.opts.claimX || this.opts.claimY || this.opts.delayedClaim) {
+      eventHandlers.preMove = _.bind(this.preMove, this);
+    }
+
+    new PointerNested(element, eventHandlers);
+  }
+
+  PointerAction.prototype.start = function(e) {
+    this.inRange = true;
+    this.addClassTimeout = setTimeout(_.bind(function() {
+      dom.addClass(this.element, this.opts.activeClass);
+    }, this), 50);
+    if (this.opts.claimX || this.opts.claimY) {
+      this.startPoint = Point.fromEvent(e);
+    }
+    if (this.opts.delayedClaim !== null) {
+      this.claimedAfterDelay = false;
+      this.claimTimeout = setTimeout(_.bind(function() {
+        this.claimedAfterDelay = true;
+      }, this), this.opts.delayedClaim);
+    }
+  }
+
+  PointerAction.prototype.preMove = function(e) {
+    if (this.opts.claimX || this.opts.claimY) {
+      var point = Point.fromEvent(e),
+          diff = Point.difference(this.startPoint, point),
+          abs = diff.copy().abs();
+      if (abs.x === abs.y) abs.x += 0.01;
+      if ((abs.x > abs.y && this.opts.claimX) ||
+          (abs.y > abs.x && this.opts.claimY)) {
+        return true;
+      }
+    }
+    if (this.opts.delayedClaim !== null) {
+      if (this.claimedAfterDelay) {
+        return true;
+      } else {
+        clearTimeout(this.claimTimeout);
+      }
+    }
+  }
+
+  PointerAction.prototype.move = function(e) {
+    var inRange = inElementRange(this.element, e);
+    var fnName = inRange ? "addClass" : "removeClass";
+    // If we are in/(out of) range and weren't in/(out of) range before,
+    // then set inRange to our current state, and add/remove the
+    // active class
+    if (this.inRange !== inRange) {
+      this.inRange = inRange;
+      dom[fnName](this.element, this.opts.activeClass);
+    }
+  }
+
+  PointerAction.prototype.end = function(e) {
+    clearTimeout(this.addClassTimeout);
+    clearTimeout(this.claimTimeout);
+    if (this.inRange) {
+      // Add the active class before calling the callback
+      // so that it at least flashes for a moment.
+      dom.addClass(this.element, this.opts.activeClass);
+      this.opts.cb.call(null, e);
+      dom.removeClass(this.element, this.opts.activeClass);
+    }
+  }
+
+  PointerAction.prototype.lost = function() {
+    clearTimeout(this.addClassTimeout);
+    clearTimeout(this.claimTimeout);
+    dom.removeClass(this.element, this.opts.activeClass);
+  }
+
   events.PointerAction = PointerAction;
   events.PointerNested = PointerNested;
   events.bind = bind;
   events.unbind = unbind;
   events.inElementRange = inElementRange;
-  window.EVE = events;
   return events;
 });

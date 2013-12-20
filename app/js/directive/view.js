@@ -170,17 +170,17 @@ RFZ.directive("rfzPaneBody", function() {
 //
 // This will change the pane to "settings" which is revealed from the right.
 // <div rfz-change-pane="settings" rfz-change-direction="right">
-RFZ.directive("rfzChangePane", function() {
-  return {
-    restrict : "A", 
-    require : "^rfzView",
-    link : function(scope, element, attrs, ctrl) {
-      new Events.PointerAction(element[0], function() {
-        scope.$broadcast("rfzViewChange");
-        ctrl.openPane(attrs.rfzChangePane, attrs.rfzChangeDirection);
-      });
+  RFZ.directive("rfzChangePane", ["$compile", function($compile) {
+    return {
+      restrict : "A", 
+      require : "^rfzView",
+      link : function(scope, element, attrs, ctrl) {
+        new Events.PointerAction(element[0], function() {
+          scope.$broadcast("rfzViewChange");
+          ctrl.openPane(attrs.rfzChangePane, attrs.rfzChangeDirection);
+        });
+      }
     }
-  }
-});
+  }]);
 
 });
