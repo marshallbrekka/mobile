@@ -6,7 +6,8 @@ define([
   "./axis",
   "./edges",
   "./indicator",
-  "./events"
+  "./events",
+  "./render"
 ], function(
   _,
   css,
@@ -15,7 +16,8 @@ define([
   Axis,
   Edges,
   Indicator,
-  Events
+  Events,
+  render
 ) {
 
   function merge(obj1, obj2) {
@@ -80,15 +82,8 @@ define([
     this.tracking = null;
 
     var self = this;
-    this.frameSetTranslate = function() {
-      if (this.unrendered && !self.deceleration) {
-        css.setTranslate(self.content, -self.position.x, -self.position.y);
-        this.unrendered = false;
-        window.requestAnimationFrame(self.frameSetTranslate);
-      }
-    }
+    
 
-    this.unrendered = false;
     this.indicator = new Axis(new Indicator("x"), new Indicator("y"));
     Point.applyFn(function(canScroll, indicator) {
       if (canScroll) self.container.appendChild(indicator.element);
@@ -102,6 +97,25 @@ define([
       end      : _.bind(this.pointerEnd, this),
       lost     : _.bind(this.pointerLost, this)
     });
+
+    this.renderId = render.getId();
+    this.render = _.bind(function() {
+      css.setTranslate(this.content, -this.position.x, -this.position.y);
+      this.positionIndicators();
+    }, this);
+
+    this.renderDeceleration = _.bind(function() {
+      this.stepThroughDeceleration();
+    }, this);
+  }
+  
+  Scroll.prototype.positionElements = function() {
+    if (this.decelerating) {
+      css.setTranslate(this.content, -this.position.x, -this.position.y);
+      this.positionIndicators();
+    } else {
+      render.render(this.renderId, this.render);
+    }
   }
 
   Scroll.MAX_TRACKING_TIME = 100;
@@ -346,7 +360,7 @@ define([
       this.firstScroll = false;
       this.dragging = true;
       this.toggleIndicators(true);
-      window.requestAnimationFrame(this.frameSetTranslate);
+      this.positionElements();
     }
 
     var point = Point.fromEvent(e),
@@ -399,7 +413,7 @@ define([
   Scroll.prototype.setPosition = function(point) {
     this.transitionEnded();
     (this.position = point.copy()).roundToPx();
-    css.setTranslate(this.content, -this.position.x,  -this.position.y);
+    this.positionElements();
   }
 
   Scroll.prototype.setPositionAnimated = function(point, animate, duration) {
@@ -412,7 +426,7 @@ define([
       }
 
       // Prevent traditional scrolling from happening.
-      this.container.scrollTop = this.container.scrollLeft = 0;
+//      this.container.scrollTop = this.container.scrollLeft = 0;
 
       // the real translate values have to be negative, but we treat
       // scroll values as positive (zero being the top of the page,
@@ -429,9 +443,8 @@ define([
         // TODO animate scroll indicators getting larger again
         this.callListeners(Scroll.CHANGE_POSITION_EVENT, duration || Scroll.PAGE_TRANSITION_DURATION);
       } else {
-        css.setTranslate(this.content, -this.position.x,  -this.position.y);
+        this.positionElements();
         this.callListeners(Scroll.CHANGE_POSITION_EVENT);
-        this.positionIndicators();
       }
     }
   }
@@ -497,9 +510,7 @@ define([
           this.animatedPosition = this.position.copy();
           var self = this;
           this.previousDecelerationFrame = Date.now();
-          window.requestAnimationFrame(function() {
-            self.stepThroughDeceleration();
-          });
+          render.render(this.renderId, this.renderDeceleration, true);
         }
       }
     }
@@ -613,9 +624,7 @@ define([
 
         var self = this;
         this.previousDecelerationFrame = frameTime;
-        window.requestAnimationFrame(function() {
-          self.stepThroughDeceleration();
-        });
+        render.render(this.renderId, this.renderDeceleration, true);
       }
     }
   }
