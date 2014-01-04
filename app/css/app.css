@@ -756,8 +756,8 @@ and (-webkit-min-device-pixel-ratio: 2) {
 }
 
 .animate.ng-enter, .animate.ng-leave {
- -webkit-transition:-webkit-transform 0.5s ease-in-out;
-  transition:transform 0.5s ease-in-out;
+ -webkit-transition:-webkit-transform 0.3s ease-in-out;
+  transition:transform 0.3s ease-in-out;
 }
 
 .animate.ng-enter {
