@@ -50,7 +50,8 @@
               <ul>
                 <li ng-repeat="payment in month" class="row {{payment.status}}"
                     ng-class="{last : $last}"
-                    rfz-change-pane="payment"
+                    rfz-tap="$rfzNavPush('payment', 'side')"
+                    rfz-tap-delayed-claim="5000"
                     rfz-change-direction="right">
                   <div class="left amount table-text-blue">{{payment.amount | currency}}</div>
                   <div class="right">

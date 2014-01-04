@@ -1,6 +1,6 @@
 'use strict';
 define([
-  "angular",
+  "lib/angular/angular",
   "config/rfz"
 ], function(
   angular,

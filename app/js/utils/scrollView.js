@@ -1,5 +1,5 @@
 define([
-  "underscore",
+  "lib/underscore",
   "./css",
   "./numb",
   "./point",

@@ -1,18 +1,22 @@
 require.config({
   baseUrl: "js",
   paths : {
-    "angular" : "lib/angular/angular",
-    "underscore" : "lib/underscore",
-    "jquery" : "lib/jquery-1.9.1"
+    "lib/angular/angular" : "lib/angular/angular-1.2.6",
+    "lib/angular/angular-animate" : "lib/angular/angular-animate-1.2.6",
+    "lib/underscore" : "lib/underscore",
+    "lib/jquery" : "lib/jquery-1.9.1"
   },
   shim : {
-    angular : {
+    "lib/angular/angular" : {
       exports : "angular"
     },
-    underscore : {
+    "lib/angular/angular-animate" : {
+      requires : ["lib/angular/angular"]
+    },
+    "lib/underscore" : {
       exports : "_"
     },
-    jquery : {
+    "lib/jquery" : {
       exports : "$"
     }
   },
@@ -23,7 +27,7 @@ require.config({
     },
     waitSeconds: 15*/
   });
-  require( ["angular", "app", "config/rfz", "utils/scrollView"],
+  require( ["lib/angular/angular", "app", "config/rfz", "utils/scrollView"],
     function(angular, app, RFZ, ScrollView) {
       console.log("RAN");
       angular.element(document).ready(function() {

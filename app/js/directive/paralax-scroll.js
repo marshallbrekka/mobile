@@ -1,5 +1,5 @@
 define([
-  "underscore",
+  "lib/underscore",
   "config/rfz",
   "utils/scrollView",
   "./scroll-view"

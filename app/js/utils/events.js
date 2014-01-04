@@ -1,5 +1,5 @@
 define([
-  "underscore",
+  "lib/underscore",
   "./dom",
   "./point",
   "./edges"
@@ -415,7 +415,7 @@ define([
     this.inRange = true;
     this.addClassTimeout = setTimeout(_.bind(function() {
       dom.addClass(this.element, this.opts.activeClass);
-    }, this), 50);
+    }, this), 100);
     if (this.opts.claimX || this.opts.claimY) {
       this.startPoint = Point.fromEvent(e);
     }
@@ -443,6 +443,7 @@ define([
         return true;
       } else {
         clearTimeout(this.claimTimeout);
+        dom.removeClass(this.element, this.opts.activeClass);
       }
     }
   }

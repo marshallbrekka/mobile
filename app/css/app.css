@@ -76,105 +76,38 @@ body {
     top:0;
     left:0;
     right:0;
+    bottom:0;
+}
+
+.rfz-pane {
+    -webkit-transform: translate3d(0,0,0);
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+}
+
+.rfz-pane-body {
+  background:url("/img/view-bg.png") fixed;
+  background-size:3px 2px;
+}
+
+.has-menu {
     bottom:49px;
-    z-index:10;
-    background:url("/img/view-bg.png") fixed;
-    background-size:3px 2px;
 }
 
 @media only screen 
 and (-webkit-min-device-pixel-ratio: 2) {
-  .rfz-view {
+  .rfz-pane-body {
     background-image:url("/img/view-bg@2x.png");
   }
 }
 
 
 .rfz-view.no-menu {
-    bottom:0px;;
+    bottom:0px;
     z-index:1000;
-}
-
-.rfz-view-enter,
-.rfz-view-enter-active,
-.rfz-view-leave, 
-.rfz-view-enter .rfz-pane-body,
-.rfz-view-enter-active .rfz-pane-body, 
-.rfz-view-leave .rfz-pane-body {
-    -webkit-transition:-webkit-transform 0.3s ease-in-out;
-    transition: -webkit-transform 0.3s ease-in-out;
-}
-
-.rfz-view-direction-no-animation,
-.rfz-view-direction-no-animation .rfz-view-enter,
-.rfz-view-direction-no-animation .rfz-view-leave,
-.rfz-view-direction-no-animation .rfz-pane-body {
-    -webkit-transition:none;
-    transition:none;
-}
-
-
-
-
-.rfz-view-direction-right .rfz-view-enter .rfz-pane-body,
-.rfz-view-direction-left .rfz-view-leave-active .rfz-pane-body {
-    -webkit-transform: translateX(100%);
-}
-
-.rfz-view-direction-left .rfz-view-enter .rfz-pane-body,
-.rfz-view-direction-right .rfz-view-leave-active .rfz-pane-body {
-    -webkit-transform: translateX(-100%);
-}
-
-.rfz-view-direction-left .rfz-view-enter-active .rfz-pane-body,
-.rfz-view-direction-right .rfz-view-enter-active .rfz-pane-body {
-    -webkit-transform: translateX(0);
-}
-
-.rfz-view-enter .header{
-    z-index:115;
-}
-
-.rfz-view-leave .header {
-    z-index:120;
-}
-
-.rfz-view-leave .header {
-    opacity: 1;
-}
-
-.rfz-view-leave-active .header {
-    opacity: 0;
-}
-
-.rfz-view-direction-left .rfz-view-enter .header-name, 
-.rfz-view-direction-right .rfz-view-leave-active .header-name {
-    -webkit-transform:translateX(-30%);
-}
-
-.rfz-view-direction-right .rfz-view-enter .header-name, 
-.rfz-view-direction-left .rfz-view-leave-active .header-name {
-    -webkit-transform:translateX(30%);
-}
-
-.rfz-view-direction-right .rfz-view-enter-active .header-name,
-.rfz-view-direction-left .rfz-view-enter-active .header-name {
-    -webkit-transform:translateX(0);
-}
-
-
-.overlay-enter, .overlay-enter-active, .overlay-leave, .overlay-enter .rfz-view.no-menu, .overlay-enter-active .rfz-view.no-menu, .overlay-leave .rfz-view.no-menu {
-    -webkit-transition:-webkit-transform 0.3s ease-in-out;
-    transition: -webkit-transform 0.3s ease-in-out;
-}
-
-.overlay-enter .rfz-view.no-menu, .overlay-leave .rfz-view.no-menu {
-    -webkit-transform: translateY(100%);
-
-}
-
-.overlay-enter.overlay-enter-active .rfz-view.no-menu {
-    -webkit-transform: translateY(0);
 }
 
 .header {
@@ -192,23 +125,6 @@ and (-webkit-min-device-pixel-ratio: 2) {
     font-weight:bold;
     color:#fff;
     text-shadow:0 -1px 0 rgba(0,0,0,0.8);
-    -webkit-transition:opacity 0.3s;
-}
-
-.header-content {
-    position:absolute;
-    top:0;
-    left:0;
-    right:0;
-    bottom:0;
-    background:url("../ios-images/navbar_bg@2x.png") right no-repeat, #2D5081;
-    background-size:480px 88px;
-    opacity:1;
-    -webkit-transition:opacity 0.3s;
-}
-
-.header-content.main {
-    z-index:100;
 }
 
 .header .header-name {
@@ -831,4 +747,105 @@ and (-webkit-min-device-pixel-ratio: 2) {
 .scroll-indicator-x :nth-child(3) {
   left:3px;
   background-position:-4px 0;
+}
+
+/* Nav Stack Animations */
+
+.animate {
+  -webkit-transform: translate3d(0,0,0);
+}
+
+.animate.ng-enter, .animate.ng-leave {
+ -webkit-transition:-webkit-transform 0.5s ease-in-out;
+  transition:transform 0.5s ease-in-out;
+}
+
+.animate.ng-enter {
+  visibility:hidden;
+}
+
+.animate.ng-leave.ng-leave-active,
+.animate.ng-enter {
+  -webkit-transform: translate3d(0, 100%, 0);
+}
+
+.animate.ng-enter.ng-enter-active,
+.animate.ng-leave {
+  visibility:visible;
+  -webkit-transform: translate3d(0, 0, 0);
+}
+
+.rfz-nav-stack-up .ng-hide-add {
+  -webkit-transition:opacity 0.3s;
+  transition:opacity 0.3s;
+  display:block!important;
+}
+
+/* Nav Stack Side Animations */
+
+.rfz-nav-stack-side .rfz-pane.ng-enter,
+.rfz-nav-stack-side .rfz-pane.ng-leave,
+.rfz-nav-stack-side .rfz-pane.ng-enter .rfz-pane-body,
+.rfz-nav-stack-side .rfz-pane.ng-leave .rfz-pane-body,
+.rfz-nav-stack-side .rfz-pane.ng-enter .header-name,
+.rfz-nav-stack-side .rfz-pane.ng-leave .header-name,
+.rfz-nav-stack-side .rfz-pane.ng-hide-add,
+.rfz-nav-stack-side .rfz-pane.ng-hide-add .rfz-pane-body,
+.rfz-nav-stack-side .rfz-pane.ng-hide-add .header-name,
+.rfz-nav-stack-side .rfz-pane.ng-hide-remove,
+.rfz-nav-stack-side .rfz-pane.ng-hide-remove .rfz-pane-body,
+.rfz-nav-stack-side .rfz-pane.ng-hide-remove .header-name {
+  -webkit-transition:-webkit-transform 0.3s ease-in-out;
+  transition: -webkit-transform 0.3s ease-in-out;
+  display:block!important;
+}
+
+.rfz-nav-stack-side .rfz-pane.ng-enter .rfz-pane-body,
+.rfz-nav-stack-side .rfz-pane.ng-leave-active .rfz-pane-body {
+  -webkit-transform: translateX(100%);
+}
+
+.rfz-nav-stack-side .rfz-pane.ng-enter-active .rfz-pane-body,
+.rfz-nav-stack-side .rfz-pane.ng-hide-add .rfz-pane-body,
+.rfz-nav-stack-side .rfz-pane.ng-hide-remove.ng-hide-remove-active .rfz-pane-body {
+  -webkit-transform: translateX(0);
+}
+
+.rfz-nav-stack-side .rfz-pane.ng-hide-add-active .rfz-pane-body,
+.rfz-nav-stack-side .rfz-pane.ng-hide-remove .rfz-pane-body {
+  -webkit-transform: translateX(-100%);
+}
+
+.rfz-nav-stack-side .rfz-pane.ng-enter .header,
+.rfz-nav-stack-side .rfz-pane.ng-leave .header,
+.rfz-nav-stack-side .rfz-pane.ng-hide-add .header,
+.rfz-nav-stack-side .rfz-pane.ng-hide-remove .header {
+  -webkit-transition:opacity 0.3s;
+}
+
+.rfz-nav-stack-side .rfz-pane.ng-enter .header,
+.rfz-nav-stack-side .rfz-pane.ng-leave.ng-leave-active .header {
+  opacity:0;
+}
+
+.rfz-nav-stack-side .rfz-pane.ng-enter-active .header,
+.rfz-nav-stack-side .rfz-pane.ng-leave .header {
+  opacity:1;
+}
+
+.rfz-nav-stack-side .rfz-pane.ng-enter .header-name,
+.rfz-nav-stack-side .rfz-pane.ng-leave.ng-leave-active .header-name {
+  -webkit-transform:translateX(30%);
+}
+
+.rfz-nav-stack-side .rfz-pane.ng-hide-add.ng-hide-add-active .header-name,
+.rfz-nav-stack-side .rfz-pane.ng-hide-remove .header-name {
+  -webkit-transform:translateX(-30%);
+}
+
+.rfz-nav-stack-side .rfz-pane.ng-hide-add .header-name,
+.rfz-nav-stack-side .rfz-pane.ng-hide-remove-active .header-name,
+.rfz-nav-stack-side .rfz-pane.ng-enter-active .header-name,
+.rfz-nav-stack-side .rfz-pane.ng-leave .header-name {
+  -webkit-transform:translateX(0);
 }

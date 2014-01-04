@@ -1,4 +1,4 @@
-define(["angular", "underscore"], function(angular, _) {
+define(["lib/angular/angular", "lib/underscore"], function(angular, _) {
   function createElement(tag, props) {
     var propString = _.chain(props)
                      .pairs()

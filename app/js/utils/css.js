@@ -1,6 +1,6 @@
 define([
 "./point",
-"underscore"
+"lib/underscore"
 ], function(
 Point,
 _

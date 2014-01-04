@@ -1,4 +1,4 @@
-define(["config/rfz", "underscore"], function(RFZ, _) {
+define(["config/rfz", "lib/underscore"], function(RFZ, _) {
   console.log("progres");
   RFZ.controller("Progress", ["$scope", "model", function Progress($scope, model) {
     $scope.debtAccounts = function() {

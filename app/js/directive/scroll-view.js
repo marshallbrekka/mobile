@@ -81,7 +81,9 @@ RFZ.directive("rfzScrollView", function() {
           if (scope.startPage) {
             scroll.scrollToPage(scope.startPage);
             scope.$watch("startPage", function(newVal, oldVal) {
-              scroll.scrollToPage(newVal, true);
+              if (newVal !== oldVal) {
+                scroll.scrollToPage(newVal, true);
+              }
             });
           }
           scroll.calculateMaxPoint();

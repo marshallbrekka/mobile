@@ -1,6 +1,6 @@
 'use strict';
 define([
-  "angular",
+  "lib/angular/angular",
   "config/rfz",
   "services",
   "filters",
@@ -39,8 +39,8 @@ function mobileConsole(msg) {
 
 
 // Declare app level module which depends on filters, and services
-RFZ.config(['$routeProvider', function($routeProvider) {
-    $routeProvider.when('/overview',
+RFZ.config([function() {
+/*    $routeProvider.when('/overview',
                         {templateUrl: 'partials/overview.html',
                          controller: "Overview"});
     $routeProvider.when('/progress',
@@ -52,6 +52,6 @@ RFZ.config(['$routeProvider', function($routeProvider) {
     $routeProvider.when("/accounts",
                        {templateUrl: "partials/accounts.html",
                         controller: "Accounts"})
-    $routeProvider.otherwise({redirectTo: '/overview'});
+    $routeProvider.otherwise({redirectTo: '/overview'});*/
   }]);
 });

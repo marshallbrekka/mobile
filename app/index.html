@@ -14,50 +14,43 @@
 </head>
 
 <body ng-controller="Menu">
-<div  ng-controller="Overlay">
-  <div ng-switch="overlayName" ng-animate="'overlay'">
-    <div ng-switch-when="settings">
-      <div rfz-view="settings" no-menu="true">
-        <div rfz-pane="settings">
-          <div ng-include="'/partials/settings.html'"></div>
-        </div>
-        <div rfz-pane="settings-notifications">
-          <div ng-include="'/partials/settings-notifications.html'"></div>
-        </div>
-      </div>
-    </div>
+<div rfz-view="main">
+  <div rfz-pane="settings" class="animate">
+    <div ng-include="'/partials/settings.html'"></div>
   </div>
-  <div ng-switch="mainView">
-    <div ng-switch-when="overview" rfz-view="overview">
-      <div rfz-pane="overview">
+  <div rfz-pane="settings-notifications">
+    <div ng-include="'/partials/settings-notifications.html'"></div>
+  </div>
+  <div class="rfz-view has-menu">
+    <div ng-switch="mainView" rfz-pane="main">
+      <div ng-switch-when="overview">
         <div ng-controller="Overview" ng-include="'/partials/overview.html'"></div>
       </div>
-    </div>
-    <div ng-switch-when="progress" rfz-view="progress">
-      <div rfz-pane="progress">
-        <div ng-controller="Progress" ng-include="'/partials/progress.html'"></div>
-      </div>
-    </div>
-    <div ng-switch-when="payments" ng-controller="Payments">
-      <div rfz-view="all">
-        <div rfz-pane="all">
-          <div ng-include="'/partials/payments.html'"></div>
-        </div>
-        <div rfz-pane="payment">
-          <div ng-include="'/partials/payment-single.html'"></div>
+      <div ng-switch-when="progress" rfz-view="progress">
+        <div rfz-pane="progress">
+          <div ng-controller="Progress" ng-include="'/partials/progress.html'"></div>
         </div>
       </div>
+      <div ng-switch-when="payments" ng-controller="Payments">
+        <div rfz-view="all">
+          <div rfz-pane="all">
+            <div ng-include="'/partials/payments.html'"></div>
+          </div>
+          <div rfz-pane="payment">
+            <div ng-include="'/partials/payment-single.html'"></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <ul id="menu">
-      <li ng-repeat="path in paths"
-          class="menu-{{path}}"
-          ng-class="pathIndex | ifEqual:$index:'selected'"
-          rfz-tap="go($index)">
-        <span>{{path | capitalize}}</span>
+  </div>
+  <ul id="menu">
+    <li ng-repeat="path in paths"
+        class="menu-{{path}}"
+        ng-class="pathIndex | ifEqual:$index:'selected'"
+        rfz-tap="go($index)">
+      <span>{{path | capitalize}}</span>
     </li>
   </ul>
-
-  </div>
 </div>
   <div id="console"></div>
   <!-- In production use:
