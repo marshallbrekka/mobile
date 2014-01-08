@@ -12,31 +12,35 @@
 <link rel="stylesheet" href="css/reset.css"/>
 <link rel="stylesheet" href="css/app.css"/>
 </head>
-
 <body ng-controller="Menu">
-<div rfz-view="main">
-  <div rfz-pane="settings" class="animate">
-    <div ng-include="'/partials/settings.html'"></div>
-  </div>
-  <div rfz-pane="settings-notifications">
-    <div ng-include="'/partials/settings-notifications.html'"></div>
-  </div>
-  <div class="rfz-view has-menu">
-    <div ng-switch="mainView" rfz-pane="main">
-      <div ng-switch-when="overview">
-        <div ng-controller="Overview" ng-include="'/partials/overview.html'"></div>
-      </div>
-      <div ng-switch-when="progress" rfz-view="progress">
-        <div rfz-pane="progress">
-          <div ng-controller="Progress" ng-include="'/partials/progress.html'"></div>
+  <div class="rfz-view">
+    <div rfz-tabs="mainView" >
+      <div rfz-tab="overview">
+        <div rfz-view-stack="main">
+          <div rfz-view="main" class="has-menu">
+            <div ng-controller="Overview" ng-include="'/partials/overview.html'"></div>
+          </div>
+          <div rfz-view="settings" class="animate">
+            <div ng-include="'/partials/settings.html'"></div>
+          </div>
+          <div rfz-view="settings-notifications">
+            <div ng-include="'/partials/settings-notifications.html'"></div>
+          </div>
         </div>
       </div>
-      <div ng-switch-when="payments" ng-controller="Payments">
-        <div rfz-view="all">
-          <div rfz-pane="all">
+      <div rfz-tab="progress">
+        <div rfz-view-stack="progress">
+          <div rfz-view="progress" class="has-menu">
+            <div ng-controller="Progress" ng-include="'/partials/progress.html'"></div>
+          </div>
+        </div>
+      </div>
+      <div rfz-tab="payments" ng-controller="Payments">
+        <div rfz-view-stack="all">
+          <div rfz-view="all" class="has-menu">
             <div ng-include="'/partials/payments.html'"></div>
           </div>
-          <div rfz-pane="payment">
+          <div rfz-view="payment" class="has-menu">
             <div ng-include="'/partials/payment-single.html'"></div>
           </div>
         </div>
@@ -51,11 +55,7 @@
       <span>{{path | capitalize}}</span>
     </li>
   </ul>
-</div>
   <div id="console"></div>
-  <!-- In production use:
-  <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.4/angular.min.js"></script>
-  -->
-<script src="/js/lib/require.js" data-main="/js/config/config.js"></script>
+  <script src="/js/lib/require.js" data-main="/js/config/config.js"></script>
 </body>
 </html>

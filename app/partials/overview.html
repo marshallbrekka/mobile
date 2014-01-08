@@ -1,13 +1,13 @@
-<div rfz-pane-header="Overview">
-  <div rfz-pane-header-button
-       rfz-tap="$rfzNavPush('settings', 'up')"
+<div rfz-view-header="Overview">
+  <div rfz-view-header-button
+       rfz-tap="$rfzViewStack.$push('settings', 'up')"
        position="right"
        class="header-settings">
     <span></span>
   </div>
-  <div rfz-pane-header-button position="left">Refresh</div>
+  <div rfz-view-header-button position="left">Refresh</div>
 </div>
-<div rfz-pane-body
+<div rfz-view-body
      rfz-scroll-view
      scroll-view-name="main"
      can-scroll-x="false">

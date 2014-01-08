@@ -1,17 +1,17 @@
-<div rfz-pane-header="Settings">
-  <div rfz-pane-header-button 
+<div rfz-view-header="Klien">
+  <div rfz-view-header-button 
        position="left"
        class="header-button"
        rfz-tap-element-range="50"
-       rfz-tap="$rfzNavPop()">Cancel</div>
-  <div rfz-pane-header-button
-       rfz-tap="$rfzNavPush('settings-notifications', 'side')"
+       rfz-tap="$rfzViewStack.$pop()">Cancel</div>
+  <div rfz-view-header-button
+       rfz-tap="$rfzViewStack.$push('settings-notifications', 'side')"
        rfz-tap-element-range="50"
        position="right">
     Second Pane
   </div>
 </div>
-<div rfz-pane-body
+<div rfz-view-body
      rfz-scroll-view
      can-scroll-x="false">
   <div rfz-scroll-view-body>

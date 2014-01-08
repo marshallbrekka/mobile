@@ -1,10 +1,10 @@
-<div rfz-pane-header="Payment Detail">
-  <div rfz-pane-header-button position="left"
-       rfz-tap="$rfzNavPop()"
+<div rfz-view-header="Payment Detail">
+  <div rfz-view-header-button position="left"
+       rfz-tap="$rfzViewStack.$pop()"
        type="back"
-       rfz-change-direction="left">Back</div>
+       rfz-change-direction="left">{{$rfzViewProperties.previousTitle}}</div>
 </div>
-<div rfz-pane-body >
+<div rfz-view-body >
   <div >
   Loading... (not actually loading)
   </div>
