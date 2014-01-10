@@ -1,4 +1,5 @@
-define(["./numb"], function(numb) {
+'use strict';
+lib.factory("$rfz.util.point", ["$rfz.util.number" function (numb) {
   function Point(x, y) {
     this.x = x || 0;
     this.y = y || 0;
@@ -111,5 +112,6 @@ define(["./numb"], function(numb) {
     this.y = numb.clampNum(this.y, minPoint.y, maxPoint.y);
     return this;
   }
+
   return Point;
-});
+}]);

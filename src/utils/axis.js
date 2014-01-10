@@ -1,4 +1,6 @@
-define([], function() {
+'use strict';
+
+lib.factory("$rfz.util.axis", function() {
   function Axis(x, y) {
     this.x = x;
     this.y = y;

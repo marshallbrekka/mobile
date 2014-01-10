@@ -1,8 +1,5 @@
-define([
-  "lib/underscore"
-], function(
-  _
-) {
+'use strict';
+lib.factory("$rfz.util.attrs", function () {
   function toBoolean(v) {
     return v === "true";
   }

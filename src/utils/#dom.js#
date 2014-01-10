@@ -1,4 +1,5 @@
 define(["lib/angular/angular", "lib/underscore"], function(angular, _) {
+lib.factory("$rfz.util.dom", )
   function createElement(tag, props) {
     var propString = _.chain(props)
                      .pairs()

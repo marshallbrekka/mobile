@@ -1,11 +1,5 @@
-define([
-"./point",
-"lib/underscore"
-], function(
-Point,
-_
-) {
-
+'use strict';
+lib.factory("$rfz.util.css", function () {
   function elementToElements(element) {
     if (element instanceof Node) {
       return [element];

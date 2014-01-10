@@ -1,5 +1,4 @@
-define([], function() {
-
+lib.factory("$rfz.util.number", function() {
   function clampNum(n, min, max) {
     return Math.min(Math.max(n, min), max);
   }

@@ -1,25 +1,9 @@
-define([
-  "lib/underscore",
-  "./css",
-  "./numb",
-  "./point",
-  "./axis",
-  "./edges",
-  "./indicator",
-  "./events",
-  "./render"
-], function(
-  _,
-  css,
-  numb,
-  Point,
-  Axis,
-  Edges,
-  Indicator,
-  Events,
-  render
-) {
-
+lib.factory("$rfz.util.scrollView",
+           ["$rfz.util.css", "$rfz.util.numb", "$rfz.util.point", "$rfz.util.axis",
+            "$rfz.util.edges", "$rfz.util.indicator", "$rfz.util.events",
+            "rfz.util.render", 
+            function(css, numb, Point, Axis, Edges, Indicator, Events, render) {
+  // TODO replace this with _.defaults
   function merge(obj1, obj2) {
     var re = {};
     for (var k in obj1) {
@@ -645,4 +629,4 @@ define([
   }
 
   return Scroll;
-});
+}]);

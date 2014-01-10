@@ -1,4 +1,5 @@
-define(["./axis"], function(Axis) {
+'use strict';
+lib.factory("$rfz.util.edges", ["$rfz.util.axis", function (Axis) {
   function Edges(o) {
     o = o || {};      
     this.top = o.top || 0;
@@ -18,4 +19,4 @@ define(["./axis"], function(Axis) {
   }
 
   return Edges;
-});
+}]);

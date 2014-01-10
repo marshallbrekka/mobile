@@ -1,16 +1,4 @@
-define([
-"config/rfz",
-"utils/css",
-"utils/events",
-"utils/point"
-],function(
-RFZ,
-css,
-EVENTS,
-Point
-) {
-
-RFZ.directive("toggle", function() {
+lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.events", "$rfz.util.point", function(css, EVENTS, Point) {
   function setPosition(slider, percent) {
     var unit = -50 * percent;
     css.setTranslate(slider[0], unit);
@@ -106,6 +94,5 @@ RFZ.directive("toggle", function() {
         end : pointerEnd
       });
     }
-  }
-});
-});
+    }
+}]);

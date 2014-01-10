@@ -1,8 +1,4 @@
-define([
-  "lib/underscore"
-], function(
-  _
-) {
+lib.factory("$rfz.util.render", function() {
   var renderQueue = {};
   var scheduled = false;
   var rendering = false;

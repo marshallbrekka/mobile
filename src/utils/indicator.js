@@ -1,13 +1,16 @@
-define(["./css", "./dom", "./events"], function(css, dom, EVENTS) {
+lib.factory("$rfz.util.indicator",
+            ["$rfz.util.css", "$rfz.util.events", function(css, EVENTS) {
   function Indicator(axis) {
+    var parent = angular.element("<div class='scroll-indicator scroll-indicator-" +
+                                 axis + "'></div>");
     this.axis = axis;
-    this.dom =
-      {parent : dom.createElement("div",
-                                  {"class" : "scroll-indicator scroll-indicator-" + axis}),
-       start : dom.createElement("div"),
-       middle : dom.createElement("div", {"class" : "scroll-indicator-middle"}),
-       end : dom.createElement("div")};
-    dom.appendChildren(this.dom.parent, [this.dom.start, this.dom.middle, this.dom.end]);
+    this.dom = {
+      parent : parent[0],
+      start : angular.element("<div></div>")[0],
+      middle : angular.element("<div class='scroll-indicator-middle'></div>")[0],
+      end : angular.element("<div></div>")[0]
+    };
+    parent.append(this.dom.start, this.dom.middle, this.dom.end);
     this.dom.parent.addEventListener(EVENTS.TRANSITION_END, this);
     this.anchor = Indicator.ANCHOR_START;
     this.element = this.dom.parent;
@@ -93,7 +96,13 @@ define(["./css", "./dom", "./events"], function(css, dom, EVENTS) {
     }
     this.element.style[styleAttr] = pos + "px";
   }
-
+              
+  /*
+  Takes one of the constants ANCHOR_START or ANCHOR_END.
+  Sets how the indicator is anchor to the page. If the
+  Indicator is for the x axis, then the start anchor is
+  "left" and the end anchor is "right".
+  */
   Indicator.prototype.setAnchor = function(anchor) {
     if (anchor != this.anchor) {
       this.anchor = anchor;
@@ -108,4 +117,4 @@ define(["./css", "./dom", "./events"], function(css, dom, EVENTS) {
   }
 
   return Indicator;
-});
+}]);
