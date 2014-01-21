@@ -1,13 +1,13 @@
 lib.factory("$rfz.util.indicator",
             ["$rfz.util.css", "$rfz.util.events", function(css, EVENTS) {
   function Indicator(axis) {
-    var parent = angular.element("<div class='scroll-indicator scroll-indicator-" +
+    var parent = angular.element("<div class='rfz-scroll-indicator rfz-scroll-indicator-" +
                                  axis + "'></div>");
     this.axis = axis;
     this.dom = {
       parent : parent[0],
       start : angular.element("<div></div>")[0],
-      middle : angular.element("<div class='scroll-indicator-middle'></div>")[0],
+      middle : angular.element("<div class='rfz-scroll-indicator-middle'></div>")[0],
       end : angular.element("<div></div>")[0]
     };
     parent.append(this.dom.start, this.dom.middle, this.dom.end);
@@ -17,8 +17,12 @@ lib.factory("$rfz.util.indicator",
     this.animation = false;
   }
 
+  // Platform specific constants
+  // TODO set platform/version specific values
   Indicator.THICKNESS = 7;
   Indicator.END_SIZE = 3;
+
+  // Generic constants
   Indicator.ANIMATION_DURATION = 0.25;
   Indicator.ANCHOR_START = 0;
   Indicator.ANCHOR_END = 1;

@@ -1,35 +1,20 @@
 lib.factory("$rfz.util.scrollView",
-           ["$rfz.util.css", "$rfz.util.numb", "$rfz.util.point", "$rfz.util.axis",
+           ["$rfz.util.css", "$rfz.util.number", "$rfz.util.point", "$rfz.util.axis",
             "$rfz.util.edges", "$rfz.util.indicator", "$rfz.util.events",
-            "rfz.util.render", 
-            function(css, numb, Point, Axis, Edges, Indicator, Events, render) {
-  // TODO replace this with _.defaults
-  function merge(obj1, obj2) {
-    var re = {};
-    for (var k in obj1) {
-      if (obj1.hasOwnProperty(k)) {
-        re[k] = obj1[k];
-      }
-    }
-    for (var k in obj2) {
-      if (obj2.hasOwnProperty(k)) {
-        re[k] = obj2[k];
-      }
-    }
-    return re;
-  }
+            "$rfz.util.render", "$rfz.util.platform",
+            function(css, numb, Point, Axis, Edges, Indicator, Events, render, platform) {
 
   function Scroll(opts) {
-    var opts = merge({
-      bounces          : true,
+    var opts = _.defaults(opts, {
+      bounces          : platform.os === platform.PLATFORMS.IOS,
       canScrollX       : true,
       canScrollY       : true,
       showIndicatorX   : true,
       showIndicatorY   : true,
       pageSizeFactor   : 1,
       pagingEnabled    : false,
-      autoPageHeight : false
-    }, opts);
+      autoPageHeight   : false
+    });
 
     if (!opts.container) {
       throw new Error("Scroll view requires a container");
@@ -73,7 +58,7 @@ lib.factory("$rfz.util.scrollView",
       if (canScroll) self.container.appendChild(indicator.element);
     }, this.canScroll, this.indicator);
 
-    new Events.PointerNested(this.container, {
+    new Events.PointerNested(angular.element(this.container), {
       preStart : _.bind(this.pointerPreStart, this),
       start    : _.bind(this.pointerStart, this),
       preMove  : _.bind(this.pointerPreMove, this),
@@ -102,20 +87,24 @@ lib.factory("$rfz.util.scrollView",
     }
   }
 
+  // Platform/version specific contants
+  // TODO specify values depending on os
+  Scroll.DELECERATION_FRICTION = 0.998;
+  Scroll.MIN_INDICATOR_LENGTH = 32;
+  Scroll.PAGING_ACCELERATION = 3.6E-4;
+  Scroll.PAGING_DECELERATION = 0.9668;
+
+  // Generic constants
   Scroll.MAX_TRACKING_TIME = 100;
   Scroll.OUT_OF_BOUNDS_FRICTION = 0.5;
   Scroll.PAGE_TRANSITION_DURATION = 0.25;
-  Scroll.DELECERATION_FRICTION = 0.998;
   Scroll.MINIMUM_VELOCITY = 10;
-  Scroll.MIN_INDICATOR_LENGTH = 32;
   Scroll.MIN_OUT_OF_RANGE_DISTANCE = 1;
   Scroll.MIN_VELOCITY_FOR_DECELERATION = 250;
   Scroll.MIN_VELOCITY_FOR_DECELERATION_WITH_PAGING = 300;
   Scroll.DESIRED_FRAME_RATE = 1 / 60;
   Scroll.PENETRATION_DECELERATION = 8;
   Scroll.PENETRATION_ACCELERATION = 5;
-  Scroll.PAGING_ACCELERATION = 3.6E-4;
-  Scroll.PAGING_DECELERATION = 0.9668;
   Scroll.INDICATOR_DISPLAY_EVENT = "indicatorDisplayEvent";
   Scroll.MOVE_TRANSITION_END_EVENT = "moveTransitionEndEvent";
   Scroll.CHANGE_POSITION_EVENT = "changePositionEvent";
@@ -409,15 +398,6 @@ lib.factory("$rfz.util.scrollView",
         this.position.clamp(this.minPoint, this.maxPoint);
       }
 
-      // Prevent traditional scrolling from happening.
-//      this.container.scrollTop = this.container.scrollLeft = 0;
-
-      // the real translate values have to be negative, but we treat
-      // scroll values as positive (zero being the top of the page,
-      // positive n being further down the page).
-//      if (!this.dragging) {
-
-//      }
       if (animate) {
         this.scrollTransitionActive = true;
         Events.bind(this.container, this, [Events.TRANSITION_END]);
@@ -505,6 +485,7 @@ lib.factory("$rfz.util.scrollView",
       // For each frame when paging, perform maths to adjust the
       // decelerationVelocity, and then apply the velocity to
       // the animated position.
+      // TODO ask Nacho for some help with cleaning this up.
       this.decelerationVelocity
         = Point.applyFn(function(decVelocity, position, nextPagePosition) {
           var velocity = decVelocity + 1E3

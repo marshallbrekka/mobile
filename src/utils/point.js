@@ -1,5 +1,5 @@
 'use strict';
-lib.factory("$rfz.util.point", ["$rfz.util.number" function (numb) {
+lib.factory("$rfz.util.point", ["$rfz.util.number", function (numb) {
   function Point(x, y) {
     this.x = x || 0;
     this.y = y || 0;

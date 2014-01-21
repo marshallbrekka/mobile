@@ -82,7 +82,9 @@ lib.directive("rfzViewStack", ["$animate", function($animate) {
           var previous = ctrl.history[ctrl.history.length - 1];
           element.addClass(transitionClass(current.transition));
           current.scope.$destroy();
-          $animate.removeClass(previous.element, "ng-hide");
+          $animate.removeClass(previous.element, "ng-hide", function() {
+            previous.scope.$broadcast("$navStackViewFocus");
+          });
           $animate.leave(current.element, function() {
             element.removeClass(transitionClass(current.transition));
           });
@@ -106,6 +108,7 @@ lib.directive("rfzViewStack", ["$animate", function($animate) {
 
         viewObj.transclude(view.scope, function(clone) {
           clone.addClass("rfz-pane");
+          clone.addClass("rfz-js-header-animation");
           clone.css("z-index", ctrl.depthIndex++ + "");
           view.element = clone;
           var anchor = viewObj.element;
@@ -115,7 +118,7 @@ lib.directive("rfzViewStack", ["$animate", function($animate) {
             var current = ctrl.history[ctrl.history.length - 1];
             newScope.$rfzViewProperties = {
               canGoBack : true,
-              previousTitle : current.scope.$rfzViewProperties.title
+              previous : current.scope.$rfzViewProperties
             };
             $animate.addClass(current.element, "ng-hide");
           }
@@ -140,7 +143,7 @@ lib.directive("rfzViewStack", ["$animate", function($animate) {
       };
       pushView(attr.rfzViewStack, "none");
     }
-  }
+  };
 }]);
 
 lib.directive("rfzView", function() {
@@ -149,7 +152,7 @@ lib.directive("rfzView", function() {
     priority: 800,
     require: '^rfzViewStack',
     link: function(scope, element, attr, ctrl, $transclude) {
-      ctrl.views[attrs.rfzView] = {
+      ctrl.views[attr.rfzView] = {
         transclude : $transclude,
         element : element
       };
@@ -162,22 +165,27 @@ lib.directive("rfzView", function() {
 // title of the header. It also adds some classes for us.
 //
 // <div rfz-pane-header="Overview">
-lib.directive("rfzViewHeader", function() {
+lib.directive("rfzViewHeader", ["$rfz.util.platform", function(platform) {
   return {
     restrict : "A",
     compile : function(element, attrs) {
-      element.append(angular.element("<div class='rfz-view-header-name'>" + 
-                                     attrs.rfzViewHeader + "</div>"))
-        .removeAttr("rfzViewHeader")
-        .addClass("rfz-view-header");
-      return function(scope, element, attr) {
-        if (scope.$rfzViewProperties) {
-          scope.$rfzViewProperties.title = attrs.rfzViewHeader;
+      var title = attrs.rfzViewHeader;
+      element.removeAttr("rfzViewHeader")
+             .addClass("rfz-view-header");
+      return {
+        pre : function(scope, element, attr) {
+          var titleEl = angular.element("<div class='rfz-view-header-name'>" +
+                                        title + "</div>");
+          element.append(titleEl);
+          var dimensions = titleEl[0].getBoundingClientRect();
+          if (scope.$rfzViewProperties) {
+            scope.$rfzViewProperties.title = attrs.rfzViewHeader;
+          }
         }
       }
     }
   }
-});
+}]);
 
 lib.directive("rfzViewHeaderButton", function() {
   return {
@@ -187,6 +195,8 @@ lib.directive("rfzViewHeaderButton", function() {
       elem.addClass("rfz-view-header-button-" + attrs.position);
       if (attrs.type === "back") {
         elem.addClass("rfz-view-header-button-back");
+        var wrapper = angular.element("<div class='rfz-view-header-button-back-contents'></div>");
+        elem.append(wrapper.append(elem.contents()));
       }
       elem.removeAttr("position").removeAttr("type").removeAttr("action");
     }
@@ -204,3 +214,99 @@ lib.directive("rfzViewBody", function() {
     }
   }
 });
+
+
+lib.animation('.rfz-js-header-animation', ["$rfz.util.css", function($rfzCss) {
+  var duration = 300;
+
+  return {
+    enter: function(element, done) {
+      var width = element[0].getBoundingClientRect().width;
+      var headerName = element[0].querySelector(".rfz-view-header-name");
+      var leftButton = element[0].querySelector(".rfz-view-header-button-back-contents");
+
+      if (headerName) {
+        var size = $rfzCss.textRect(headerName);
+        $rfzCss.setTranslate(headerName, (width / 2) + (size.width / 2));
+      }
+      if (leftButton) {
+        var size = $rfzCss.textRect(leftButton);
+        $rfzCss.setTranslate(leftButton,(width / 2) - (size.width / 2));
+      }
+
+      setTimeout(function() {
+        done();
+      }, duration);
+
+      //run the animation here and call done when the animation is complete
+      return function(cancelled) {
+        if (headerName) {
+          $rfzCss.setTransform(headerName, "");
+        }
+        if (leftButton) {
+          $rfzCss.setTransform(leftButton, "");
+        }
+      };
+    },
+
+    leave : function(element, done) {
+      var width = element[0].getBoundingClientRect().width;
+      var headerName = element[0].querySelector(".rfz-view-header-name");
+      var leftButton = element[0].querySelector(".rfz-view-header-button-back-contents");
+
+      if (headerName) {
+        var headerSize = $rfzCss.textRect(headerName);
+        $rfzCss.setTranslate(headerName);
+      }
+      if (leftButton) {
+        var buttonSize = $rfzCss.textRect(leftButton);
+      }
+
+      _.delay(function() {
+        if (headerName) {
+          $rfzCss.setTranslate(headerName, (width / 2) + (headerSize.width / 2));
+        }
+        if (leftButton) {
+          $rfzCss.setTranslate(leftButton, (width / 2) - (buttonSize.width / 2));
+        }
+      }, 10);
+
+      setTimeout(function() {
+        done();
+      }, duration);
+    },
+    addClass: function(element, className, done) {
+      if (className === "ng-hide") {
+        var width = element[0].getBoundingClientRect().width;
+        var headerName = element[0].querySelector(".rfz-view-header-name");
+
+        if (headerName) {
+          var size = $rfzCss.textRect(headerName);
+          $rfzCss.setTranslate(headerName, (-1 * (width / 2)) + (size.width / 2) + 27);
+        }
+
+        setTimeout(function() {
+          $rfzCss.setTransform(headerName, "");
+          done();
+        }, duration);
+      }
+    },
+    beforeRemoveClass: function(element, className, done) {
+      if (className === "ng-hide") {
+        var width = element[0].getBoundingClientRect().width;
+        var headerName = element[0].querySelector(".rfz-view-header-name");
+
+        if (headerName) {
+          var size = $rfzCss.textRect(headerName);
+          $rfzCss.setTranslate(headerName, (-1 * (width / 2)) + (size.width / 2) + 27);
+          console.log(headerName.style.webkitTransform);
+          console.log(element[0].className);
+        }
+        done();
+        setTimeout(function() {
+          $rfzCss.setTransform(headerName, "");
+        }, duration);
+      }
+    }
+  };
+}]);

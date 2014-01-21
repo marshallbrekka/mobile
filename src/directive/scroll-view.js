@@ -28,7 +28,7 @@ lib.directive("rfzScrollView", ["$rfz.util.scrollView", "$rfz.util.attrs",
     require : "?^rfzScrollViewListener",
     replace : true,
     transclude : true,
-    template : "<div class='rfz-scroll-view-container' ng-transclude></div>"
+    template : "<div class='rfz-scroll-view-container' ng-transclude></div>",
     scope : {
       currentPage : "="
     },
@@ -83,6 +83,6 @@ lib.directive("rfzScrollViewBody", function() {
     restrict : "A",
     replace : true,
     transclude : true,
-    template : "<div class='rfz-scroll-view-content' ng-transclude></div>",
+    template : "<div class='rfz-scroll-view-content' ng-transclude></div>"
   }
 });

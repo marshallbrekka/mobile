@@ -137,6 +137,8 @@ lib.factory("$rfz.util.events",
     listener has claimed the event.
   */
   function PointerNested(el, opts) {
+    // get the raw dom node reference
+    el = el[0];
     this.el = el;
     this.opts = _.defaults(opts, {movePreventDefault : true,
                                   endPreventDefault : true,
@@ -245,7 +247,7 @@ lib.factory("$rfz.util.events",
     this.calledPreMove = false;
     this.firstMove = false;
     if (this.callStage("preStart", e)) {
-      this.log("preStart claimed");
+      this.log("preStart claimed: our pre start fn returned true");
       e._pointerNested = this;
       this.owns.preStart = true;
     }
@@ -256,7 +258,8 @@ lib.factory("$rfz.util.events",
     this.firstMove = true;
     if (e._pointerNested) {
       if (e._pointerNested === this) {
-        this.log("start owner");
+        this.log("start owner: the eventOwner is equal to 'this', set the other " +
+                 "listeners and call the start stage");
         this.setEndListener(true);
         this.setMoveListener(true);
         this.callStage("start", e);
@@ -265,7 +268,8 @@ lib.factory("$rfz.util.events",
         }
       }
     } else {
-      this.log("start no owner");
+      this.log("start no owner: no one claimed the start event, so call all of " +
+               "the start stages");
       this.setEndListener(true);
       this.setMoveListener(true);
       this.callStage("start", e);
@@ -279,36 +283,36 @@ lib.factory("$rfz.util.events",
     this.log("preMove");
     this.calledPreMove = true;
     if (e._pointerNested && e._pointerNested.owns.move) {
-      this.log("preMove bail early");
+      this.log("preMove bail early: the event owner was already set, and the owner " +
+               "claimed the event last time, so don't even try to intercept.");
       return;
     } else if (this.callStage("preMove", e)) {
-      this.log("preMove claim");
+      this.log("preMove claim: our preMove fn returned true, so claim the event.");
       e._pointerNested = this;
       this.owns.preMove = true;
-      e._pointerNestedHardClaim = true;
-    } else if (this.opts.preMove) {
-      if (!e._pointerNestedHardClaim) {
-        e._pointerNested = this;
-        this.owns.preMove = true;
-      }
     } else if (this.owns.preMove) {
-      this.log("preMove lost");
+      this.log("preMove lost: we didn't claim, but we did try and claim last " +
+               "time, call our lost fn.");
       this.setEndListener(false);
       this.setMoveListener(false);
       this.callStage("lost");
+    } else {
+      this.callStage("intercepted");
     }
   };
 
   PointerNested.prototype.move = function(e) {
-    this.log("move");
+    this.log("move step");
     // if we are getting called on document after we
     // unbound from el and bound to document, return
     if (e.moveStage && e.moveStage[this]) {
-      this.log("move 2nd call in an event");
+      this.log("move 2nd call in an event, this means we were unbound from" + 
+               " our element and bound to the document. so we exited early");
       return;
     } else if (e._pointerNested) {
       if (e._pointerNested == this) {
-        this.log("move own");
+        this.log("move own: the owner of the move event is equal to 'this', " +
+                 "so we own it, run the 'move' stage");
         this.callStage("move", e);
         if (this.firstMove) {
           this.firstMove = false;
@@ -320,14 +324,27 @@ lib.factory("$rfz.util.events",
         if (this.opts.movePreventDefault) {
           e.preventDefault();
         }
-      } else if (this.owns.preMove) {
-        this.log("move lost");
+      } 
+      // The problem here is for things like an item in a list. If any
+      // move action occurs in a direction the scroll view supports,
+      // then we should sort of know that the item should get its
+      // "lost" method called.
+      // One solution could be that if we already owned the event,
+      // then we do lose the event for good if we didn't claim the
+      // preMove. however, if we never claimed a preMove, the system
+      // will call our lost method, but if on another move event
+      // the previous move owner loses it, and then we end up claiming
+      // it, then we call the start stage again.
+      else if (this.owns.preMove) {
+        this.log("move lost: we indicated that we owned preMove, but we weren't " +
+                 "the indicated owner on the event object. calling the lost stage.");
         this.setEndListener(false);
         this.setMoveListener(false);
         this.callStage("lost");
       }
     } else {
-      this.log("move called without any owner");
+      this.log("move called without any owner, so set ourselves to the " +
+               "owner and call move again.");
       e._pointerNested = this;
       this.move(e);
     }
@@ -336,7 +353,7 @@ lib.factory("$rfz.util.events",
   PointerNested.prototype.end = function(e) {
     this.log("end");
     if (this.calledPreMove && !this.owns.move) {
-      this.log("end lost");
+      this.log("end lost: calledPreMove was ture, and we don't own move, so call lost.");
       this.callStage("lost");
     } else {
       this.log("end called");
@@ -361,7 +378,7 @@ lib.factory("$rfz.util.events",
     ineractions that only need to know when a "click" has happened on
     the provided element.
 
-    Takes an element, a cb to call with the event for the POINTER_END
+    Takes an angular element, a cb to call with the event for the POINTER_END
     event, and a map of options that allow customizing its behavior.
 
     opts are:
@@ -386,12 +403,13 @@ lib.factory("$rfz.util.events",
       elementRange : 50
     });
     this.opts.cb = cb;
-
+    var boundLost = _.bind(this.lost, this);
     var eventHandlers = {
       start : _.bind(this.start, this),
       move  : _.bind(this.move,  this),
       end   : _.bind(this.end, this),
-      lost  : _.bind(this.lost, this)
+      lost  : boundLost,
+      intercepted : boundLost
     };
 
     if (this.opts.claimX || this.opts.claimY || this.opts.delayedClaim) {
@@ -404,7 +422,7 @@ lib.factory("$rfz.util.events",
   PointerAction.prototype.start = function(e) {
     this.inRange = true;
     this.addClassTimeout = setTimeout(_.bind(function() {
-      dom.addClass(this.element, this.opts.activeClass);
+      this.element.addClass(this.opts.activeClass);
     }, this), 100);
     if (this.opts.claimX || this.opts.claimY) {
       this.startPoint = Point.fromEvent(e);
@@ -418,6 +436,7 @@ lib.factory("$rfz.util.events",
   }
 
   PointerAction.prototype.preMove = function(e) {
+    console.log("premove");
     if (this.opts.claimX || this.opts.claimY) {
       var point = Point.fromEvent(e),
       diff = Point.difference(this.startPoint, point),
@@ -427,26 +446,27 @@ lib.factory("$rfz.util.events",
           (abs.y > abs.x && this.opts.claimY)) {
         return true;
       }
+      console.log("didn't claim direction");
     }
     if (this.opts.delayedClaim !== null) {
       if (this.claimedAfterDelay) {
         return true;
       } else {
         clearTimeout(this.claimTimeout);
-        dom.removeClass(this.element, this.opts.activeClass);
+        this.element.removeClass(this.opts.activeClass);
       }
     }
   }
 
   PointerAction.prototype.move = function(e) {
-    var inRange = inElementRange(this.element, e);
+    var inRange = inElementRange(this.element[0], e);
     var fnName = inRange ? "addClass" : "removeClass";
     // If we are in/(out of) range and weren't in/(out of) range before,
     // then set inRange to our current state, and add/remove the
     // active class
     if (this.inRange !== inRange) {
       this.inRange = inRange;
-      dom[fnName](this.element, this.opts.activeClass);
+      this.element[fnName](this.opts.activeClass);
     }
   }
 
@@ -456,16 +476,16 @@ lib.factory("$rfz.util.events",
     if (this.inRange) {
       // Add the active class before calling the callback
       // so that it at least flashes for a moment.
-      dom.addClass(this.element, this.opts.activeClass);
+      this.element.addClass(this.opts.activeClass);
       this.opts.cb.call(null, e);
-      dom.removeClass(this.element, this.opts.activeClass);
+      this.element.removeClass(this.opts.activeClass);
     }
   }
 
   PointerAction.prototype.lost = function() {
     clearTimeout(this.addClassTimeout);
     clearTimeout(this.claimTimeout);
-    dom.removeClass(this.element, this.opts.activeClass);
+    this.element.removeClass(this.opts.activeClass);
   }
 
   events.PointerAction = PointerAction;

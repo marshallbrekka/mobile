@@ -85,7 +85,7 @@ lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.events", "$rfz.util.poin
         }
       }
 
-      new EVENTS.PointerNested(element[0], {
+      new EVENTS.PointerNested(element, {
         start : pointerStart,
         preMove : function() {
           return true;

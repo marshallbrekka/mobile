@@ -1,0 +1,2 @@
+(function() {
+var lib = angular.module("rfz", ["ngAnimate"]);

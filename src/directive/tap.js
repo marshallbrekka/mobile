@@ -23,7 +23,7 @@ lib.directive("rfzTap", ["$rfz.util.events", "$rfz.util.point", "$rfz.util.edges
       opts.elementRange = parseInt(attrs.rfzTapElementRange);
     }
 
-    new events.PointerAction(element[0], function() {
+    new events.PointerAction(element, function() {
       scope.$apply(attrs["rfzTap"]);
     }, opts);
   }

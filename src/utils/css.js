@@ -1,5 +1,5 @@
 'use strict';
-lib.factory("$rfz.util.css", function () {
+lib.factory("$rfz.util.css", ["$rfz.util.point", function (Point) {
   function elementToElements(element) {
     if (element instanceof Node) {
       return [element];
@@ -54,6 +54,12 @@ lib.factory("$rfz.util.css", function () {
     });
   }
 
+  function textRect(element) {
+    var range = document.createRange();
+    range.selectNodeContents(element);
+    return range.getBoundingClientRect();
+  }
+
   return {
     setTransform : setTransform,
     setTranslate : setTranslate,
@@ -61,6 +67,7 @@ lib.factory("$rfz.util.css", function () {
     setTransitionProperties : setTransitionProperties,
     setTransition : setTransition,
     getPointFromTranslate : getPointFromTranslate,
-    setTransformOrigin : setTransformOrigin
+    setTransformOrigin : setTransformOrigin,
+    textRect           : textRect
   };
-});
+}]);
