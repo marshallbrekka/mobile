@@ -296,8 +296,6 @@ lib.factory("$rfz.util.events",
       this.setEndListener(false);
       this.setMoveListener(false);
       this.callStage("lost");
-    } else {
-      this.callStage("intercepted");
     }
   };
 
@@ -341,6 +339,8 @@ lib.factory("$rfz.util.events",
         this.setEndListener(false);
         this.setMoveListener(false);
         this.callStage("lost");
+      } else {
+        this.callStage("intercepted");
       }
     } else {
       this.log("move called without any owner, so set ourselves to the " +
@@ -436,7 +436,6 @@ lib.factory("$rfz.util.events",
   }
 
   PointerAction.prototype.preMove = function(e) {
-    console.log("premove");
     if (this.opts.claimX || this.opts.claimY) {
       var point = Point.fromEvent(e),
       diff = Point.difference(this.startPoint, point),
@@ -446,7 +445,6 @@ lib.factory("$rfz.util.events",
           (abs.y > abs.x && this.opts.claimY)) {
         return true;
       }
-      console.log("didn't claim direction");
     }
     if (this.opts.delayedClaim !== null) {
       if (this.claimedAfterDelay) {
