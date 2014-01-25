@@ -1,0 +1,117 @@
+/* scroll-view styles */
+
+/* 
+Structure of scroll view is as follows
+
+<div class="rfz-scroll-view-container">
+  <div class="rfz-scroll-view-content">
+  // Scroll view content here
+  </div>
+  <div class="rfz-scroll-indicator rfz-scroll-indicator-y">
+    <div></div> // top of indicator
+    <div class="rfz-scroll-indicator-middle">
+    <div></div> // bottom of indicator
+  </div>
+</div>
+*/
+
+.rfz-scroll-view-container {
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  overflow:hidden;
+}
+
+.rfz-scroll-view-content {
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  -webkit-transform: translate3d(0, 0, 0);
+  overflow:auto;
+}
+
+.rfz-scroll-indicator {
+  position:absolute;
+  opacity:0;
+  -webkit-transition-property: opacity;
+  -webkit-transition-duration: 0.25s;
+  z-index:100;
+}
+
+.rfz-scroll-indicator-y {
+  top:0;
+  right:2px;
+}
+
+.rfz-scroll-indicator-x {
+  bottom:2px;
+  left:0;
+}
+
+.rfz-scroll-indicator > div {
+  position:absolute;
+  top:0;
+  left:0;
+  -webkit-transform-origin: left top;
+}
+
+
+.rfz-os-ios {
+  &.rfz-os-version-7 {
+
+    .rfz-scroll-indicator {
+      width:5px;
+      height:5px;
+    }
+
+
+    .rfz-scroll-indicator-y > div {
+      width:5px;
+      height:2px;
+    }
+
+    .rfz-scroll-indicator-x > div {
+      width:2px;
+      height:5px;
+    }
+
+
+    .rfz-scroll-indicator > div {
+      background:url("img/ios-7-scroll-indicator.png") no-repeat;
+      background-size:5px;
+    }
+
+    @media (-webkit-min-device-pixel-ratio: 2) {
+      .rfz-scroll-indicator > div {
+         background-image:url("img/ios-7-scroll-indicator@2x.png") !important;
+       }
+    }
+
+    .rfz-scroll-indicator-x .rfz-scroll-indicator-middle {
+      background-position:-2px 0;
+      left:2px;
+      width:1px;
+    }
+
+    .rfz-scroll-indicator-y .rfz-scroll-indicator-middle {
+      background-position:0 -2px;
+      top:2px;
+      height:1px;
+    }
+
+    .rfz-scroll-indicator-y :nth-child(3) {
+      top:2px;
+      background-position:0 -3px;
+    }
+
+    .rfz-scroll-indicator-x :nth-child(3) {
+      left:2px;
+      background-position:-3px 0;
+    }
+  }
+}
+
+

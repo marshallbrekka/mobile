@@ -1,0 +1,314 @@
+/* view */
+
+* {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none; /* Disable selection/copy in UIWebView */
+}
+
+/* Generic container that fills the entire positioned parent view */
+.rfz-view {
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  background:#000;
+}
+
+/*
+a single view, designed to be animated between, which is why it is
+declared as a layer
+*/
+.rfz-pane {
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+}
+
+.rfz-view-body {
+  @extend .rfz-pane;
+  -webkit-transform:translate3d(0,0,0);
+  background:#fff;
+  z-index:10;
+}
+
+.rfz-view-has-header .rfz-view-body {
+  top: 45px;
+}
+
+/* pane header */
+.rfz-view-header {
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    height:44px;
+    z-index:100;
+    text-align:center;
+    background:#f7f7f7;
+}
+
+.rfz-view-header-name {
+    position:absolute;
+    left: 0;
+    right: 0;
+    z-index:0;
+    text-align:center;
+}
+
+.rfz-view-header-button {
+    z-index:1;
+    position:relative;
+}
+
+.rfz-view-header-button-left {
+  float : left;
+}
+
+.rfz-view-header-button-right {
+  float : right;
+}
+
+
+.rfz-os-ios {
+  font-family : "Helvetica";
+  &.rfz-os-version-7 {
+    $transition-duration : 0.3s;
+    $transition-function : cubic-bezier(0,0,0.11,1);
+    .rfz-pane {
+      &.ng-enter, &.ng-leave, &.ng-hide-add, &.ng-hide-remove, &.ng-animate {
+         transition:top $transition-duration $transition-function;
+         -webkit-transition:top $transition-duration $transition-function;
+         display:block!important;
+      }
+
+      &.ng-enter {
+         .rfz-view-header {
+             opacity:0;
+          }
+
+        .rfz-view-body {
+          clip:rect(0, 5000px, 50000px, -15px);
+          box-shadow:0 0 15px 0 rgba(0,0,0, 0.40);
+          -webkit-transform:translate3d(100%,0,0);
+        }
+
+        .rfz-view-header-button-back-contents {
+          opacity:0.5;
+        }
+
+        &.ng-enter-active {
+          .rfz-view-header {
+            transition:opacity $transition-duration ease-in;
+            -webkit-transition:opacity $transition-duration ease-in;
+            opacity:1;
+          }
+
+          .rfz-view-header-name {
+              transition:-webkit-transform $transition-duration ease-out;
+              -webkit-transition:-webkit-transform $transition-duration ease-out;
+              -webkit-transform:translate3d(0,0,0) !important;
+           }
+
+          .rfz-view-header-button-back-contents {
+              transition:-webkit-transform $transition-duration ease-out,
+                         opacity $transition-duration ease-in;
+              -webkit-transition:-webkit-transform $transition-duration ease-out,
+                                 opacity $transition-duration ease-in;
+
+              -webkit-transform:translate3d(0,0,0) !important;
+              opacity:1;
+           }
+
+          .rfz-view-body {
+            box-shadow:0 0 10px 0 rgba(0,0,0, 0);
+            transition:-webkit-transform $transition-duration $transition-function,
+                       box-shadow $transition-duration linear;
+            -webkit-transition:-webkit-transform $transition-duration $transition-function,
+                       box-shadow $transition-duration linear;
+            -webkit-transform:translate3d(0,0,0);
+          }
+        }
+      }
+
+      &.ng-hide-add {
+        .rfz-view-body {
+          transition:-webkit-transform $transition-duration $transition-function,
+                     opacity $transition-duration linear;
+          -webkit-transition:-webkit-transform $transition-duration $transition-function,
+                     opacity $transition-duration linear;
+
+          -webkit-transform:translate3d(0,0,0);
+          opacity:1;
+        }
+
+        .rfz-view-header-button-back-contents {
+          transition:opacity $transition-duration ease-out;
+          -webkit-transition:opacity $transition-duration ease-out;
+          opacity:1;
+        }
+
+
+        .rfz-view-header-name {
+          transition:-webkit-transform $transition-duration ease-out,
+                     opacity $transition-duration ease-out;
+          -webkit-transition:-webkit-transform $transition-duration ease-out,
+                             opacity $transition-duration ease-out;
+
+        }
+
+        &.ng-hide-add-active {
+          .rfz-view-header-name {
+            opacity:0.1;
+          }
+
+          .rfz-view-header-button-back-contents {
+            opacity : 0;
+          }
+
+          .rfz-view-body {
+            opacity:0.9;
+            -webkit-transform:translate3d(-25%,0,0);
+          }
+        }
+      }
+
+      &.ng-hide-remove {
+        .rfz-view-body {
+          -webkit-transform:translate3d(-25%, 0, 0);
+          opacity:0.9;
+        }
+
+        .rfz-view-header-button-back-contents {
+          transition:opacity $transition-duration ease-out;
+          -webkit-transition:opacity $transition-duration ease-out;
+          opacity:0;
+        }
+
+        .rfz-view-header-name {
+          opacity : 0.1;
+        }
+
+        &.ng-hide-remove-active {
+          .rfz-view-body {
+            transition:-webkit-transform $transition-duration $transition-function,
+                       opacity $transition-duration linear;
+            -webkit-transition:-webkit-transform $transition-duration $transition-function,
+                       opacity $transition-duration linear;
+            -webkit-transform:translate3d(0,0,0);
+            opacity:1;
+          }
+
+          .rfz-view-header-name {
+            -webkit-transform:translate3d(0,0,0) !important;
+            transition:-webkit-transform $transition-duration ease-out,
+                       opacity $transition-duration ease-in;
+            -webkit-transition:-webkit-transform $transition-duration ease-out,
+                       opacity $transition-duration ease-in;
+            opacity:1;
+          }
+
+          .rfz-view-header-button-back-contents {
+            opacity:1;
+          }
+        }
+      }
+
+      &.ng-leave {
+
+        .rfz-view-header {
+          opacity:1;
+        }
+
+        .rfz-view-header-button-back-contents {
+          transition:-webkit-transform $transition-duration ease-out,
+                     opacity $transition-duration ease-in;
+          -webkit-transition:-webkit-transform $transition-duration ease-out,
+                     opacity $transition-duration ease-in;
+        }
+
+        .rfz-view-header-name {
+          transition: -webkit-transform $transition-duration ease-out;
+          -webkit-transition: -webkit-transform $transition-duration ease-out;
+        }
+
+        .rfz-view-body {
+          clip:rect(0, 5000px, 50000px, -15px);
+          -webkit-transform:translate3d(0,0,0);
+          box-shadow:0 0 15px 0 rgba(0,0,0, 0.40);
+        }
+
+        &.ng-leave-active {
+
+          .rfz-view-header {
+            transition:opacity $transition-duration ease-in-out;
+            -webkit-transition:opacity $transition-duration ease-in-out;
+            opacity:0;
+          }
+
+          .rfz-view-header-button-back-contents {
+            opacity:0;
+          }
+
+          .rfz-view-body {
+            transition:-webkit-transform $transition-duration $transition-function,
+                       box-shadow $transition-duration linear;
+            -webkit-transition:-webkit-transform $transition-duration $transition-function,
+                       box-shadow $transition-duration linear;
+            -webkit-transform:translate3d(100%,0,0);
+            box-shadow:0 0 10px 0 rgba(0,0,0, 0);
+          }
+        }
+      }
+    }
+
+    .rfz-view-header {
+      background:#f7f7f8;
+      border-bottom:1px solid #999999;
+      font-size:16px;
+      font-weight:bold;
+    }
+
+    .rfz-view-header-name, .rfz-view-header-button {
+      padding-top:14px;
+      padding-right:10px;
+      line-height:16px;
+      height:30px;
+      -webkit-transform:translate3d(0,0,0);
+    }
+
+    .rfz-view-header-button {
+      -webkit-transform:none;
+    }
+
+    .rfz-view-header-button.pointer-start {
+      -webkit-transition:opacity 0.2s;
+      opacity:0.3;
+    }
+
+    .rfz-view-header-button-back:before {
+      content : '';
+      display:block;
+      position:absolute;
+      top:15px;
+      left:10px;
+      height:11px;
+      width:11px;
+      border:3px solid #007aff;
+      border-width: 0 0 3px 3px;
+      -webkit-transform : rotate(45deg);
+    }
+
+    .rfz-view-header-button-back {
+      padding-left:27px;
+      color : #007aff;
+      font-weight:normal;
+    }
+
+    .rfz-view-header-button-back-contents {
+      -webkit-transform:translate3d(0,0,0);
+    }
+  }
+}

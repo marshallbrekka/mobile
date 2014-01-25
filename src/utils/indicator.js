@@ -10,7 +10,9 @@ lib.factory("$rfz.util.indicator",
       middle : angular.element("<div class='rfz-scroll-indicator-middle'></div>")[0],
       end : angular.element("<div></div>")[0]
     };
-    parent.append(this.dom.start, this.dom.middle, this.dom.end);
+    parent.append(this.dom.start);
+    parent.append(this.dom.middle);
+    parent.append(this.dom.end);
     this.dom.parent.addEventListener(EVENTS.TRANSITION_END, this);
     this.anchor = Indicator.ANCHOR_START;
     this.element = this.dom.parent;
@@ -19,8 +21,8 @@ lib.factory("$rfz.util.indicator",
 
   // Platform specific constants
   // TODO set platform/version specific values
-  Indicator.THICKNESS = 7;
-  Indicator.END_SIZE = 3;
+  Indicator.THICKNESS = 5;
+  Indicator.END_SIZE = 2;
 
   // Generic constants
   Indicator.ANIMATION_DURATION = 0.25;
