@@ -24,6 +24,7 @@
       vertical-align:middle;
       border-bottom:1px solid #a1a1a1;
       transition:color 0.2s ease-out, background 0.2s ease-out;
+      -webkit-transition:color 0.2s ease-out, background 0.2s ease-out;
       }
 
       li.pointer-start, li.active-item {
@@ -33,6 +34,7 @@
 
       li.pointer-start {
         transition:none !important;
+        -webkit-transition:none !important;
       }
 
     </style>
@@ -45,11 +47,9 @@
       <div rfz-view-body>
         <div rfz-scroll-view can-scroll-x="false">
           <ul rfz-scroll-view-body>
-            {{$rfzPlatform.os}}
             <li ng-repeat="item in items" class="ITEM"
                 rfz-tap="openItem(item); $rfzViewStack.$push('item','side')"
                 rfz-tap-claim-x="true"
-                rfz-tap-delayed-claim="3000"
                 ng-class="{'active-item' : item.active}">
               {{item.name}} plus some more
             </li>
@@ -68,7 +68,8 @@
       <div rfz-view-body rfz-scroll-view can-scroll-x="false">
         <div rfz-scroll-view-body>
           {{$rfzViewProperties.previous.selectedItem}}
-          <div rfz-tap="$rfzViewStack.$push('item2', 'slide')" rfz-tap-claim-x="true">Next</div>
+          <div rfz-tap="$rfzViewStack.$push('item2', 'slide')"
+          rfz-tap-claim-x="true">Go to "Something More"</div>
         </div>
       </div>
     </div>
@@ -82,6 +83,9 @@
       <div rfz-view-body rfz-scroll-view can-scroll-x="false">
         <div rfz-scroll-view-body>
           hello something
+          <div rfz-tap="$rfzViewStack.$push('item', 'slide')"
+          rfz-tap-claim-x="true">Go to another "General" page</div>
+
         </div>
       </div>
     </div>
