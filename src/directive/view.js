@@ -86,7 +86,6 @@ lib.directive("rfzViewStack", ["$animate", function($animate) {
             var length = ctrl.history.length;
             while (length) {
               length--;
-              console.log("removing", length);
               var last = ctrl.history.pop();
               if (last.name === viewName) {
                 previous = last;
