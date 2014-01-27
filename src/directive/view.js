@@ -68,7 +68,7 @@ lib.directive("rfzViewStack", ["$animate", function($animate) {
       if (parentController) {
         ctrl.depthIndex = parentController.depthIndex + 1;
       }
-      function popView() {
+      function popView(viewName) {
         if (ctrl.history.length === 1){
           if (parentController) {
             parentController.$$pop();
@@ -77,10 +77,36 @@ lib.directive("rfzViewStack", ["$animate", function($animate) {
                             " of stack, and no parent stack exists.");
           }
         } else {
+          var previous,
+              transition,
+              silentRemove = [],
+              current = ctrl.history.pop();
+
+          if (viewName) {
+            var length = ctrl.history.length;
+            while (length) {
+              length--;
+              console.log("removing", length);
+              var last = ctrl.history.pop();
+              if (last.name === viewName) {
+                previous = last;
+                ctrl.history.push(last);
+                continue;
+              } else {
+                transition = last.transition;
+                silentRemove.push(last);
+              }
+            }
+          } else {
+            previous = ctrl.history[ctrl.history.length - 1];
+            transition = current.transition;
+          }
           // Remove the current view, and reveal the previous one.
-          var current = ctrl.history.pop();
-          var previous = ctrl.history[ctrl.history.length - 1];
-          element.addClass(transitionClass(current.transition));
+          _.each(silentRemove, function(view) {
+            view.scope.$destroy();
+            view.element.remove();
+          })
+          element.addClass(transitionClass(transition));
           current.scope.$destroy();
           $animate.removeClass(previous.element, "ng-hide", function() {
             previous.scope.$broadcast("$navStackViewFocus");
@@ -102,6 +128,7 @@ lib.directive("rfzViewStack", ["$animate", function($animate) {
         // Properties to use for the new view
         var newScope = scope.$new();
         var view = {
+          name : name,
           scope : newScope,
           transition : transitionType
         };
@@ -137,8 +164,8 @@ lib.directive("rfzViewStack", ["$animate", function($animate) {
         $push : function(name, transitionType) {
           pushView(name, transitionType);
         },
-        $pop : function() {
-          popView();
+        $pop : function(name) {
+          popView(name);
         }
       };
       pushView(attr.rfzViewStack, "none");
