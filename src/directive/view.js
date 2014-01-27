@@ -257,7 +257,7 @@ lib.animation('.rfz-js-header-animation', ["$rfz.util.css", function($rfzCss) {
       }
       if (leftButton) {
         var size = $rfzCss.textRect(leftButton);
-        $rfzCss.setTranslate(leftButton,(width / 2) - (size.width / 2));
+        $rfzCss.setTranslate(leftButton,(width / 2) - (size.width / 2) - 27);
       }
 
       setTimeout(function() {
@@ -293,7 +293,8 @@ lib.animation('.rfz-js-header-animation', ["$rfz.util.css", function($rfzCss) {
           $rfzCss.setTranslate(headerName, (width / 2) + (headerSize.width / 2));
         }
         if (leftButton) {
-          $rfzCss.setTranslate(leftButton, (width / 2) - (buttonSize.width / 2));
+          $rfzCss.setTranslate(leftButton,
+                               (width / 2) - (buttonSize.width / 2) - 27);
         }
       }, 10);
 
@@ -308,7 +309,8 @@ lib.animation('.rfz-js-header-animation', ["$rfz.util.css", function($rfzCss) {
 
         if (headerName) {
           var size = $rfzCss.textRect(headerName);
-          $rfzCss.setTranslate(headerName, (-1 * (width / 2)) + (size.width / 2) + 27);
+          $rfzCss.setTranslate(headerName,
+                               (-1 * (width / 2)) + (size.width / 2) + 27);
         }
 
         setTimeout(function() {
@@ -324,9 +326,8 @@ lib.animation('.rfz-js-header-animation', ["$rfz.util.css", function($rfzCss) {
 
         if (headerName) {
           var size = $rfzCss.textRect(headerName);
-          $rfzCss.setTranslate(headerName, (-1 * (width / 2)) + (size.width / 2) + 27);
-          console.log(headerName.style.webkitTransform);
-          console.log(element[0].className);
+          $rfzCss.setTranslate(headerName,
+                               (-1 * (width / 2)) + (size.width / 2) + 27);
         }
         done();
         setTimeout(function() {
