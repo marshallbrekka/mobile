@@ -71,7 +71,6 @@ declared as a layer
   float : right;
 }
 
-
 .rfz-os-ios {
   font-family : "Helvetica";
   &.rfz-os-version-7 {
@@ -310,5 +309,63 @@ declared as a layer
     .rfz-view-header-button-back-contents {
       -webkit-transform:translate3d(0,0,0);
     }
+  }
+}
+
+.rfz-os-android {
+    font-family:arial;
+  &.rfz-os-version-4 {
+    $transition-duration : 0.3s;
+    $transition-function : ease-out;
+
+    .rfz-pane {
+      -webkit-transform:translate3d(0,0,0);
+
+      &.ng-enter, &.ng-leave, &.ng-animate, &.ng-hide-add, &.ng-hide-remove {
+          -webkit-transition:-webkit-transform $transition-duration $transition-function,
+                             opacity $transition-duration $transition-function;
+         display:block !important;
+      }
+
+      &.ng-enter {
+        box-shadow:0 0 10px 0 rgba(0,0,0, 0.5);
+        opacity : 0;
+        -webkit-transform:scale3d(0.7, 0.7, 1);
+
+        &.ng-enter-active {
+          -webkit-transition:-webkit-transform $transition-duration $transition-function,
+                             opacity $transition-duration $transition-function;
+          -webkit-transform:scale3d(1, 1, 1);
+          opacity:1;
+        }
+      }
+
+      &.ng-leave {
+        box-shadow:0 0 10px 0 rgba(0,0,0, 0.5);
+        opacity : 1;
+        -webkit-transform:scale3d(1, 1, 1);
+
+        &.ng-leave-active {
+          -webkit-transition:-webkit-transform $transition-duration $transition-function,
+                             opacity $transition-duration $transition-function;
+          -webkit-transform:scale3d(0.7, 0.7, 0.7);
+          opacity:0;
+        }
+      }
+    }
+
+    .rfz-view-header-name, .rfz-view-header-button {
+      padding-top:14px;
+      padding-left:10px;
+      padding-right:10px;
+      line-height:16px;
+      height:30px;
+      text-align: left;
+    }
+
+    .rfz-view-header-button.pointer-start {
+      background:rgba(0,0,0,0.1);
+    }
+
   }
 }

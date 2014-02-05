@@ -113,4 +113,56 @@ Structure of scroll view is as follows
   }
 }
 
+.rfz-os-android {
+  &.rfz-os-version-4 {
 
+    .rfz-scroll-indicator {
+      width:4px;
+      height:4px;
+    }
+
+    .rfz-scroll-indicator-y > div {
+      width:4px;
+      height:1px;
+    }
+
+    .rfz-scroll-indicator-x > div {
+      width:1px;
+      height:4px;
+    }
+
+
+    .rfz-scroll-indicator > div {
+      background:url("img/android-4-scroll-indicator.png") no-repeat;
+      background-size:4px;
+    }
+
+    @media (-webkit-min-device-pixel-ratio: 2) {
+      .rfz-scroll-indicator > div {
+         background-image:url("img/android-4-scroll-indicator@2x.png") !important;
+       }
+    }
+
+    .rfz-scroll-indicator-x .rfz-scroll-indicator-middle {
+      background-position:-2px 0;
+      left:2px;
+      width:1px;
+    }
+
+    .rfz-scroll-indicator-y .rfz-scroll-indicator-middle {
+      background-position:0 -2px;
+      top:2px;
+      height:1px;
+    }
+
+    .rfz-scroll-indicator-y :nth-child(3) {
+      top:2px;
+      background-position:0 -3px;
+    }
+
+    .rfz-scroll-indicator-x :nth-child(3) {
+      left:2px;
+      background-position:-3px 0;
+    }
+  }
+}
