@@ -200,10 +200,7 @@ lib.directive("rfzViewHeader", ["$rfz.util.platform", function(platform) {
              .addClass("rfz-view-header");
       return {
         pre : function(scope, element, attr) {
-          var titleEl = angular.element("<div class='rfz-view-header-name'>" +
-                                        title + "</div>");
-          element.append(titleEl);
-          var dimensions = titleEl[0].getBoundingClientRect();
+          scope.$viewName = title;
           if (scope.$rfzViewProperties) {
             scope.$rfzViewProperties.title = attrs.rfzViewHeader;
           }
@@ -242,98 +239,103 @@ lib.directive("rfzViewBody", function() {
 });
 
 
-lib.animation('.rfz-js-header-animation', ["$rfz.util.css", function($rfzCss) {
+lib.animation('.rfz-js-header-animation', ["$rfz.util.css", "$rfz.util.platform",
+                                           function($rfzCss, $platform) {
   var duration = 300;
-
-  return {
-    enter: function(element, done) {
-      var width = element[0].getBoundingClientRect().width;
-      var headerName = element[0].querySelector(".rfz-view-header-name");
-      var leftButton = element[0].querySelector(".rfz-view-header-button-back-contents");
-
-      if (headerName) {
-        var size = $rfzCss.textRect(headerName);
-        $rfzCss.setTranslate(headerName, (width / 2) + (size.width / 2));
-      }
-      if (leftButton) {
-        var size = $rfzCss.textRect(leftButton);
-        $rfzCss.setTranslate(leftButton,(width / 2) - (size.width / 2) - 27);
-      }
-
-      setTimeout(function() {
-        done();
-      }, duration);
-
-      //run the animation here and call done when the animation is complete
-      return function(cancelled) {
-        if (headerName) {
-          $rfzCss.setTransform(headerName, "");
-        }
-        if (leftButton) {
-          $rfzCss.setTransform(leftButton, "");
-        }
-      };
-    },
-
-    leave : function(element, done) {
-      var width = element[0].getBoundingClientRect().width;
-      var headerName = element[0].querySelector(".rfz-view-header-name");
-      var leftButton = element[0].querySelector(".rfz-view-header-button-back-contents");
-
-      if (headerName) {
-        var headerSize = $rfzCss.textRect(headerName);
-        $rfzCss.setTranslate(headerName);
-      }
-      if (leftButton) {
-        var buttonSize = $rfzCss.textRect(leftButton);
-      }
-
-      _.delay(function() {
-        if (headerName) {
-          $rfzCss.setTranslate(headerName, (width / 2) + (headerSize.width / 2));
-        }
-        if (leftButton) {
-          $rfzCss.setTranslate(leftButton,
-                               (width / 2) - (buttonSize.width / 2) - 27);
-        }
-      }, 10);
-
-      setTimeout(function() {
-        done();
-      }, duration);
-    },
-    addClass: function(element, className, done) {
-      if (className === "ng-hide") {
+  if ($platform.os === $platform.PLATFORMS.IOS &&
+      $platform.version.major >= 7) {
+    return {
+      enter: function(element, done) {
         var width = element[0].getBoundingClientRect().width;
         var headerName = element[0].querySelector(".rfz-view-header-name");
+        var leftButton = element[0].querySelector(".rfz-view-header-button-back-contents");
 
         if (headerName) {
           var size = $rfzCss.textRect(headerName);
-          $rfzCss.setTranslate(headerName,
-                               (-1 * (width / 2)) + (size.width / 2) + 27);
+          $rfzCss.setTranslate(headerName, (width / 2) + (size.width / 2));
+        }
+        if (leftButton) {
+          var size = $rfzCss.textRect(leftButton);
+          $rfzCss.setTranslate(leftButton,(width / 2) - (size.width / 2) - 27);
         }
 
         setTimeout(function() {
-          $rfzCss.setTransform(headerName, "");
           done();
         }, duration);
-      }
-    },
-    beforeRemoveClass: function(element, className, done) {
-      if (className === "ng-hide") {
+
+        //run the animation here and call done when the animation is complete
+        return function(cancelled) {
+          if (headerName) {
+            $rfzCss.setTransform(headerName, "");
+          }
+          if (leftButton) {
+            $rfzCss.setTransform(leftButton, "");
+          }
+        };
+      },
+
+      leave : function(element, done) {
         var width = element[0].getBoundingClientRect().width;
         var headerName = element[0].querySelector(".rfz-view-header-name");
+        var leftButton = element[0].querySelector(".rfz-view-header-button-back-contents");
 
         if (headerName) {
-          var size = $rfzCss.textRect(headerName);
-          $rfzCss.setTranslate(headerName,
-                               (-1 * (width / 2)) + (size.width / 2) + 27);
+          var headerSize = $rfzCss.textRect(headerName);
+          $rfzCss.setTranslate(headerName);
         }
-        done();
+        if (leftButton) {
+          var buttonSize = $rfzCss.textRect(leftButton);
+        }
+
+        _.delay(function() {
+          if (headerName) {
+            $rfzCss.setTranslate(headerName, (width / 2) + (headerSize.width / 2));
+          }
+          if (leftButton) {
+            $rfzCss.setTranslate(leftButton,
+                                 (width / 2) - (buttonSize.width / 2) - 27);
+          }
+        }, 10);
+
         setTimeout(function() {
-          $rfzCss.setTransform(headerName, "");
+          done();
         }, duration);
+      },
+      addClass: function(element, className, done) {
+        if (className === "ng-hide") {
+          var width = element[0].getBoundingClientRect().width;
+          var headerName = element[0].querySelector(".rfz-view-header-name");
+
+          if (headerName) {
+            var size = $rfzCss.textRect(headerName);
+            $rfzCss.setTranslate(headerName,
+                                 (-1 * (width / 2)) + (size.width / 2) + 27);
+          }
+
+          setTimeout(function() {
+            $rfzCss.setTransform(headerName, "");
+            done();
+          }, duration);
+        }
+      },
+      beforeRemoveClass: function(element, className, done) {
+        if (className === "ng-hide") {
+          var width = element[0].getBoundingClientRect().width;
+          var headerName = element[0].querySelector(".rfz-view-header-name");
+
+          if (headerName) {
+            var size = $rfzCss.textRect(headerName);
+            $rfzCss.setTranslate(headerName,
+                                 (-1 * (width / 2)) + (size.width / 2) + 27);
+          }
+          done();
+          setTimeout(function() {
+            $rfzCss.setTransform(headerName, "");
+          }, duration);
+        }
       }
     }
+  } else {
+    return {}
   };
 }]);

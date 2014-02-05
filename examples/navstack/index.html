@@ -22,17 +22,39 @@
       height:50px;
       padding-left:20px;
       vertical-align:middle;
-      border-bottom:1px solid #a1a1a1;
-      transition:color 0.2s ease-out, background 0.2s ease-out;
-      -webkit-transition:color 0.2s ease-out, background 0.2s ease-out;
+/*      border-bottom:1px solid #a1a1a1;*/
+      position:relative;
       }
+      
+      .rfz-os-ios li {
+        transition:color 0.2s ease-out, background 0.2s ease-out;
+        -webkit-transition:color 0.2s ease-out, background 0.2s ease-out;
+      }
+
+      li:after {
+        content:'';
+        width:100%;
+        height:1px;
+        position:absolute;
+        background:#a1a1a1;
+        left:0;
+        bottom:0;
+      }
+
+      @media (-webkit-min-device-pixel-ratio: 2) {
+        li:after {
+          -webkit-transform:scaleY(0.5);
+          -webkit-transform-origin:0 0;
+        }
+      }
+
 
       li.pointer-start, li.active-item {
         background:#909090;
         color:#fff;
       }
 
-      li.pointer-start {
+      .rfz-os-ios li.pointer-start {
         transition:none !important;
         -webkit-transition:none !important;
       }
@@ -43,7 +65,9 @@
 <body class="rfz-os-{{$rfzPlatform.os}} rfz-os-version-{{$rfzPlatform.version.major}}">
   <div rfz-view-stack="main">
     <div rfz-view="main" ng-controller="ItemList" class="rfz-view-has-header">
-      <div rfz-view-header="Items"></div>
+      <div rfz-view-header="Items">
+        <div class="rfz-view-header-name">{{$viewName}}</div>
+      </div>
       <div rfz-view-body>
         <div rfz-scroll-view can-scroll-x="false">
           <ul rfz-scroll-view-body>
@@ -51,7 +75,7 @@
                 rfz-tap="openItem(item); $rfzViewStack.$push('item','side')"
                 rfz-tap-claim-x="true"
                 ng-class="{'active-item' : item.active}">
-              {{item.name}} plus some more
+              {{item.name}}
             </li>
           </ul>
         </div>
@@ -59,35 +83,64 @@
     </div>
 
     <div rfz-view="item" class="rfz-view-has-header">
-      <div rfz-view-header="General" something="{{$rfzViewProperties.previous.selectedItem.name}}">
-        <div rfz-view-header-button position="left" type="back"
-             rfz-tap="$rfzViewStack.$pop()">
-          {{$rfzViewProperties.previous.title}}
+      <div rfz-view-header="General">
+        <div rfz-platform="IOS">
+          <div rfz-view-header-button position="left" type="back"
+               rfz-tap="$rfzViewStack.$pop()">
+            {{$rfzViewProperties.previous.title}}
+          </div>
+          <div class="rfz-view-header-name">{{$viewName}}</div>
+        </div>
+        <div rfz-platform="ANDROID">
+          <div class="rfz-view-header-name" 
+               rfz-view-header-button 
+               position="left" type="back"
+               rfz-tap="$rfzViewStack.$pop()">{{$viewName}}
+          </div>
         </div>
       </div>
       <div rfz-view-body rfz-scroll-view can-scroll-x="false">
         <div rfz-scroll-view-body>
-          {{$rfzViewProperties.previous.selectedItem}}
-          <div rfz-tap="$rfzViewStack.$push('item2', 'slide')"
-          rfz-tap-claim-x="true">Go to "Something More"</div>
+          <ul>
+            <span ng-if="$rfzViewProperties.previous.selectedItem">
+            <li>Item Name:
+            {{$rfzViewProperties.previous.selectedItem.name}}</li>
+            <li>Item Id:
+            {{$rfzViewProperties.previous.selectedItem.id}}</li>
+            <li>Active:
+            {{$rfzViewProperties.previous.selectedItem.active}}</li>
+            </span>
+            <li rfz-tap="$rfzViewStack.$push('item2', 'slide')"
+                rfz-tap-claim-x="true">Go To Next Pane</li>
+          </ul>
         </div>
       </div>
     </div>
     <div rfz-view="item2" class="rfz-view-has-header">
       <div rfz-view-header="More">
-        <div rfz-view-header-button position="left" type="back"
-             rfz-tap="$rfzViewStack.$pop()">
-          {{$rfzViewProperties.previous.title}}
+        <div rfz-platform="IOS">
+          <div rfz-view-header-button position="left" type="back"
+               rfz-tap="$rfzViewStack.$pop()">
+            {{$rfzViewProperties.previous.title}}
+          </div>
+          <div class="rfz-view-header-name">{{$viewName}}</div>
+        </div>
+        <div rfz-platform="ANDROID">
+          <div class="rfz-view-header-name" 
+               rfz-view-header-button 
+               position="left" type="back"
+               rfz-tap="$rfzViewStack.$pop()">{{$viewName}}
+          </div>
         </div>
       </div>
       <div rfz-view-body rfz-scroll-view can-scroll-x="false">
         <div rfz-scroll-view-body>
-          hello something
-          <div rfz-tap="$rfzViewStack.$push('item', 'slide')"
-          rfz-tap-claim-x="true">Go to another "General" page</div>
-          <div rfz-tap="$rfzViewStack.$pop('main')"
-          rfz-tap-claim-x="true" style="padding-top:20px">Go back to start</div>
-
+          <ul>
+            <li rfz-tap="$rfzViewStack.$push('item', 'slide')"
+                rfz-tap-claim-x="true">Go to another "General" page</li>
+            <li rfz-tap="$rfzViewStack.$pop('main')"
+                rfz-tap-claim-x="true">View All Items</li>
+          <ul>
         </div>
       </div>
     </div>
