@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en" ng-app="scrolling">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" 
+        content="initial-scale=1.0,
+                 minimum-scale=1.0,
+                 maximum-scale=1.0,
+                 width=device-width,
+                 user-scalable=no" />
+    <script src="/dist/js/angular/angular.js"></script>
+    <script src="/dist/js/angular/angular-animate.js"></script>
+    <script src="/dist/js/underscore.js"></script>
+    <script src="/dist/rfz.js"></script>
+    <script src="controller.js"></script>
+    <script src="directive.js"></script>
+    <link href="/dist/css/reset.css" rel="stylesheet">
+    <link href="/dist/rfz.css" rel="stylesheet">
+    <style>
+      li {
+      list-style-type : none;
+      line-height:50px;
+      height:50px;
+      padding-left:20px;
+      vertical-align:middle;
+/*      border-bottom:1px solid #a1a1a1;*/
+      position:relative;
+      }
+      
+      .rfz-os-ios li {
+        transition:color 0.2s ease-out, background 0.2s ease-out;
+        -webkit-transition:color 0.2s ease-out, background 0.2s ease-out;
+      }
+
+      li:after {
+        content:'';
+        width:100%;
+        height:1px;
+        position:absolute;
+        background:#a1a1a1;
+        left:0;
+        bottom:0;
+      }
+
+      @media (-webkit-min-device-pixel-ratio: 2) {
+        li:after {
+          -webkit-transform:scaleY(0.5);
+          -webkit-transform-origin:0 0;
+        }
+      }
+
+      li.pointer-start, li.active-item {
+        background:#909090;
+        color:#fff;
+      }
+
+      .rfz-os-ios li.pointer-start {
+        transition:none !important;
+        -webkit-transition:none !important;
+      }
+
+      .months-header {
+        text-align:center;
+        -webkit-mask-image: -webkit-linear-gradient(left, transparent 5%, 
+        white 18%, white 82%, transparent 95%);
+        position:relative;
+        height:56px;
+      }
+
+      .appointments-page {
+        float:left;
+      }
+
+      .appointment-month {
+      float:left;
+      color:#585453;
+      font-size:20px;
+      font-weight:normal;
+      text-align:center;
+      padding-top:18px;
+      padding-bottom:18px;
+      }
+
+.appointment-table {
+    /* override defaults for scroll-view */
+    position:relative !important;
+    bottom:auto !important;
+    overflow:visible !important;
+}
+
+
+    </style>
+  <title>Scrolling</title>
+</head>
+<body class="rfz-os-{{$rfzPlatform.os}} rfz-os-version-{{$rfzPlatform.version.major}}">
+  <div rfz-view-stack="main">
+    <div rfz-view="main" ng-controller="ScrollExamples" class="rfz-view-has-header">
+      <div rfz-view-header="Examples">
+        <div class="rfz-view-header-name">{{$viewName}}</div>
+      </div>
+      <div rfz-view-body>
+        <div rfz-scroll-view can-scroll-x="false">
+          <ul rfz-scroll-view-body>
+            <li ng-repeat="item in items" class="item"
+                rfz-tap="openItem(item); $rfzViewStack.$push(item.type,'side')"
+                rfz-tap-claim-x="true"
+                ng-class="{'active-item' : item.active}">
+              {{item.name}}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div rfz-view="paralax" ng-controller="Appointments" class="rfz-view-has-header">
+      <div rfz-view-header="Paralax">
+        <div rfz-platform="IOS">
+          <div rfz-view-header-button position="left" type="back"
+               rfz-tap="$rfzViewStack.$pop()">
+            {{$rfzViewProperties.previous.title}}
+          </div>
+          <div class="rfz-view-header-name">{{$viewName}}</div>
+        </div>
+        <div rfz-platform="ANDROID">
+          <div class="rfz-view-header-name" 
+               rfz-view-header-button
+               position="left" type="back"
+               rfz-tap="$rfzViewStack.$pop()">{{$viewName}}
+          </div>
+        </div>
+      </div>
+      <div rfz-scroll-view-listener
+           paralax-scroll
+           rfz-view-body>
+        <div rfz-scroll-view="container"
+             can-scroll-x="false">
+          <div rfz-scroll-view-body
+               style="overflow:visible;">
+            <div class="months-header">
+              <div rfz-scroll-view="header"
+                   can-scroll-y="false"
+                   show-indicator-x="false"
+                   paging-enabled="true"
+                   page-size-factor="0.5"
+                   class="month-body">
+                <div rfz-scroll-view-body
+                     class="months-container"
+                     style="padding:0 25%;
+                            width : {{((appointments.length) / 2) * 100}}%">
+                  <div ng-repeat="month in appointments"
+                       class="appointment appointment-month"
+                       style="width:{{100 / appointments.length}}%">
+                    {{month[0].date | date:'MMM yyyy'}}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div rfz-scroll-view="content"
+                 can-scroll-y="false"
+                 show-indicator-x="false"
+                 paging-enabled="true"
+                 auto-page-height="true"
+                 class="appointment-table"
+                 style="overflow:visible;">
+              <div rfz-scroll-view-body
+                   style="width: {{appointments.length * 100}}%; overflow:visible;">
+                <div ng-repeat="month in appointments"
+                     style="width: {{100 / appointments.length}}%"
+                     class="appointments-page">
+                  <ul>
+                    <li ng-repeat="appointment in month"
+                        ng-class="{'active-item' : appointment.active}"
+                        rfz-tap="openAppointment(appointment); 
+                                 $rfzViewStack.$push('appointment', 'side')"
+                        rfz-tap-delayed-claim="1000">
+                      <div style="float:left">{{appointment.name}}</div>
+                      <div style="float:right; padding-right:10px;">{{appointment.date | date:hh}}</div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div rfz-view="appointment" class="rfz-view-has-header">
+      <div rfz-view-header="Appointment">
+        <div rfz-platform="IOS">
+          <div rfz-view-header-button position="left" type="back"
+               rfz-tap="$rfzViewStack.$pop()">
+            {{$rfzViewProperties.previous.title}}
+          </div>
+          <div class="rfz-view-header-name">{{$viewName}}</div>
+        </div>
+        <div rfz-platform="ANDROID">
+          <div class="rfz-view-header-name" 
+               rfz-view-header-button
+               position="left" type="back"
+               rfz-tap="$rfzViewStack.$pop()">{{$viewName}}
+          </div>
+        </div>
+      </div>
+      <div rfz-view-body>
+        <div rfz-scroll-view can-scroll-x="false">
+          <ul rfz-scroll-view-body>
+            <li>Title:
+            {{$rfzViewProperties.previous.appointment.name}}</li>
+            <li>Date: {{$rfzViewProperties.previous.appointment.name |
+            date}}</li>
+            <li>Details:
+            {{$rfzViewProperties.previous.appointment.details}}</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
