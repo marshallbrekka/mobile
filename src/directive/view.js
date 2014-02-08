@@ -50,9 +50,14 @@ and the $pop method was called, then it looks for its controller on
 its parent and calls $pop there, thus removing the current view from
 the stack, as well as the last view on the parents stack.
 */
-lib.directive("rfzViewStack", ["$animate", function($animate) {
+lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate, events) {
   function transitionClass(type) {
     return "rfz-view-stack-transition-" + type;
+  }
+
+  function stopEvent(e) {
+    e.preventDefault();
+    e.stopPropagation();
   }
 
   return {
@@ -104,13 +109,19 @@ lib.directive("rfzViewStack", ["$animate", function($animate) {
           _.each(silentRemove, function(view) {
             view.scope.$destroy();
             view.element.remove();
-          })
+          });
+
           element.addClass(transitionClass(transition));
           current.scope.$destroy();
+
+          events.bind(previous.element[0], stopEvent, events.POINTER_START, true);
           $animate.removeClass(previous.element, "ng-hide", function() {
+            events.unbind(previous.element[0], stopEvent, events.POINTER_START, true);
             previous.scope.$broadcast("$navStackViewFocus");
           });
+          events.bind(current.element[0], stopEvent, events.POINTER_START, true);
           $animate.leave(current.element, function() {
+            events.unbind(current.element[0], stopEvent, events.POINTER_START, true);
             element.removeClass(transitionClass(current.transition));
           });
           ctrl.depthIndex--;
@@ -146,10 +157,15 @@ lib.directive("rfzViewStack", ["$animate", function($animate) {
               canGoBack : true,
               previous : current.scope.$rfzViewProperties
             };
-            $animate.addClass(current.element, "ng-hide");
+            events.bind(current.element[0], stopEvent, events.POINTER_START, true);
+            $animate.addClass(current.element, "ng-hide", function() {
+              events.unbind(current.element[0], stopEvent, events.POINTER_START, true);
+            });
           }
           ctrl.history.push(view);
+          events.bind(clone[0], stopEvent, events.POINTER_START, true);
           $animate.enter(clone, anchor.parent(), anchor, function() {
+            events.unbind(clone[0], stopEvent, events.POINTER_START, true);
             element.removeClass(transitionClass(transitionType));
           });
         });
