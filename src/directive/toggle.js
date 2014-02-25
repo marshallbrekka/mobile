@@ -1,4 +1,4 @@
-lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.events", "$rfz.util.point", function(css, EVENTS, Point) {
+/*lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.events", "$rfz.util.point", function(css, EVENTS, Point) {
   function setPosition(slider, percent) {
     var unit = -50 * percent;
     css.setTranslate(slider[0], unit);
@@ -95,4 +95,87 @@ lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.events", "$rfz.util.poin
       });
     }
     }
+}]);
+*/
+lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.events", "$rfz.util.point", "$rfz.util.platform",
+                            function(css, events, Point, platform) {
+  return {
+    restrict : "A",
+    replace : true,
+    scope : {
+      model : "=rfzToggle"
+    },
+    template : "<div class='rfz-toggle' ng-class=\"{on : model}\"><div class='rfz-toggle-handle'></div></div>",
+    link : function(scope, element, attr) {
+      var handle = element.children();
+
+      function getTargetPoint(start, firstChange) {
+        var target = start.copy();
+        var unit = firstChange ? 35 : 25;
+        if (scope.model) {
+          target.x -= unit;
+        } else {
+          target.x += unit;
+        }
+        return target;
+      }
+
+      var startPosition;
+      var targetPoint;
+      var hasMoved;
+
+      function pointerStart (e) {
+        hasMoved = false;
+        startTime = new Date().getTime();
+        startPosition = Point.fromEvent(e);
+        element.addClass("pointer-start");
+        targetPoint = getTargetPoint(startPosition, true);
+      }
+
+      function pointerMove(e) {
+        var position = Point.fromEvent(e);
+        if (scope.model) {
+          if (position.x <= targetPoint.x) {
+            hasMoved = true;
+            scope.model = false;
+            targetPoint = getTargetPoint(targetPoint, false);
+            scope.$digest();
+          }
+        } else {
+          if (position.x >= targetPoint.x) {
+            hasMoved = true;
+            scope.model = true;
+            targetPoint = getTargetPoint(targetPoint, false);
+            scope.$digest();
+          }
+        }
+      }
+
+      function pointerLost(e) {
+        element.removeClass("pointer-start");
+      }
+
+
+      function pointerEnd(e) {
+        pointerLost(e);
+        if (!hasMoved) {
+          scope.model = !scope.model;
+          scope.$digest();
+        }
+      }
+
+      if (platform.os === platform.PLATFORMS.IOS) {
+        new events.PointerNested(element, {
+          start : pointerStart,
+          preMove : function() {
+            return true;
+          },
+          move : pointerMove,
+          end : pointerEnd,
+          lost : pointerLost
+
+        });
+      }
+    }
+  }
 }]);

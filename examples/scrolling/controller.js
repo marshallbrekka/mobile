@@ -1,3 +1,4 @@
+
 var module = angular.module("scrolling", ["rfz", "ngAnimate"]);
 
 module.controller("Appointments", ["$scope", function($scope){
@@ -74,6 +75,9 @@ module.controller("ScrollExamples", ["$scope", function($scope){
   $scope.items = [{
     name : "Paralax",
     type : "paralax"
+  },{
+    name : "Toggle Control",
+    type : "toggle"
   }];
 
   $scope.openItem = function(item) {
@@ -92,5 +96,11 @@ module.controller("ScrollExamples", ["$scope", function($scope){
       $scope.$digest();
     }
   });
+}]);
 
+module.controller("Toggle", ["$scope", function($scope) {
+  $scope.myModel = false;
+  $scope.toggle = function() {
+    $scope.myModel = !$scope.myModel;
+  }
 }]);

@@ -23,7 +23,6 @@
       height:50px;
       padding-left:20px;
       vertical-align:middle;
-/*      border-bottom:1px solid #a1a1a1;*/
       position:relative;
       }
       
@@ -45,7 +44,7 @@
       @media (-webkit-min-device-pixel-ratio: 2) {
         li:after {
           -webkit-transform:scaleY(0.5);
-          -webkit-transform-origin:0 0;
+          -webkit-transform-origin:0 bottom;
         }
       }
 
@@ -215,6 +214,34 @@
         </div>
       </div>
     </div>
+
+    <div rfz-view="toggle" class="rfz-view-has-header" ng-controller="Toggle">
+      <div rfz-view-header="Toggle">
+        <div rfz-platform="IOS">
+          <div rfz-view-header-button position="left" type="back"
+               rfz-tap="$rfzViewStack.$pop()">
+            {{$rfzViewProperties.previous.title}}
+          </div>
+          <div class="rfz-view-header-name">{{$viewName}}</div>
+        </div>
+        <div rfz-platform="ANDROID">
+          <div class="rfz-view-header-name" 
+               rfz-view-header-button
+               position="left" type="back"
+               rfz-tap="$rfzViewStack.$pop()">{{$viewName}}
+          </div>
+        </div>
+      </div>
+      <div rfz-view-body>
+        <div rfz-scroll-view can-scroll-x="false">
+          <ul rfz-scroll-view-body >
+            <li>Toggle Thing <div style="float:right; margin:5px 5px 0
+            0;" rfz-toggle="myModel"></div></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
 
   </div>
 </body>
