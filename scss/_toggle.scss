@@ -13,19 +13,18 @@
       width:51px;
       height:31px;
       border-radius:15px;
-      background-color:#e6e6e6;
       transition:0.25s all;
       -webkit-transition:0.25s all;
     }
 
     .rfz-toggle-handle {
+      box-sizing:content-box;
       top:1px;
       left : 2px;
       right:21px;
       height: 28px;
       -webkit-transform:translate3d(0, 0.5px, 0);
       -webkit-transform-origin:top right;
-
       border-radius:14px;
       background:#fff;
       box-shadow:0 0 0px 1px rgba(0,0,0,0.1),
@@ -37,37 +36,35 @@
     .rfz-toggle:after {
       content:'';
       position:absolute;
-      width:48px;
-      height:28px;
-      top:1px;
-      right:1px;
-      -webkit-transform:translate3d(-0.5px, 0.5px, 0);
-      -webkit-transform-origin: middle right;
-      background:#ffffff;
-      border-radius:14px;
-      z-index:1;
+      left:0;
+      top:0;
+      box-sizing:border-box;
+      width:51px;
+      height:31px;
+      border-radius:15px;
+      border: 2px solid #e6e6e6;
+      transition:0.3s all;
       -webkit-transition:0.3s all;
     }
 
     .rfz-toggle.pointer-start {
+
       .rfz-toggle-handle {
         right:14px;
       }
 
       &:after {
-        width:28px;
-        -webkit-transform: translate3d(0, 0, 0) scale(0.01);
+       border: 16px solid #e6e6e6;
+       border-bottom-width:15px;
+       border-left-width:35px;
       }
     }
 
     .rfz-toggle.on {
-      & {
-        background-color:#4bd662;
-      }
-
       &:after {
-       width:28px;
-       -webkit-transform: translate3d(0, 0, 0) scale(0.01);
+        border: 16px solid #4bd662;
+        border-bottom-width:15px;
+        border-left-width:35px;
       }
 
       .rfz-toggle-handle {
@@ -84,3 +81,65 @@
     }
   }
 }
+
+.rfz-os-android {
+  .rfz-toggle {
+    width:98px;
+    height:34px;
+    position:relative;
+  }
+
+  .rfz-toggle:after {
+    content:'';
+    position:absolute;
+    top:5px;
+    bottom:5px;
+    left:0;
+    right:0;
+    background:#d7d7d7;
+    z-index:1;
+  }
+
+  .rfz-toggle-handle {
+    z-index:2;
+    position:absolute;
+    left:1px;
+    top:6px;
+    width:47px;
+    height:16px;
+    background:#bebebe;
+    color: #fff;
+    font-size:14px;
+    padding-top:4px;
+    line-height:14px;
+    text-align:center;
+    border-width:1px;
+    border-style:solid;
+    border-top-color:rgba(255,255,255,0.34);
+    border-left-color:rgba(0,0,0,0.05);
+    border-right-color:rgba(0,0,0,0.05);
+    border-bottom-color:rgba(0,0,0,0.44);
+    box-shadow:0 0 0 1px rgba(0,0,0,0.06);
+    border-radius:1px;
+  }
+
+  .rfz-toggle.on {
+
+    .rfz-toggle-handle {
+       -webkit-transform:translate3d(47px, 0, 0);
+       background:#2ba5ce;
+       border-top-color:rgba(255,255,255,0.27);
+       border-left-color:rgba(0,0,0,0.03);
+       border-right-color:rgba(0,0,0,0.03);
+       border-bottom-color:rgba(0,0,0,0.22);
+    }
+
+  }
+
+  .rfz-toggle.pointer-start {
+    .rfz-toggle-handle {
+      background: #4bb2d5;
+    }
+  }
+}
+
