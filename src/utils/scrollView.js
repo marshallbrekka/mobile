@@ -59,6 +59,8 @@ lib.factory("$rfz.util.scrollView",
     }, this.canScroll, this.indicator);
 
     new Events.PointerNested(angular.element(this.container), {
+      startPreventDefault : false,
+      endPreventDefault : false,
       preStart : _.bind(this.pointerPreStart, this),
       start    : _.bind(this.pointerStart, this),
       preMove  : _.bind(this.pointerPreMove, this),
@@ -356,7 +358,9 @@ lib.factory("$rfz.util.scrollView",
   }
 
   Scroll.prototype.pointerEnd = function(e) {
-    e.preventDefault();
+    if (e.target.tagName !== "INPUT") {
+      e.preventDefault();
+    }
     this.dragging = false;
     this.startDeceleration();
     // If the deceleration function determined we weren't going to
