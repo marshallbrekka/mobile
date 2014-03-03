@@ -61,7 +61,7 @@
     </style>
   <title>Nav Stack</title>
 </head>
-<body class="rfz-os-{{$rfzPlatform.os}} rfz-os-version-{{$rfzPlatform.version.major}}">
+<body rfz-add-platform>
   <div rfz-view-stack="main">
     <div rfz-view="main" ng-controller="ItemList" class="rfz-view-has-header">
       <div rfz-view-header="Items">

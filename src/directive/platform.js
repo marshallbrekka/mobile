@@ -11,3 +11,13 @@ lib.directive("rfzPlatform", ["$rfz.util.platform", function($platform) {
     }
   }
 }]);
+
+lib.directive("rfzAddPlatform", ["$rfz.util.platform", function($platform) {
+  return {
+    restrict : "A",
+    compile : function(elem, attrs, link) {
+      elem.addClass("rfz-os-" + $platform.os);
+      elem.addClass("rfz-os-version-" + $platform.version.major);
+    }
+  }
+}]);
