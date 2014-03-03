@@ -268,6 +268,7 @@ declared as a layer
       border-bottom:1px solid #999999;
       font-size:16px;
       font-weight:bold;
+      padding-top:20px;
     }
 
     .rfz-view-header-name, .rfz-view-header-button {
@@ -304,6 +305,10 @@ declared as a layer
       padding-left:27px;
       color : #007aff;
       font-weight:normal;
+    }
+
+    .rfz-view-has-header .rfz-view-body {
+      top: 65px;
     }
 
     .rfz-view-header-button-back-contents {
