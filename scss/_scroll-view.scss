@@ -35,9 +35,6 @@ Structure of scroll view is as follows
 
 .rfz-scroll-indicator {
   position:absolute;
-  opacity:0;
-  -webkit-transition-property: opacity;
-  -webkit-transition-duration: 0.25s;
   z-index:100;
 }
 
@@ -52,10 +49,15 @@ Structure of scroll view is as follows
 }
 
 .rfz-scroll-indicator > div {
+  opacity:0;
   position:absolute;
   top:0;
   left:0;
+  backface-visibility: hidden;
+  -webkit-transition-property: opacity;
+  -webkit-transition-duration: 0.25s;
   -webkit-transform-origin: left top;
+  -webkit-backface-visibility: hidden;
 }
 
 

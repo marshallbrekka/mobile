@@ -97,7 +97,7 @@ lib.factory("$rfz.util.scrollView",
   Scroll.PAGING_DECELERATION = 0.9668;
 
   // Generic constants
-  Scroll.MAX_TRACKING_TIME = 100;
+  Scroll.MAX_TRACKING_TIME = 150;
   Scroll.OUT_OF_BOUNDS_FRICTION = 0.5;
   Scroll.PAGE_TRANSITION_DURATION = 0.25;
   Scroll.MINIMUM_VELOCITY = 10;
@@ -234,7 +234,7 @@ lib.factory("$rfz.util.scrollView",
   Scroll.prototype.trackedPositionsToVelocity = function() {
     var trackedScrolles = this.clipTrackedPositions(),
     firstScroll,lastScroll, distance, acceleration;
-    if (trackedScrolles.length > 2) {
+    if (trackedScrolles.length >= 2) {
       firstScroll = trackedScrolles[trackedScrolles.length - 1];
       lastScroll = trackedScrolles[0];
       var distance = Point.difference(lastScroll.point, firstScroll.point).inverse();

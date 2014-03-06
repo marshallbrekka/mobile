@@ -33,7 +33,6 @@ lib.factory("$rfz.util.indicator",
   Indicator.prototype.handleEvent = function(e) {
     if (e.type == EVENTS.TRANSITION_END) {
       if (this.fading) {
-        this.element.display = "none";
         this.fading = false;
       }
     }
@@ -58,14 +57,19 @@ lib.factory("$rfz.util.indicator",
   Indicator.prototype.show = function() {
     this.setAnimation(false);
     this.fading = false;
-    this.element.style.display = "block";
-    this.element.style.opacity = "1";
+    // Set to 0.99 instead of 1 because chrome/android repaints when
+    // going from 1 to < 1.
+    this.dom.start.style.opacity = "0.99";
+    this.dom.middle.style.opacity = "0.99";
+    this.dom.end.style.opacity = "0.99";
   }
 
   Indicator.prototype.hide = function() {
     this.setAnimation(false);
     this.fading = true;
-    this.element.style.opacity = "0";
+    this.dom.start.style.opacity = "0";
+    this.dom.middle.style.opacity = "0";
+    this.dom.end.style.opacity = "0";
   }
 
   Indicator.prototype.setLength = function(length, animate, duration) {
