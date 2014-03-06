@@ -277,8 +277,8 @@ lib.factory("$rfz.util.scrollView",
                                                  (maxLength - actualLength) + offsets[props.start]),
                                       minPosition, maxPosition - actualLength);
         }
-        indicator.setLength(actualLength, animate, duration);
         indicator.setPosition(minPosition, animate, duration);
+        indicator.setLength(actualLength, animate, duration);
       }
     }, this.indicator, this.canScroll, this.indicatorOffsets,
                   new Axis({start : "left", end : "right"}, {start : "top", end : "bottom"}),

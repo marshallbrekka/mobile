@@ -17,6 +17,7 @@ lib.factory("$rfz.util.indicator",
     this.anchor = Indicator.ANCHOR_START;
     this.element = this.dom.parent;
     this.animation = false;
+    this.position = 0;
   }
 
   // Platform specific constants
@@ -74,18 +75,26 @@ lib.factory("$rfz.util.indicator",
     
     if (this.anchor == Indicator.ANCHOR_START) {
       endElement = this.dom.end;
-      endPosition = scale;
-      middleOffset = 0;
+      startElement = this.dom.start;
+      startPosition = this.position;
+      middleOffset = startPosition;
+      endPosition = startPosition + scale;
+
     } else {
       endElement = this.dom.start;
-      endPosition = -scale;
-      middleOffset = -1;
+      startElement = this.dom.end;
+      startPosition = -this.position - 1;
+      middleOffset = startPosition - 1;
+      endPosition = startPosition - scale;
     }
+
     if (this.axis == "x") {
+      css.setTranslate(startElement, startPosition);
       css.setTransform(this.dom.middle,
                        "translate3d(" + middleOffset + "px,0,0) scale(" + scale + ",1)");
       css.setTranslate(endElement, endPosition);
     } else {
+      css.setTranslate(startElement, 0, startPosition);
       css.setTransform(this.dom.middle,
                        "translate3d(0," + middleOffset + "px,0) scale(1," + scale + ")");
       css.setTranslate(endElement, 0, endPosition);
@@ -93,6 +102,7 @@ lib.factory("$rfz.util.indicator",
   }
 
   Indicator.prototype.setPosition = function(pos, animate, duration) {
+    this.position = pos;
     this.setAnimation(animate, duration);
     var styleAttr;
     if (this.anchor == Indicator.ANCHOR_START) {
@@ -100,7 +110,7 @@ lib.factory("$rfz.util.indicator",
     } else {
       styleAttr = this.axis == "x" ? "right" : "bottom";
     }
-    this.element.style[styleAttr] = pos + "px";
+//    this.element.style[styleAttr] = pos + "px";
   }
               
   /*
