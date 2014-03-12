@@ -96,6 +96,10 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
             previous.element.removeClass("rfz-js-header-animation-" + transition);
           });
           ctrl.depthIndex--;
+
+          if (ctrl.history.length === 1) {
+            document.removeEventListener("backbutton", backButtonHandler, false);
+          }
         }
       }
 
@@ -149,6 +153,10 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
               current.element.removeClass("rfz-js-header-animation-" + transitionType);
             }
           });
+
+          if (ctrl.history.length === 2) {
+            document.addEventListener("backbutton", backButtonHandler, false);
+          }
         });
       }
 
@@ -165,6 +173,14 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
         }
       };
       pushView(attr.rfzViewStack, "none");
+
+      // TODO make the back button event handler deal with nested nav stacks.
+      function backButtonHandler(e) {
+        scope.$apply(function() {
+          popView();
+        });
+      }
+
     }
   };
 }]);
