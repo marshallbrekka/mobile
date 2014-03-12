@@ -1,5 +1,27 @@
 'use strict';
 lib.factory("$rfz.util.css", ["$rfz.util.point", function (Point) {
+  var transformProperty, transitionProperty;
+
+  function findSupportedProperty(prop) {
+    var element = document.createElement("div");
+    if (element.style[prop] !== undefined) {
+      return prop;
+    } else {
+      var capitalized = prop.charAt(0).toUpperCase() + prop.substring(1);
+      var prefixes = ["Moz", "webkit", "o"],
+      prefix = _.chain(prefixes)
+        .filter(function(prefix) {
+          return element.style[prefix + capitalized] !== undefined;
+        }).first().value();
+      if (prefix) {
+        return prefix + capitalized;
+      }
+    }
+  }
+
+  transformProperty = findSupportedProperty("transform");
+  transitionProperty = findSupportedProperty("transition");
+
   function elementToElements(element) {
     if (element instanceof Node) {
       return [element];
@@ -9,7 +31,7 @@ lib.factory("$rfz.util.css", ["$rfz.util.point", function (Point) {
 
   function setTransform(element, transform) {
     _.each(elementToElements(element), function(el) {
-      el.style.webkitTransform = transform;
+      el.style[transformProperty] = transform;
     });
   }
 
@@ -21,25 +43,25 @@ lib.factory("$rfz.util.css", ["$rfz.util.point", function (Point) {
 
   function setTransitionDuration(element, duration) {
     _.each(elementToElements(element), function(el) {
-      el.style.webkitTransitionDuration = duration;
+      el.style[transitionProperty + "Duration"] = duration;
     });
   }
 
   function setTransitionProperties(element, properties) {
     _.each(elementToElements(element), function(el) {
-      el.style.webkitTransitionProperty = properties.join(", ");
+      el.style[transitionProperty + "Property"] = properties.join(", ");
     });
   }
 
   function setTransition(element, duration) {
     _.each(elementToElements(element), function(el) {
-      el.style.webkitTransitionDuration = duration + "s";
+      el.style[transitionProperty + "Duration"] = duration + "s";
     });
   }
 
   function getPointFromTranslate(element) {
     var computed = getComputedStyle(element);
-    var pieces = computed.webkitTransform.split("(")[1].split(",");
+    var pieces = computed[transformProperty].split("(")[1].split(",");
 
     if (pieces.length < 16) {
       return new Point(parseFloat(pieces[4]), parseFloat(pieces[5]));
@@ -50,7 +72,7 @@ lib.factory("$rfz.util.css", ["$rfz.util.point", function (Point) {
 
   function setTransformOrigin (element, origin) {
     _.each(elementToElements(element), function(el) {
-      el.style.webkitTransformOrigin = origin;
+      el.style[transformProperty + "Origin"] = origin;
     });
   }
 
