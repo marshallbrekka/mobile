@@ -16,6 +16,12 @@
     <link href="/dist/css/reset.css" rel="stylesheet">
     <link href="/dist/rfz.css" rel="stylesheet">
     <style>
+      ul {
+        list-style-type:none;
+        margin:0;
+        padding:0;
+      }
+
       li {
       list-style-type : none;
       line-height:50px;
@@ -64,7 +70,7 @@
 <body rfz-add-platform>
   <div rfz-view-stack="main">
     <div rfz-view="main" ng-controller="ItemList" class="rfz-view-has-header">
-      <div rfz-view-header="Items">
+      <div rfz-view-header="'Items'">
         <div class="rfz-view-header-name">{{$viewName}}</div>
       </div>
       <div rfz-view-body>
@@ -82,7 +88,7 @@
     </div>
 
     <div rfz-view="item" class="rfz-view-has-header">
-      <div rfz-view-header="General">
+      <div rfz-view-header="'General'">
         <div rfz-platform="IOS">
           <div rfz-view-header-button position="left" type="back"
                rfz-tap="$rfzViewStack.$pop()">
@@ -109,14 +115,14 @@
             <li>Active:
             {{$rfzViewProperties.previous.selectedItem.active}}</li>
             </span>
-            <li rfz-tap="$rfzViewStack.$push('item2', 'slide')"
+            <li rfz-tap="$rfzViewStack.$push('item2', 'side')"
                 rfz-tap-claim-x="true">Go To Next Pane</li>
           </ul>
         </div>
       </div>
     </div>
     <div rfz-view="item2" class="rfz-view-has-header">
-      <div rfz-view-header="More">
+      <div rfz-view-header="'More'">
         <div rfz-platform="IOS">
           <div rfz-view-header-button position="left" type="back"
                rfz-tap="$rfzViewStack.$pop()">
@@ -135,9 +141,9 @@
       <div rfz-view-body rfz-scroll-view can-scroll-x="false">
         <div rfz-scroll-view-body>
           <ul>
-            <li rfz-tap="$rfzViewStack.$push('item', 'slide')"
+            <li rfz-tap="$rfzViewStack.$push('item', 'side')"
                 rfz-tap-claim-x="true">Go to another "General" page</li>
-            <li rfz-tap="$rfzViewStack.$pop('main')"
+            <li rfz-tap="$rfzViewStack.$pop('main', 'side')"
                 rfz-tap-claim-x="true">View All Items</li>
           <ul>
         </div>

@@ -188,6 +188,13 @@ lib.factory("$rfz.util.events",
     }
   };
 
+  PointerNested.prototype.destroy = function() {
+    this.setMoveListener(false);
+    this.setEndListener(false);
+    unbind(this.el, this, events.POINTER_START);
+    unbind(this.el, this, events.POINTER_START, true);
+  }
+
   /*
     Adds or removes the pointer end event listener.
   */
@@ -210,6 +217,7 @@ lib.factory("$rfz.util.events",
   */
   PointerNested.prototype.setMoveListener = function(shouldBind) {
     this.log("set move listener " + shouldBind);
+
     if (shouldBind) {
       if (this._boundElement) {
         if (this._boundElement !== document) {
@@ -224,7 +232,7 @@ lib.factory("$rfz.util.events",
         bind(this.el, this, events.POINTER_MOVE, true);
         this._boundElement = this.el;
       }
-    } else {
+    } else if (this._boundElement) {
       unbind(this._boundElement, this, events.POINTER_MOVE);
       unbind(this._boundElement, this, events.POINTER_MOVE, true);
       this._boundElement = null;
@@ -340,6 +348,7 @@ lib.factory("$rfz.util.events",
         this.setMoveListener(false);
         this.callStage("lost");
       } else {
+        this.owns.move = false;
         this.callStage("intercepted");
       }
     } else {

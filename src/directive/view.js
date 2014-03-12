@@ -2,44 +2,7 @@
 The following controller and directives make up all the pieces that
 are neccesary to make the pane views/transitions work correctly, and
 be controlled easily through setting html attributes.
-
-
-Usage starts with a parent element with the attr rfzView, which can
-contain any number of rfzPane's, where only one is shown at a time,
-and switching between them emulates the standard iOS transitions.
-
-* Sample Structure *
-<div rfz-view="settings"> // Sets the default pane to settings
-  <div rfz-pane="settings"> // gives the pane name settings
-    <div rfz-pane-header="Settings"> // The headers displayed title is 
-                                     // Settings
-      <div rfz-pane-header-button
-           rfz-change-pane="notifications" // When tapped will change
-                                           // pane to notifications
-           rfz-change-direction="right" // The pane will come from the right
-           position="right">
-        Notifications
-      </div>
-    </div>
-    <div rfz-pane-body>Content Of Settings Pane</div>
-  </div>
-  <div rfz-pane="notifications"> // gives the pane name notifications
-    <div rfz-pane-header="Noticiations"> // The headers displayed title is 
-                                         // Notifications
-      <div rfz-pane-header-button
-           rfz-change-pane="settings" // When tapped will change
-                                      // pane to settings
-           rfz-change-direction="left" // The pane will come from the left
-           position="left"
-           type="back">
-        Settings
-      </div>
-    </div>
-    <div rfz-pane-body>Content Of Notifications Pane</div>
-  </div>
-</div>
 */
-
 
 /*
 When the directive is first initialized the value for
@@ -73,6 +36,14 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
       if (parentController) {
         ctrl.depthIndex = parentController.depthIndex + 1;
       }
+
+      function removeViewsSilently(views) {
+        _.each(views, function(view) {
+          view.scope.$destroy();
+          view.element.remove();
+        });
+      }
+
       function popView(viewName) {
         if (ctrl.history.length === 1){
           if (parentController) {
@@ -106,12 +77,11 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
             transition = current.transition;
           }
           // Remove the current view, and reveal the previous one.
-          _.each(silentRemove, function(view) {
-            view.scope.$destroy();
-            view.element.remove();
-          });
+          removeViewsSilently(silentRemove);
 
           element.addClass(transitionClass(transition));
+          current.element.addClass("rfz-js-header-animation-" + transition);
+          previous.element.addClass("rfz-js-header-animation-" + transition);
           current.scope.$destroy();
 
           events.bind(previous.element[0], stopEvent, events.POINTER_START, true);
@@ -123,20 +93,25 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
           $animate.leave(current.element, function() {
             events.unbind(current.element[0], stopEvent, events.POINTER_START, true);
             element.removeClass(transitionClass(current.transition));
+            previous.element.removeClass("rfz-js-header-animation-" + transition);
           });
           ctrl.depthIndex--;
         }
       }
 
-      function pushView(name, transitionType) {
+      function pushView(name, transitionType, reset) {
         var viewObj = ctrl.views[name];
+        if (reset) {
+          var silentRemove = ctrl.history;
+          ctrl.history = [];
+        }
         if (!viewObj) {
           throw new Error("rfzViewStack: tried to push the view " + name +
                           " but no view by that name exists");
         }
         element.addClass(transitionClass(transitionType));
         // Properties to use for the new view
-        var newScope = scope.$new();
+        var newScope = viewObj.scope.$new();
         var view = {
           name : name,
           scope : newScope,
@@ -145,7 +120,7 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
 
         viewObj.transclude(view.scope, function(clone) {
           clone.addClass("rfz-pane");
-          clone.addClass("rfz-js-header-animation");
+          clone.addClass("rfz-js-header-animation-" + transitionType);
           clone.css("z-index", ctrl.depthIndex++ + "");
           view.element = clone;
           var anchor = viewObj.element;
@@ -153,6 +128,7 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
             newScope.$rfzViewProperties = {};
           } else {
             var current = ctrl.history[ctrl.history.length - 1];
+            current.element.addClass("rfz-js-header-animation-" + transitionType);
             newScope.$rfzViewProperties = {
               canGoBack : true,
               previous : current.scope.$rfzViewProperties
@@ -165,8 +141,13 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
           ctrl.history.push(view);
           events.bind(clone[0], stopEvent, events.POINTER_START, true);
           $animate.enter(clone, anchor.parent(), anchor, function() {
+            removeViewsSilently(silentRemove);
             events.unbind(clone[0], stopEvent, events.POINTER_START, true);
             element.removeClass(transitionClass(transitionType));
+            clone.removeClass("rfz-js-header-animation-" + transitionType);
+            if (current) {
+              current.element.removeClass("rfz-js-header-animation-" + transitionType);
+            }
           });
         });
       }
@@ -176,8 +157,8 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
       element.addClass("rfz-view");
       var previousStack = scope.$rfzViewStack;
       scope.$rfzViewStack = {
-        $push : function(name, transitionType) {
-          pushView(name, transitionType);
+        $push : function(name, transitionType, reset) {
+          pushView(name, transitionType, reset);
         },
         $pop : function(name) {
           popView(name);
@@ -196,7 +177,8 @@ lib.directive("rfzView", function() {
     link: function(scope, element, attr, ctrl, $transclude) {
       ctrl.views[attr.rfzView] = {
         transclude : $transclude,
-        element : element
+        element : element,
+        scope : scope
       };
     }
   }
@@ -211,15 +193,15 @@ lib.directive("rfzViewHeader", ["$rfz.util.platform", function(platform) {
   return {
     restrict : "A",
     compile : function(element, attrs) {
-      var title = attrs.rfzViewHeader;
-      element.removeAttr("rfzViewHeader")
-             .addClass("rfz-view-header");
+      element.addClass("rfz-view-header");
       return {
         pre : function(scope, element, attr) {
-          scope.$viewName = title;
-          if (scope.$rfzViewProperties) {
-            scope.$rfzViewProperties.title = attrs.rfzViewHeader;
-          }
+          scope.$watch(attr.rfzViewHeader, function(val) {
+            scope.$viewName = val;
+            if (scope.$rfzViewProperties) {
+              scope.$rfzViewProperties.title = scope.$viewName;
+            }
+          });
         }
       }
     }
@@ -255,7 +237,7 @@ lib.directive("rfzViewBody", function() {
 });
 
 
-lib.animation('.rfz-js-header-animation', ["$rfz.util.css", "$rfz.util.platform",
+lib.animation('.rfz-js-header-animation-side', ["$rfz.util.css", "$rfz.util.platform",
                                            function($rfzCss, $platform) {
   var duration = 300;
   if ($platform.os === $platform.PLATFORMS.IOS &&

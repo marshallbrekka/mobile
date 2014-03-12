@@ -37,9 +37,19 @@ module.exports = function(grunt) {
   });
 
   grunt.initConfig({
+    connect : {
+      server : {
+        options : {
+          port : 9000,
+          base : ""
+        }
+      }
+    },
+
     clean : {
       build : ["dist"]
     },
+
     build : {
       rfz : {
         dest : "dist/rfz.js",
@@ -73,4 +83,5 @@ module.exports = function(grunt) {
   require('load-grunt-tasks')(grunt);
   
   grunt.registerTask('build2', ['clean', 'build']);
+  grunt.registerTask("start-server", ["build", "connect", "watch"]);
 };

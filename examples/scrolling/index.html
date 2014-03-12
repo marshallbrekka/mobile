@@ -14,9 +14,14 @@
     <script src="/dist/rfz.js"></script>
     <script src="controller.js"></script>
     <script src="directive.js"></script>
-    <link href="/dist/css/reset.css" rel="stylesheet">
     <link href="/dist/rfz.css" rel="stylesheet">
     <style>
+      ul {
+        list-style-type:none;
+        margin:0;
+        padding:0;
+      }
+
       li {
       list-style-type : none;
       line-height:50px;
@@ -94,7 +99,7 @@
 <body rfz-add-platform>
   <div rfz-view-stack="main">
     <div rfz-view="main" ng-controller="ScrollExamples" class="rfz-view-has-header">
-      <div rfz-view-header="Examples">
+      <div rfz-view-header="'Examples'">
         <div class="rfz-view-header-name">{{$viewName}}</div>
       </div>
       <div rfz-view-body>
@@ -112,7 +117,7 @@
     </div>
 
     <div rfz-view="paralax" ng-controller="Appointments" class="rfz-view-has-header">
-      <div rfz-view-header="Paralax">
+      <div rfz-view-header="'Paralax'">
         <div rfz-platform="IOS">
           <div rfz-view-header-button position="left" type="back"
                rfz-tap="$rfzViewStack.$pop()">
@@ -185,7 +190,7 @@
     </div>
 
     <div rfz-view="appointment" class="rfz-view-has-header">
-      <div rfz-view-header="Appointment">
+      <div rfz-view-header="'Appointment'">
         <div rfz-platform="IOS">
           <div rfz-view-header-button position="left" type="back"
                rfz-tap="$rfzViewStack.$pop()">
@@ -216,7 +221,7 @@
     </div>
 
     <div rfz-view="toggle" class="rfz-view-has-header" ng-controller="Toggle">
-      <div rfz-view-header="Toggle">
+      <div rfz-view-header="'Toggle'">
         <div rfz-platform="IOS">
           <div rfz-view-header-button position="left" type="back"
                rfz-tap="$rfzViewStack.$pop()">
