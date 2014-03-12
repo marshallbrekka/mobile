@@ -5,6 +5,10 @@
   -webkit-user-select: none; /* Disable selection/copy in UIWebView */
 }
 
+input, textarea {
+  -webkit-user-select: text;
+}
+
 /* Generic container that fills the entire positioned parent view */
 .rfz-view {
   position:absolute;
