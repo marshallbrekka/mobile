@@ -53,11 +53,14 @@ Structure of scroll view is as follows
   position:absolute;
   top:0;
   left:0;
-  backface-visibility: hidden;
   -webkit-transition-property: opacity;
   -webkit-transition-duration: 0.25s;
   -webkit-transform-origin: left top;
-  -webkit-backface-visibility: hidden;
+  /*
+    Don't include this, it causes elements with transform:scale to become blured on ios
+     after the keyboard appears at least once
+    -webkit-backface-visibility: hidden;
+  */
 }
 
 
@@ -65,52 +68,52 @@ Structure of scroll view is as follows
   &.rfz-os-version-7 {
 
     .rfz-scroll-indicator {
-      width:5px;
-      height:5px;
-    }
-
-    .rfz-scroll-indicator-y > div {
-      width:5px;
-      height:2px;
-    }
-
-    .rfz-scroll-indicator-x > div {
       width:2px;
-      height:5px;
+      height:2px;
     }
 
 
     .rfz-scroll-indicator > div {
-      background:url("img/ios-7-scroll-indicator.png") no-repeat;
-      background-size:5px;
+      width:2px;
+      height:2px;
+      border-radius:3px;
+      background:rgba(0,0,0,0.3);
     }
 
-    @media (-webkit-min-device-pixel-ratio: 2) {
+
+/*(    @media (-webkit-min-device-pixel-ratio: 2) {
       .rfz-scroll-indicator > div {
          background-image:url("img/ios-7-scroll-indicator@2x.png") !important;
        }
-    }
+    }*/
 
     .rfz-scroll-indicator-x .rfz-scroll-indicator-middle {
-      background-position:-2px 0;
-      left:2px;
+      border-radius:0px;
+      left:1px;
       width:1px;
     }
 
     .rfz-scroll-indicator-y .rfz-scroll-indicator-middle {
-      background-position:0 -2px;
-      top:2px;
+      border-radius:0px;
+      top:1px;
       height:1px;
     }
 
+    .rfz-scroll-indicator-y :nth-child(1) {
+      clip:rect(0, 2px, 1px, 0);
+    }
+
+    .rfz-scroll-indicator-x :nth-child(1) {
+      clip:rect(0, 1px, 2px, 0);
+    }
+
+
     .rfz-scroll-indicator-y :nth-child(3) {
-      top:2px;
-      background-position:0 -3px;
+      clip:rect(1px, 2px, 2px, 0);
     }
 
     .rfz-scroll-indicator-x :nth-child(3) {
-      left:2px;
-      background-position:-3px 0;
+      clip:rect(0, 2px, 2px, 1px);
     }
   }
 }

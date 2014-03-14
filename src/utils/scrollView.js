@@ -137,9 +137,9 @@ lib.factory("$rfz.util.scrollView",
     }
   }
 
-  Scroll.prototype.pointerLost = function() {
+  Scroll.prototype.pointerLost = function(e) {
     this.dragging = false;
-    this.startDeceleration();
+    this.startDeceleration(e.timeStamp);
     // If the deceleration function determined we weren't going to
     // decelerate then decelerating is false and we should snap to
     // the bounds of minPoint and maxPoint
@@ -213,12 +213,12 @@ lib.factory("$rfz.util.scrollView",
     }
   }
 
-  Scroll.prototype.trackPosition = function(point) {
-    this.tracking.push({time : Date.now(), point : point});
+  Scroll.prototype.trackPosition = function(point, time) {
+    this.tracking.push({time : time || Date.now(), point : point});
   }
 
-  Scroll.prototype.clipTrackedPositions = function() {
-    var now = Date.now();
+  Scroll.prototype.clipTrackedPositions = function(time) {
+    var now = time || Date.now();
     var tracked = this.tracking;
     var filtered = [];
     for (var i = tracked.length - 1; i >= 0; i--) {
@@ -231,8 +231,8 @@ lib.factory("$rfz.util.scrollView",
     return filtered;
   }
 
-  Scroll.prototype.trackedPositionsToVelocity = function() {
-    var trackedScrolles = this.clipTrackedPositions(),
+  Scroll.prototype.trackedPositionsToVelocity = function(time) {
+    var trackedScrolles = this.clipTrackedPositions(time),
     firstScroll,lastScroll, distance, acceleration;
     if (trackedScrolles.length >= 2) {
       firstScroll = trackedScrolles[trackedScrolles.length - 1];
@@ -306,7 +306,7 @@ lib.factory("$rfz.util.scrollView",
     this.tracking = [];
     this.startPosition = this.position.copy();
     this.startScroll = point.copy();
-    this.trackPosition(point);
+    this.trackPosition(point, e.timeStamp);
     this.containerRect = rect;
     this.calculateMaxPoint();
 
@@ -340,7 +340,7 @@ lib.factory("$rfz.util.scrollView",
 
     var point = Point.fromEvent(e),
     diff = Point.difference(this.startScroll, point);
-    this.trackPosition(point);
+    this.trackPosition(point, e.timeStamp);
     point = Point.add(this.startPosition, diff);
     if (!this.canScroll.y) point.y = 0;
     if (!this.canScroll.x) point.x = 0;
@@ -362,7 +362,7 @@ lib.factory("$rfz.util.scrollView",
       e.preventDefault();
     }
     this.dragging = false;
-    this.startDeceleration();
+    this.startDeceleration(e.timeStamp);
     // If the deceleration function determined we weren't going to
     // decelerate then decelerating is false and we should snap to
     // the bounds of minPoint and maxPoint
@@ -437,10 +437,10 @@ lib.factory("$rfz.util.scrollView",
     }
   }
 
-  Scroll.prototype.startDeceleration = function() {
+  Scroll.prototype.startDeceleration = function(time) {
     var minDecelerationVelocity, velocity;
     if (!this.bounces || this.position.isInsideRange(this.minPoint, this.maxPoint)) {
-      velocity = this.trackedPositionsToVelocity()
+      velocity = this.trackedPositionsToVelocity(time);
       if (velocity) {
         this.decelerationVelocity = velocity;
         if (!this.canScroll.y) velocity.y = 0;
