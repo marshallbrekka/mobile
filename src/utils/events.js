@@ -172,6 +172,7 @@ lib.factory("$rfz.util.events",
   };
 
   PointerNested.prototype.handleEvent = function(e) {
+    this.log("handling event type", e.type);
     switch(e.type) {
     case events.POINTER_START:
       this.phaseDispatch(e, this.preStart, this.start);
@@ -268,22 +269,19 @@ lib.factory("$rfz.util.events",
       if (e._pointerNested === this) {
         this.log("start owner: the eventOwner is equal to 'this', set the other " +
                  "listeners and call the start stage");
-        this.setEndListener(true);
-        this.setMoveListener(true);
-        this.callStage("start", e);
-        if (this.opts.startPreventDefault) {
-          e.preventDefault();
-        }
+      } else {
+        return;
       }
     } else {
       this.log("start no owner: no one claimed the start event, so call all of " +
                "the start stages");
-      this.setEndListener(true);
-      this.setMoveListener(true);
-      this.callStage("start", e);
-      if (this.opts.startPreventDefault) {
-        e.preventDefault();
-      }
+    }
+
+    this.setEndListener(true);
+    this.setMoveListener(true);
+    this.callStage("start", e);
+    if (this.opts.startPreventDefault) {
+      e.preventDefault();
     }
   };
 
@@ -362,7 +360,7 @@ lib.factory("$rfz.util.events",
   PointerNested.prototype.end = function(e) {
     this.log("end");
     if (this.calledPreMove && !this.owns.move) {
-      this.log("end lost: calledPreMove was ture, and we don't own move, so call lost.");
+      this.log("end lost: calledPreMove was true, and we don't own move, so call lost.");
       this.callStage("lost");
     } else {
       this.log("end called");
