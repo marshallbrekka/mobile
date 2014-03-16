@@ -256,8 +256,9 @@ lib.factory("$rfz.util.scrollView",
 
   Scroll.prototype.positionIndicators = function(animate, duration) {
     Point.applyFn(function(indicator, canScroll, offsets, props,
-                    containerSize, contentSize, pos, maxPoint) {
+                    containerSize, pos, maxPoint) {
       if (canScroll) {
+        var contentSize = containerSize + maxPoint;
         var minPosition = offsets[props.start] + 2,
         maxPosition = containerSize - offsets[props.end] - 2,
         maxLength = maxPosition - minPosition;
@@ -283,7 +284,6 @@ lib.factory("$rfz.util.scrollView",
     }, this.indicator, this.canScroll, this.indicatorOffsets,
                   new Axis({start : "left", end : "right"}, {start : "top", end : "bottom"}),
                   new Axis(this.containerRect.width, this.containerRect.height),
-                  new Axis(this.content.clientWidth, this.content.clientHeight),
                   this.position, this.maxPoint);
   }
 

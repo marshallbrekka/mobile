@@ -40,11 +40,11 @@ Structure of scroll view is as follows
 
 .rfz-scroll-indicator-y {
   top:0;
-  right:2px;
+  right:3px;
 }
 
 .rfz-scroll-indicator-x {
-  bottom:2px;
+  bottom:3px;
   left:0;
 }
 
@@ -56,13 +56,8 @@ Structure of scroll view is as follows
   -webkit-transition-property: opacity;
   -webkit-transition-duration: 0.25s;
   -webkit-transform-origin: left top;
-  /*
-    Don't include this, it causes elements with transform:scale to become blured on ios
-     after the keyboard appears at least once
-    -webkit-backface-visibility: hidden;
-  */
+  -webkit-backface-visibility: hidden;
 }
-
 
 .rfz-os-ios {
   &.rfz-os-version-7 {
@@ -72,20 +67,12 @@ Structure of scroll view is as follows
       height:2px;
     }
 
-
     .rfz-scroll-indicator > div {
       width:2px;
       height:2px;
       border-radius:3px;
       background:rgba(0,0,0,0.3);
     }
-
-
-/*(    @media (-webkit-min-device-pixel-ratio: 2) {
-      .rfz-scroll-indicator > div {
-         background-image:url("img/ios-7-scroll-indicator@2x.png") !important;
-       }
-    }*/
 
     .rfz-scroll-indicator-x .rfz-scroll-indicator-middle {
       border-radius:0px;
@@ -122,52 +109,45 @@ Structure of scroll view is as follows
   &.rfz-os-version-4 {
 
     .rfz-scroll-indicator {
-      width:4px;
-      height:4px;
+      width:2px;
+      height:2px;
     }
-
-    .rfz-scroll-indicator-y > div {
-      width:4px;
-      height:1px;
-    }
-
-    .rfz-scroll-indicator-x > div {
-      width:1px;
-      height:4px;
-    }
-
 
     .rfz-scroll-indicator > div {
-      background:url("img/android-4-scroll-indicator.png") no-repeat;
-      background-size:4px;
-    }
-
-    @media (-webkit-min-device-pixel-ratio: 2) {
-      .rfz-scroll-indicator > div {
-         background-image:url("img/android-4-scroll-indicator@2x.png") !important;
-       }
+      width:2px;
+      height:2px;
+      background:rgba(0,0,0,0.35);
+      box-shadow:0 0 1px 0 rgba(0,0,0,0.22);
     }
 
     .rfz-scroll-indicator-x .rfz-scroll-indicator-middle {
-      background-position:-2px 0;
       left:2px;
       width:1px;
+      clip:rect(-1px, 1px, 3px, 0);
     }
 
     .rfz-scroll-indicator-y .rfz-scroll-indicator-middle {
-      background-position:0 -2px;
-      top:2px;
+      top:1px;
       height:1px;
+      clip:rect(0, 3px, 1px, -1px);
+
     }
 
+    .rfz-scroll-indicator-y :nth-child(1) {
+      clip:rect(-1px, 3px, 1px, -1px);
+    }
+
+    .rfz-scroll-indicator-x :nth-child(1) {
+      clip:rect(-1, 1px, 3px, -1px);
+    }
+
+
     .rfz-scroll-indicator-y :nth-child(3) {
-      top:2px;
-      background-position:0 -3px;
+      clip:rect(1px, 3px, 3px, -1px);
     }
 
     .rfz-scroll-indicator-x :nth-child(3) {
-      left:2px;
-      background-position:-3px 0;
+      clip:rect(-1px, 3px, 3px, 1px);
     }
   }
 }
