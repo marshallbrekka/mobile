@@ -202,7 +202,7 @@ lib.factory("$rfz.util.events",
   PointerNested.prototype.setEndListener = function(shouldBind) {
     this.log("set end listener " + shouldBind);
     var fn = shouldBind ? bind : unbind;
-    fn(document, this, events.POINTER_END);
+    fn(document, this, [events.POINTER_END, events.POINTER_CANCEL]);
   }
 
   /*

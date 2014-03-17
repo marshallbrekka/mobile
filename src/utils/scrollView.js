@@ -137,9 +137,9 @@ lib.factory("$rfz.util.scrollView",
     }
   }
 
-  Scroll.prototype.pointerLost = function(e) {
+  Scroll.prototype.pointerLost = function() {
     this.dragging = false;
-    this.startDeceleration(e.timeStamp);
+    this.startDeceleration(Date.now());
     // If the deceleration function determined we weren't going to
     // decelerate then decelerating is false and we should snap to
     // the bounds of minPoint and maxPoint
