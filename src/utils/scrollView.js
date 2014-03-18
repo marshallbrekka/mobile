@@ -162,11 +162,22 @@ lib.factory("$rfz.util.scrollView",
     this.listeners.push(obj);
   }
 
+  Scroll.prototype.removeListener = function(obj) {
+    this.listeners = _.filter(this.listeners, function(item) {
+      return item !== obj;
+    });
+  }
+
+
   Scroll.prototype.callListeners = function(evt, args) {
     if (!this.callingListeners && this.listeners) {
       this.callingListeners = true;
-      for (var i = 0; i < this.listeners.length; i++) {
-        this.listeners[i].handleScrollEvent(evt, this, args);
+      try {
+        for (var i = 0; i < this.listeners.length; i++) {
+          this.listeners[i].handleScrollEvent(evt, this, args);
+        }
+      } catch(e) {
+        console.error(e);
       }
       this.callingListeners = false;
     }
@@ -426,7 +437,7 @@ lib.factory("$rfz.util.scrollView",
         return Math.round(curPos / pageSize) * pageSize;
       }, this.position, this.pageSize);
       useNewPosition = true;
-    } else if (this.bounces) {
+    } else {
       position.clamp(this.minPoint, this.maxPoint);
       useNewPosition = !position.equals(this.position);
     }
