@@ -30,9 +30,13 @@ lib.factory("$rfz.util.css", ["$rfz.util.point", function (Point) {
   }
 
   function setTransform(element, transform) {
-    _.each(elementToElements(element), function(el) {
-      el.style[transformProperty] = transform;
-    });
+    if (element instanceof Node) {
+      element.style[transformProperty] = transform;
+    } else {
+      for (var i = 0, length = element.length; i < length; i++) {
+        element[i].style[transformProperty] = transform;
+      }
+    }
   }
 
   function setTranslate(element, x, y, z) {

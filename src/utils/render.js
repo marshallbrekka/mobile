@@ -8,9 +8,11 @@ lib.factory("$rfz.util.render", function() {
     rendering = true;
     var queue = renderQueue;
     renderQueue = {};
-    _.each(queue, function(fn) {
-      fn();
-    });
+    for (var key in queue) {
+      if (queue.hasOwnProperty(key)) {
+        queue[key]();
+      }
+    }
     rendering = false;
   }
       
