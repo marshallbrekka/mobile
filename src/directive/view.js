@@ -156,9 +156,14 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
             }
           });
 
-          if (ctrl.history.length === 2 || 
-              (ctrl.history.length === 1 && attr.rfzViewStack !== name)) {
+          if (ctrl.history.length === 2) {
             document.addEventListener("backbutton", backButtonHandler, false);
+          } else if (ctrl.history.length === 1) {
+            if (attr.rfzViewStack !== name) {
+              document.addEventListener("backbutton", backButtonHandler, false);
+            } else {
+              document.removeEventListener("backbutton", backButtonHandler, false);
+            }
           }
           scope.$rfzViewStack.$$currentViewName = name;
         });
@@ -185,8 +190,11 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
           if (ctrl.history.length === 1 &&
               ctrl.history[0].name !== attr.rfzViewStack) {
             pushView(attr.rfzViewStack, "none", true);
+            document.removeEventListener("backbutton", backButtonHandler, false);
+          } else {
+            popView();
           }
-          popView();
+
         });
       }
 
