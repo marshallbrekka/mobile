@@ -296,11 +296,20 @@ lib.factory("$rfz.util.scrollView",
 
     if (this.scrollTransitionActive) {
       var midTransitionPosition = css.getPointFromTranslate(this.content).inverse();
+
+      // Set both of these variables to true so that
+      // A. position isnt't clamped because we are "dragging"
+      // B. position is actually set on element now (instead of next
+      // animation frame), because positionElements only sets the
+      // position if decelerating is true, and positionElements is
+      // called by setPositionAnimated
+      this.dragging = true;
+      this.decelerating = true;
+      this.setPositionAnimated(midTransitionPosition);
+      this.decelerating = false;
+      this.dragging = false;
       this.transitionEnded(e);
       this.toggleIndicators(true);
-      this.dragging = true;
-      this.setPositionAnimated(midTransitionPosition);
-      this.dragging = false;
     }
 
     this.tracking = [];
@@ -508,7 +517,7 @@ lib.factory("$rfz.util.scrollView",
     var decelerationFactor = new Point(Scroll.DELECERATION_FRICTION,
                                        Scroll.DELECERATION_FRICTION)
     var adjustedDecelerationFactorByTime = Point.applyFn(function(decFact) {
-      return Math.exp(Math.log(decFact) * elapsedTime)
+      return Math.exp(Math.log(decFact) * elapsedTime);
     }, decelerationFactor);
 
     decelerationFactor = Point.applyFn(function(decFactByTime, decFact) {
