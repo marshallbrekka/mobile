@@ -21,18 +21,21 @@ lib.directive("rfzScrollViewListener", function() {
   };
 });
 
-lib.directive("rfzScrollView", ["$rfz.util.scrollView", "$rfz.util.attrs",
-                                function(ScrollView, attrsUtils) {
+lib.directive("rfzScrollView", ["$rfz.util.scrollView", "$rfz.util.attrs", "$rfz.util.events",
+                                function(ScrollView, attrsUtils, events) {
   return {
     restrict : "A",
-    require : "?^rfzScrollViewListener",
+    require : ["rfzScrollView","?^rfzScrollViewListener"],
     replace : true,
     transclude : true,
     template : "<div class='rfz-scroll-view-container' ng-transclude></div>",
+    controller : function(){},
     scope : {
       currentPage : "="
     },
-    link : function(scope, element, attrs, ctrl) {
+    link : function(scope, element, attrs, ctrls) {
+      ctrls[0].element = element;
+      var ctrl = ctrls[1];
       var el = element[0];
       var content = element.children();
       if (content.attr("rfz-scroll-view-body") === undefined) {
@@ -54,6 +57,7 @@ lib.directive("rfzScrollView", ["$rfz.util.scrollView", "$rfz.util.attrs",
       if (ctrl && attrs.rfzScrollView) {
         ctrl.registerScrollView(attrs.rfzScrollView, scroll);
       }
+      ctrls[0].scrollView = scroll;
 
       // adjust height on next tick to ensure that all content has
       // been inserted according to angulars watch/digest lifecycle.
@@ -74,6 +78,16 @@ lib.directive("rfzScrollView", ["$rfz.util.scrollView", "$rfz.util.attrs",
         }
         scroll.calculateMaxPoint();
       }, 4);
+
+      var resize = _.throttle(function() {
+        scroll.calculateMaxPoint();
+        scroll.snapPositionToBounds(true);
+      }, 500);
+
+      events.bind(window, resize, "resize");
+      scope.$on("$destroy", function() {
+        events.unbind(window, resize, "resize");
+      });
     }
   }
 }]);
@@ -83,6 +97,11 @@ lib.directive("rfzScrollViewBody", function() {
     restrict : "A",
     replace : true,
     transclude : true,
-    template : "<div class='rfz-scroll-view-content' ng-transclude></div>"
+    controller : function() {},
+    require : "rfzScrollViewBody",
+    template : "<div class='rfz-scroll-view-content' ng-transclude></div>",
+    link : function(scope, element, attr, ctrl) {
+      ctrl.element = element;
+    }
   }
 });
