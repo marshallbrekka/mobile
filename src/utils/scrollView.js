@@ -107,10 +107,56 @@ lib.factory("$rfz.util.scrollView",
   Scroll.DESIRED_FRAME_RATE = 1 / 60;
   Scroll.PENETRATION_DECELERATION = 8;
   Scroll.PENETRATION_ACCELERATION = 5;
+  Scroll.SCROLL_TO_ELEMENT_MARGIN = 20;
   Scroll.INDICATOR_DISPLAY_EVENT = "indicatorDisplayEvent";
   Scroll.MOVE_TRANSITION_END_EVENT = "moveTransitionEndEvent";
   Scroll.CHANGE_POSITION_EVENT = "changePositionEvent";
   Scroll.END_DECELERATION_EVENT = "endDecelerationEvent";
+
+
+  /*
+    Given a element that should be scrolled to, and a boolean that
+    when true indicates it should center the element in the scroll
+    view, returns the new y coordinate that should be scrolled to
+    in order to show the element.
+
+    If it returns null it means the element is already visible.
+
+    TODO actually impl the center functionality
+  */
+  Scroll.prototype.getDesiredScrollPosition = function(targetElement, center) {
+    var visibleMargin = Scroll.SCROLL_TO_ELEMENT_MARGIN;
+    var rects = {
+      target : targetElement.getBoundingClientRect(),
+      parent : this.container.getBoundingClientRect(),
+      body   : this.content.getBoundingClientRect()
+    };
+
+    var existingScroll = rects.body.top - rects.parent.top;
+    if (rects.parent.top >= rects.target.top - visibleMargin) {
+      return -1 * ((rects.parent.top - rects.target.top) +
+                   existingScroll + visibleMargin);
+    } else if (rects.parent.bottom <= rects.target.bottom - visibleMargin) {
+      return -1 * ((rects.parent.bottom - rects.target.bottom) +
+                   existingScroll - visibleMargin);
+    }
+    return;
+  }
+
+  /*
+    Given an element to scroll to, and a boolean indicating if the
+    element should be centered in the scroll view, it scrolls to
+    the element. If center is true and the element is already
+    centered, or center is false and the element is already visible,
+    no scrolling will occur.
+  */
+  Scroll.prototype.scrollToElement = function (element, center) {
+    var newPosition = this.getDesiredScrollPosition(element, center);
+    if (newPosition) {
+      this.calculateMaxPoint();
+      this.setPositionAnimated(new Point(this.position.x, newPosition), true);
+    }
+  }
 
   Scroll.prototype.pointerPreStart = function(e) {
     if (this.decelerating || this.scrollTransitionActive) {
