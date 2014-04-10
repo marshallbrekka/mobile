@@ -51,7 +51,6 @@ lib.factory("$rfz.util.scrollView",
     this.tracking = null;
 
     var self = this;
-    
 
     this.indicator = new Axis(new Indicator("x"), new Indicator("y"));
     Point.applyFn(function(canScroll, indicator) {
@@ -79,7 +78,7 @@ lib.factory("$rfz.util.scrollView",
       this.stepThroughDeceleration();
     }, this);
   }
-  
+
   Scroll.prototype.positionElements = function() {
     if (this.decelerating) {
       css.setTranslate(this.content, -this.position.x, -this.position.y);
@@ -133,14 +132,32 @@ lib.factory("$rfz.util.scrollView",
     };
 
     var existingScroll = rects.body.top - rects.parent.top;
-    if (rects.parent.top >= rects.target.top - visibleMargin) {
+    if (center) {
+      // If the total height of the element is greater than the height
+      // of the visible scroll area then scroll to the top of the
+      // target element.
+
+      // add 2x visibleMargin, for the top and bottom of the element
+      var targetHeight = rects.target.height + (2 * visibleMargin);
+      if (targetHeight <= rects.parent.height) {
+        visibleMargin = (rects.parent.height - targetHeight) / 2;
+      }
       return -1 * ((rects.parent.top - rects.target.top) +
-                   existingScroll + visibleMargin);
-    } else if (rects.parent.bottom <= rects.target.bottom - visibleMargin) {
-      return -1 * ((rects.parent.bottom - rects.target.bottom) +
-                   existingScroll - visibleMargin);
+                   existingScroll + visibleMargin)
+    } else {
+      // if the target element is above the visible scroll area
+      if (rects.parent.top >= rects.target.top - visibleMargin) {
+        return -1 * ((rects.parent.top - rects.target.top) +
+                     existingScroll + visibleMargin);
+      }
+      // if the target is below the visible scroll area
+      else if (rects.parent.bottom <= rects.target.bottom - visibleMargin) {
+        return -1 * ((rects.parent.bottom - rects.target.bottom) +
+                     existingScroll - visibleMargin);
+      }
+      // the target is visible, return nothing.
+      return;
     }
-    return;
   }
 
   /*
