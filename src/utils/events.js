@@ -145,6 +145,23 @@ lib.factory("$rfz.util.events",
                                   startPreventDefault : true});
     bind(el, this, events.POINTER_START);
     bind(el, this, events.POINTER_START, true);
+
+    // event handler that is registered on the document instead of the
+    // target element for move events. If the preMove fn couldn't be
+    // called because the pointer moved outside of the target elements
+    // bounds (before for instance, the scroll view could move it back
+    // within its bounds), then this fn will remove the event
+    // listeners and call the "lost" stage.
+    this.postMoveRegister = _.bind(function(e) {
+      this.log("postMoveRegister");
+      if (!this.calledPreMove) {
+        this.calledPreMove = true;
+        this.setEndListener(false);
+        this.setMoveListener(false);
+        this.callStage("lost");
+      }
+      unbind(document, this.postMoveRegister, events.POINTER_MOVE);
+    }, this);
   }
 
   PointerNested.prototype.log = function(msg) {
@@ -218,7 +235,6 @@ lib.factory("$rfz.util.events",
   */
   PointerNested.prototype.setMoveListener = function(shouldBind) {
     this.log("set move listener " + shouldBind);
-
     if (shouldBind) {
       if (this._boundElement) {
         if (this._boundElement !== document) {
@@ -229,11 +245,13 @@ lib.factory("$rfz.util.events",
           this._boundElement = document;
         }
       } else {
+        bind(document, this.postMoveRegister, events.POINTER_MOVE);
         bind(this.el, this, events.POINTER_MOVE);
         bind(this.el, this, events.POINTER_MOVE, true);
         this._boundElement = this.el;
       }
     } else if (this._boundElement) {
+      unbind(document, this.postMoveRegister, events.POINTER_MOVE);
       unbind(this._boundElement, this, events.POINTER_MOVE);
       unbind(this._boundElement, this, events.POINTER_MOVE, true);
       this._boundElement = null;
