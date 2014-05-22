@@ -51,7 +51,6 @@ lib.factory("$rfz.util.scrollView",
     this.tracking = null;
 
     var self = this;
-    
 
     this.indicator = new Axis(new Indicator("x"), new Indicator("y"));
     Point.applyFn(function(canScroll, indicator) {
@@ -79,7 +78,7 @@ lib.factory("$rfz.util.scrollView",
       this.stepThroughDeceleration();
     }, this);
   }
-  
+
   Scroll.prototype.positionElements = function() {
     if (this.decelerating) {
       css.setTranslate(this.content, -this.position.x, -this.position.y);
@@ -107,10 +106,74 @@ lib.factory("$rfz.util.scrollView",
   Scroll.DESIRED_FRAME_RATE = 1 / 60;
   Scroll.PENETRATION_DECELERATION = 8;
   Scroll.PENETRATION_ACCELERATION = 5;
+  Scroll.SCROLL_TO_ELEMENT_MARGIN = 20;
   Scroll.INDICATOR_DISPLAY_EVENT = "indicatorDisplayEvent";
   Scroll.MOVE_TRANSITION_END_EVENT = "moveTransitionEndEvent";
   Scroll.CHANGE_POSITION_EVENT = "changePositionEvent";
   Scroll.END_DECELERATION_EVENT = "endDecelerationEvent";
+
+
+  /*
+    Given a element that should be scrolled to, and a boolean that
+    when true indicates it should center the element in the scroll
+    view, returns the new y coordinate that should be scrolled to
+    in order to show the element.
+
+    If it returns null it means the element is already visible.
+
+    TODO actually impl the center functionality
+  */
+  Scroll.prototype.getDesiredScrollPosition = function(targetElement, center) {
+    var visibleMargin = Scroll.SCROLL_TO_ELEMENT_MARGIN;
+    var rects = {
+      target : targetElement.getBoundingClientRect(),
+      parent : this.container.getBoundingClientRect(),
+      body   : this.content.getBoundingClientRect()
+    };
+
+    var existingScroll = rects.body.top - rects.parent.top;
+    if (center) {
+      // If the total height of the element is greater than the height
+      // of the visible scroll area then scroll to the top of the
+      // target element.
+
+      // add 2x visibleMargin, for the top and bottom of the element
+      var targetHeight = rects.target.height + (2 * visibleMargin);
+      if (targetHeight <= rects.parent.height) {
+        visibleMargin = (rects.parent.height - targetHeight) / 2;
+      }
+      return -1 * ((rects.parent.top - rects.target.top) +
+                   existingScroll + visibleMargin)
+    } else {
+      // if the target element is above the visible scroll area
+      if (rects.parent.top >= rects.target.top - visibleMargin) {
+        return -1 * ((rects.parent.top - rects.target.top) +
+                     existingScroll + visibleMargin);
+      }
+      // if the target is below the visible scroll area
+      else if (rects.parent.bottom <= rects.target.bottom - visibleMargin) {
+        return -1 * ((rects.parent.bottom - rects.target.bottom) +
+                     existingScroll - visibleMargin);
+      }
+      // the target is visible, return nothing.
+      return;
+    }
+  }
+
+  /*
+    Given an element to scroll to, and a boolean indicating if the
+    element should be centered in the scroll view, it scrolls to
+    the element. If center is true and the element is already
+    centered, or center is false and the element is already visible,
+    no scrolling will occur.
+  */
+  Scroll.prototype.scrollToElement = function (element, center) {
+    var newPosition = this.getDesiredScrollPosition(element, center);
+    if (newPosition) {
+      this.calculateMaxPoint();
+      this.setPositionAnimated(new Point(this.position.x, newPosition), true);
+    }
+  }
 
   Scroll.prototype.pointerPreStart = function(e) {
     if (this.decelerating || this.scrollTransitionActive) {
@@ -307,11 +370,20 @@ lib.factory("$rfz.util.scrollView",
 
     if (this.scrollTransitionActive) {
       var midTransitionPosition = css.getPointFromTranslate(this.content).inverse();
+
+      // Set both of these variables to true so that
+      // A. position isnt't clamped because we are "dragging"
+      // B. position is actually set on element now (instead of next
+      // animation frame), because positionElements only sets the
+      // position if decelerating is true, and positionElements is
+      // called by setPositionAnimated
+      this.dragging = true;
+      this.decelerating = true;
+      this.setPositionAnimated(midTransitionPosition);
+      this.decelerating = false;
+      this.dragging = false;
       this.transitionEnded(e);
       this.toggleIndicators(true);
-      this.dragging = true;
-      this.setPositionAnimated(midTransitionPosition);
-      this.dragging = false;
     }
 
     this.tracking = [];
@@ -519,7 +591,7 @@ lib.factory("$rfz.util.scrollView",
     var decelerationFactor = new Point(Scroll.DELECERATION_FRICTION,
                                        Scroll.DELECERATION_FRICTION)
     var adjustedDecelerationFactorByTime = Point.applyFn(function(decFact) {
-      return Math.exp(Math.log(decFact) * elapsedTime)
+      return Math.exp(Math.log(decFact) * elapsedTime);
     }, decelerationFactor);
 
     decelerationFactor = Point.applyFn(function(decFactByTime, decFact) {

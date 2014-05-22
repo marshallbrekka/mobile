@@ -22,8 +22,8 @@ lib.factory("$rfz.util.indicator",
 
   // Platform specific constants
   // TODO set platform/version specific values
-  Indicator.THICKNESS = 5;
-  Indicator.END_SIZE = 2;
+  Indicator.THICKNESS = 2;
+  Indicator.END_SIZE = 1;
 
   // Generic constants
   Indicator.ANIMATION_DURATION = 0.25;
