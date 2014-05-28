@@ -31,7 +31,7 @@ lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.number", "$rfz.util.even
         startPosition = Point.fromEvent(e);
         iosPointerStartTimer = setTimeout(function() {
           element.addClass("pointer-start");
-        }, 100);
+        }, 50);
         targetPoint = getTargetPoint(startPosition, true);
       }
 
