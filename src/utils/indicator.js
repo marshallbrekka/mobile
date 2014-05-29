@@ -1,5 +1,36 @@
-lib.factory("$rfz.util.indicator",
-            ["$rfz.util.css", "$rfz.util.events", function(css, EVENTS) {
+function indicatorFactory(css, EVENTS, platform) {
+
+  function legacyTransformX(dom, middleOffset, scale) {
+    css.setTransform(dom, "translate3d(" + middleOffset + "px,0,0)");
+    dom.style.width = scale + "px";
+  }
+
+  function legacyTransformY(dom, middleOffset, scale) {
+    css.setTransform(dom, "translate3d(0, " + middleOffset + "px,0)");
+    dom.style.height = scale + "px";
+  }
+
+  function transformX(dom, middleOffset, scale) {
+    var transform = "translate3d(" + middleOffset + "px,0,0) scale(" + scale + ",1)";
+    css.setTransform(dom, transform);
+  }
+
+  function transformY(dom, middleOffset, scale) {
+    var transform = "translate3d(0," + middleOffset + "px,0) scale(1," + scale + ")";
+    css.setTransform(dom, transform);
+  }
+
+  var transformFns = (function() {
+    if (platform.os === platform.PLATFORMS.ANDROID &&
+       platform.version.major <= 4 && platform.version.minor < 4) {
+      return {x : legacyTransformX,
+              y : legacyTransformY};
+    } else {
+      return {x : transformX,
+              y : transformY};
+    }
+  })();
+
   function Indicator(axis) {
     var parent = angular.element("<div class='rfz-scroll-indicator rfz-scroll-indicator-" +
                                  axis + "'></div>");
@@ -94,13 +125,11 @@ lib.factory("$rfz.util.indicator",
 
     if (this.axis == "x") {
       css.setTranslate(startElement, startPosition);
-      css.setTransform(this.dom.middle,
-                       "translate3d(" + middleOffset + "px,0,0) scale(" + scale + ",1)");
+      transformFns.x(this.dom.middle, middleOffset, scale);
       css.setTranslate(endElement, endPosition);
     } else {
       css.setTranslate(startElement, 0, startPosition);
-      css.setTransform(this.dom.middle,
-                       "translate3d(0," + middleOffset + "px,0) scale(1," + scale + ")");
+      transformFns.y(this.dom.middle, middleOffset, scale);
       css.setTranslate(endElement, 0, endPosition);
     }
   }
@@ -137,4 +166,8 @@ lib.factory("$rfz.util.indicator",
   }
 
   return Indicator;
-}]);
+}
+
+lib.factory("$rfz.util.indicator",
+            ["$rfz.util.css", "$rfz.util.events", "$rfz.util.platform",
+             indicatorFactory]);
