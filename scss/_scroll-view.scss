@@ -120,15 +120,15 @@ Structure of scroll view is as follows
     }
 
     .rfz-scroll-indicator-x .rfz-scroll-indicator-middle {
-      left:2px;
+      left:1px;
       width:1px;
-      clip:rect(-1px, 1px, 3px, 0);
+/*      clip:rect(-1px, 1px, 3px, 0);*/
     }
 
     .rfz-scroll-indicator-y .rfz-scroll-indicator-middle {
       top:1px;
       height:1px;
-      clip:rect(0, 3px, 1px, -1px);
+/*      clip:rect(0, 3px, 1px, -1px);*/
 
     }
 
@@ -137,7 +137,7 @@ Structure of scroll view is as follows
     }
 
     .rfz-scroll-indicator-x :nth-child(1) {
-      clip:rect(-1, 1px, 3px, -1px);
+      clip:rect(-1px, 1px, 3px, -1px);
     }
 
 
