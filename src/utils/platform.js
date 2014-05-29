@@ -15,12 +15,35 @@ lib.factory("$rfz.util.platform", ["$rootScope", function($rootScope) {
            urlArgs[pair[0]] = pair[1];
          });
 
+  var androidRegexUA = /(Android) (\d)\.(\d)/;
+  var iOSRegexUA = /(iPhone|iPad).+ OS (\d)_(\d)/;
+
+  var androidMatch = window.navigator.userAgent.match(androidRegexUA);
+  var iOSMatch = window.navigator.userAgent.match(iOSRegexUA);
+  var userAgentInfo;
+
+  if (androidMatch) {
+    userAgentInfo = {os : "android",
+                     version : {
+                       major : parseInt(androidMatch[2]),
+                       minor : parseInt(androidMatch[3])
+                     }};
+  } else if (iOSMatch) {
+    userAgentInfo = {os : "ios",
+                     version : {
+                       major : parseInt(iOSMatch[2]),
+                       minor : parseInt(iOSMatch[3])
+                     }};
+  }
+
   // Use os if specified in url args, otherwise pull os from cordova
   // object. Defaults to ios.
   if (urlArgs.os) {
     platform.os = urlArgs.os;
   } else if (window.device && window.device.platform) {
     platform.os = window.device.platform.toLowerCase();
+  } else if (userAgentInfo) {
+    platform.os = userAgentInfo.os;
   } else {
     platform.os = "ios";
   }
@@ -39,6 +62,8 @@ lib.factory("$rfz.util.platform", ["$rootScope", function($rootScope) {
       major : parseInt(vSplit[0]),
       minor : parseInt(vSplit[1]) || 0
     };
+  } else if (userAgentInfo) {
+    platform.version = userAgentInfo.version;
   } else {
     platform.version = {
       major : 7,

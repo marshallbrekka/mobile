@@ -12,6 +12,7 @@ lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.number", "$rfz.util.even
       var startPosition;
       var targetPoint;
       var hasMoved;
+      var iosPointerStartTimer;
 
       function getTargetPoint(start, firstChange) {
         var target = start.copy();
@@ -28,7 +29,9 @@ lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.number", "$rfz.util.even
       function pointerStartIOS (e) {
         hasMoved = false;
         startPosition = Point.fromEvent(e);
-        element.addClass("pointer-start");
+        iosPointerStartTimer = setTimeout(function() {
+          element.addClass("pointer-start");
+        }, 50);
         targetPoint = getTargetPoint(startPosition, true);
       }
 
@@ -57,6 +60,7 @@ lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.number", "$rfz.util.even
 
 
       function pointerEndIOS(e) {
+        clearTimeout(iosPointerStartTimer);
         pointerLostIOS(e);
         if (!hasMoved) {
           scope.model = !scope.model;
