@@ -438,11 +438,7 @@ lib.factory("$rfz.util.events",
       lost  : boundLost,
       intercepted : boundLost
     };
-
-    if (this.opts.claimX || this.opts.claimY || this.opts.delayedClaim) {
-      eventHandlers.preMove = _.bind(this.preMove, this);
-    }
-
+    eventHandlers.preMove = _.bind(this.preMove, this);
     new PointerNested(element, eventHandlers);
   }
 
@@ -451,9 +447,7 @@ lib.factory("$rfz.util.events",
     this.addClassTimeout = setTimeout(_.bind(function() {
       this.element.addClass(this.opts.activeClass);
     }, this), 100);
-    if (this.opts.claimX || this.opts.claimY) {
-      this.startPoint = Point.fromEvent(e);
-    }
+    this.startPoint = Point.fromEvent(e);
     if (this.opts.delayedClaim !== null) {
       this.claimedAfterDelay = false;
       this.claimTimeout = setTimeout(_.bind(function() {
@@ -463,14 +457,14 @@ lib.factory("$rfz.util.events",
   }
 
   PointerAction.prototype.preMove = function(e) {
-    if (this.opts.claimX || this.opts.claimY) {
-      var point = Point.fromEvent(e),
-      diff = Point.difference(this.startPoint, point),
-      abs = diff.copy().abs();
-      console.log(abs.x + " " + abs.y);
+    var point = Point.fromEvent(e),
+        diff = Point.difference(this.startPoint, point),
+        abs = diff.copy().abs();
+    if (abs.x <= 6 && abs.y <= 6) {
+      return true;
+    } else if (this.opts.claimX || this.opts.claimY) {
       if (abs.x === abs.y) abs.x += 0.01;
-      if ((abs.x <= 6 && abs.y <= 6) ||
-          (abs.x > abs.y && this.opts.claimX) ||
+      if ((abs.x > abs.y && this.opts.claimX) ||
           (abs.y > abs.x && this.opts.claimY)) {
         return true;
       }
