@@ -309,6 +309,7 @@ lib.factory("$rfz.util.events",
     if (e._pointerNested && e._pointerNested.owns.move) {
       this.log("preMove bail early: the event owner was already set, and the owner " +
                "claimed the event last time, so don't even try to intercept.");
+      this.owns.preMove = false;
       return;
     } else if (this.callStage("preMove", e)) {
       this.log("preMove claim: our preMove fn returned true, so claim the event.");
@@ -357,13 +358,14 @@ lib.factory("$rfz.util.events",
       // will call our lost method, but if on another move event
       // the previous move owner loses it, and then we end up claiming
       // it, then we call the start stage again.
-      else if (this.owns.preMove) {
+      else if (this.owns.preMove && !this.firstMove) {
         this.log("move lost: we indicated that we owned preMove, but we weren't " +
                  "the indicated owner on the event object. calling the lost stage.");
         this.setEndListener(false);
         this.setMoveListener(false);
         this.callStage("lost");
       } else {
+        this.firstMove = false;
         this.owns.move = false;
         this.callStage("intercepted");
       }
@@ -436,11 +438,7 @@ lib.factory("$rfz.util.events",
       lost  : boundLost,
       intercepted : boundLost
     };
-
-    if (this.opts.claimX || this.opts.claimY || this.opts.delayedClaim) {
-      eventHandlers.preMove = _.bind(this.preMove, this);
-    }
-
+    eventHandlers.preMove = _.bind(this.preMove, this);
     new PointerNested(element, eventHandlers);
   }
 
@@ -449,9 +447,7 @@ lib.factory("$rfz.util.events",
     this.addClassTimeout = setTimeout(_.bind(function() {
       this.element.addClass(this.opts.activeClass);
     }, this), 100);
-    if (this.opts.claimX || this.opts.claimY) {
-      this.startPoint = Point.fromEvent(e);
-    }
+    this.startPoint = Point.fromEvent(e);
     if (this.opts.delayedClaim !== null) {
       this.claimedAfterDelay = false;
       this.claimTimeout = setTimeout(_.bind(function() {
@@ -461,10 +457,12 @@ lib.factory("$rfz.util.events",
   }
 
   PointerAction.prototype.preMove = function(e) {
-    if (this.opts.claimX || this.opts.claimY) {
-      var point = Point.fromEvent(e),
-      diff = Point.difference(this.startPoint, point),
-      abs = diff.copy().abs();
+    var point = Point.fromEvent(e),
+        diff = Point.difference(this.startPoint, point),
+        abs = diff.copy().abs();
+    if (abs.x <= 6 && abs.y <= 6) {
+      return true;
+    } else if (this.opts.claimX || this.opts.claimY) {
       if (abs.x === abs.y) abs.x += 0.01;
       if ((abs.x > abs.y && this.opts.claimX) ||
           (abs.y > abs.x && this.opts.claimY)) {
