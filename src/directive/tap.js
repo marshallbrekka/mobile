@@ -3,9 +3,10 @@ Apply to any element you wish to recieve a pointer start->end event.
 ex:
 <div rfz-tap="myScopeFn()">Click Me</div>
 */
-lib.directive("rfzTap", ["$rfz.util.events", "$rfz.util.point", "$rfz.util.edges", 
-                           function(events, Point, Edges) {
+lib.directive("rfzTap", ["$parse", "$rfz.util.events", "$rfz.util.point", "$rfz.util.edges",
+                           function($parse, events, Point, Edges) {
   return function(scope, element, attrs) {
+    var fn = $parse(attrs["rfzTap"]);
     var opts = {};
     if (attrs.rfzTapClaimX === "true") {
       opts.claimX = true;
@@ -24,7 +25,9 @@ lib.directive("rfzTap", ["$rfz.util.events", "$rfz.util.point", "$rfz.util.edges
     }
 
     new events.PointerAction(element, function() {
-      scope.$apply(attrs["rfzTap"]);
+      scope.$apply(function() {
+        fn(scope);
+      });
     }, opts);
   }
 }]);
