@@ -175,10 +175,20 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
       var previousStack = scope.$rfzViewStack;
       scope.$rfzViewStack = {
         $push : function(name, transitionType, reset) {
-          pushView(name, transitionType, reset);
+          // wrap in a defer to ensure that any child scope
+          // $digest calls have completed.
+          _.defer(function() {
+            pushView(name, transitionType, reset);
+            scope.$digest();
+          });
         },
         $pop : function(name) {
-          popView(name);
+          // wrap in a defer to ensure that any child scope
+          // $digest calls have completed.
+          _.defer(function() {
+            popView(name);
+            scope.$digest();
+          });
         },
         $$currentViewName : null
       };
@@ -186,18 +196,20 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
 
       // TODO make the back button event handler deal with nested nav stacks.
       function backButtonHandler(e) {
-        scope.$apply(function() {
-          if (ctrl.history.length === 1 &&
-              ctrl.history[0].name !== attr.rfzViewStack) {
-            pushView(attr.rfzViewStack, "none", true);
-            document.removeEventListener("backbutton", backButtonHandler, false);
-          } else {
-            popView();
-          }
-
+        // wrap $apply in a defer to ensure that any child scope
+        // $digest calls have completed.
+        _.defer(function() {
+          scope.$apply(function() {
+            if (ctrl.history.length === 1 &&
+                ctrl.history[0].name !== attr.rfzViewStack) {
+              pushView(attr.rfzViewStack, "none", true);
+              document.removeEventListener("backbutton", backButtonHandler, false);
+            } else {
+              popView();
+            }
+          });
         });
       }
-
     }
   };
 }]);
