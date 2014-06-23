@@ -6,7 +6,9 @@ lib.directive("rfzScrollViewListener", function() {
       return {
         registerScrollView : function(name, view) {
           scrollViews[name] = view;
-          cb(name);
+          if (cb) {
+            cb(name);
+          }
         },
         getScrollViews : function() {
           return scrollViews;
