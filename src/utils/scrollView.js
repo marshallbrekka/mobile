@@ -283,7 +283,7 @@ lib.factory("$rfz.util.scrollView",
   Scroll.prototype.currentPage = function() {
     if (this.canScroll.x) {
       this.calculatePageSize();
-      return Math.round(this.position.x / this.pageSize);
+      return Math.round(this.position.x / this.pageSize.x);
     }
   }
 
