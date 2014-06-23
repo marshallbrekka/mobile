@@ -369,11 +369,12 @@ lib.animation('.rfz-js-header-animation-side', ["$rfz.util.css", "$rfz.util.plat
             var size = $rfzCss.textRect(headerName);
             $rfzCss.setTranslate(headerName,
                                  (-1 * (width / 2)) + (size.width / 2) + 27);
+            setTimeout(function() {
+              $rfzCss.setTransform(headerName, "");
+            }, duration);
           }
           done();
-          setTimeout(function() {
-            $rfzCss.setTransform(headerName, "");
-          }, duration);
+
         }
       }
     }
