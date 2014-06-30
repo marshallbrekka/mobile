@@ -105,7 +105,7 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
         }
       }
 
-      function pushView(name, transitionType, reset) {
+      function pushView(name, transitionType, properties, reset) {
         var viewObj = ctrl.views[name];
         if (reset) {
           var silentRemove = ctrl.history;
@@ -130,15 +130,20 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
           clone.css("z-index", ctrl.depthIndex++ + "");
           view.element = clone;
           var anchor = viewObj.element;
+          var current;
+          newScope.$rfzViewProperties = properties || {};
           if (ctrl.history.length === 0) {
-            newScope.$rfzViewProperties = {};
+            if (silentRemove) {
+              current = silentRemove[silentRemove.length - 1];
+            }
           } else {
-            var current = ctrl.history[ctrl.history.length - 1];
+            current = ctrl.history[ctrl.history.length - 1];
+            newScope.$rfzViewProperties.canGoBack = true;
+            newScope.$rfzViewProperties.previous = current.scope.$rfzViewProperties;
+          }
+
+          if (current) {
             current.element.addClass("rfz-js-header-animation-" + transitionType);
-            newScope.$rfzViewProperties = {
-              canGoBack : true,
-              previous : current.scope.$rfzViewProperties
-            };
             events.bind(current.element[0], stopEvent, events.POINTER_START, true);
             $animate.addClass(current.element, "ng-hide", function() {
               events.unbind(current.element[0], stopEvent, events.POINTER_START, true);
