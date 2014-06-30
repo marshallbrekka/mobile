@@ -179,11 +179,11 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
       element.addClass("rfz-view");
       var previousStack = scope.$rfzViewStack;
       scope.$rfzViewStack = {
-        $push : function(name, transitionType, reset) {
+        $push : function(name, transitionType, params, reset) {
           // wrap in a defer to ensure that any child scope
           // $digest calls have completed.
           _.defer(function() {
-            pushView(name, transitionType, reset);
+            pushView(name, transitionType, params, reset);
             scope.$digest();
           });
         },
