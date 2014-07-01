@@ -32,6 +32,10 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
       this.depthIndex = 1;
     },
     link : function(scope, element, attr, ctrl) {
+      // The name of the root view of the stack, can be changed.
+      // It is set by watching the value of attr.rfzViewStack.
+      var rootView;
+
       var parentController = element.parent().controller("rfzViewStack");
       if (parentController) {
         ctrl.depthIndex = parentController.depthIndex + 1;
@@ -98,7 +102,7 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
           ctrl.depthIndex--;
 
           if (ctrl.history.length === 1 && 
-              attr.rfzViewStack === ctrl.history[0].name) {
+              rootView === ctrl.history[0].name) {
             document.removeEventListener("backbutton", backButtonHandler, false);
           }
           scope.$rfzViewStack.$$currentViewName = _.last(ctrl.history).name;
@@ -164,7 +168,7 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
           if (ctrl.history.length === 2) {
             document.addEventListener("backbutton", backButtonHandler, false);
           } else if (ctrl.history.length === 1) {
-            if (attr.rfzViewStack !== name) {
+            if (rootView !== name) {
               document.addEventListener("backbutton", backButtonHandler, false);
             } else {
               document.removeEventListener("backbutton", backButtonHandler, false);
@@ -197,7 +201,17 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
         },
         $$currentViewName : null
       };
-      pushView(attr.rfzViewStack, "none");
+
+      scope.$watch(attr.rfzViewStack, function(val, previous) {
+        if (!rootView) {
+          pushView(val, "none");
+        }
+        rootView = val;
+      });
+
+      scope.$on("$destroy", function() {
+        document.removeEventListener("backbutton", backButtonHandler, false);
+      });
 
       // TODO make the back button event handler deal with nested nav stacks.
       function backButtonHandler(e) {
@@ -206,8 +220,8 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
         _.defer(function() {
           scope.$apply(function() {
             if (ctrl.history.length === 1 &&
-                ctrl.history[0].name !== attr.rfzViewStack) {
-              pushView(attr.rfzViewStack, "none", true);
+                ctrl.history[0].name !== rootView) {
+              pushView(rootView, "none", true);
               document.removeEventListener("backbutton", backButtonHandler, false);
             } else {
               popView();
