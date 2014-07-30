@@ -244,6 +244,7 @@ lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", functio
       })();
 
       scope.$on("$destroy", function() {
+        notifyStackChangeFn(scope, {stack : null});
         document.removeEventListener("backbutton", backButtonHandler, false);
       });
 
