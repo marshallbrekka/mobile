@@ -26,3 +26,21 @@ module.controller("ItemList", ["$scope", function($scope){
   });
 
 }]);
+
+module.controller("StackPersistance", ["$scope", function($scope) {
+  console.log("created ctrl");
+  $scope.stackChanged = function(stack) {
+    console.log("STACK", stack);
+  }
+
+  $scope.restoreStack = function() {
+    return [{name : "main",
+             transition : "none"},
+            {name : "item",
+             transition : "side"},
+            {name : "item2",
+             transition : "side"},
+            {name : "item",
+             transition : "side"}];
+  }
+}]);

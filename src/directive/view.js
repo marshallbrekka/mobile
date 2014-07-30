@@ -13,7 +13,7 @@ and the $pop method was called, then it looks for its controller on
 its parent and calls $pop there, thus removing the current view from
 the stack, as well as the last view on the parents stack.
 */
-lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate, events) {
+lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", function($animate, $parse, events) {
   function transitionClass(type) {
     return "rfz-view-stack-transition-" + type;
   }
@@ -35,6 +35,14 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
       // The name of the root view of the stack, can be changed.
       // It is set by watching the value of attr.rfzViewStack.
       var rootView;
+
+
+      var restoreStackFn = $parse(attr["restoreStack"]);
+      var notifyStackChangeFn = $parse(attr["onStackChange"]);
+
+      function notifyStackChange() {
+        notifyStackChangeFn(scope, {stack : ctrl.history});
+      }
 
       var parentController = element.parent().controller("rfzViewStack");
       if (parentController) {
@@ -106,10 +114,11 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
             document.removeEventListener("backbutton", backButtonHandler, false);
           }
           scope.$rfzViewStack.$$currentViewName = _.last(ctrl.history).name;
+          notifyStackChange();
         }
       }
 
-      function pushView(name, transitionType, properties, reset) {
+      function pushView(name, transitionType, properties, reset, restoreStackCb) {
         var viewObj = ctrl.views[name];
         if (reset) {
           var silentRemove = ctrl.history;
@@ -127,6 +136,9 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
           scope : newScope,
           transition : transitionType
         };
+        if (restoreStackCb) {
+          transitionType = "none";
+        }
 
         viewObj.transclude(view.scope, function(clone) {
           clone.addClass("rfz-pane");
@@ -154,6 +166,10 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
             });
           }
           ctrl.history.push(view);
+          // notify the stack change listener if we aren't being restored
+          if (!restoreStackCb) {
+            notifyStackChange();
+          }
           events.bind(clone[0], stopEvent, events.POINTER_START, true);
           $animate.enter(clone, anchor.parent(), anchor, function() {
             removeViewsSilently(silentRemove);
@@ -175,6 +191,10 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
             }
           }
           scope.$rfzViewStack.$$currentViewName = name;
+          if (restoreStackCb) {
+            restoreStackCb();
+          }
+
         });
       }
 
@@ -203,11 +223,25 @@ lib.directive("rfzViewStack", ["$animate", "$rfz.util.events", function($animate
       };
 
       scope.$watch(attr.rfzViewStack, function(val, previous) {
-        if (!rootView) {
+        if (ctrl.history.length === 0) {
           pushView(val, "none");
         }
         rootView = val;
       });
+
+      // Restores the view stack with the result of restoreStackFn if
+      // it returns anything.
+      (function() {
+        var history = restoreStackFn(scope);
+        function restoreView() {
+          var viewToAdd = history.shift(0, 1);
+          pushView(viewToAdd.name, viewToAdd.transition, viewToAdd.parameters, false, (history.length !== 0 ? restoreView : null));
+        }
+
+        if (history) {
+          restoreView();
+        }
+      })();
 
       scope.$on("$destroy", function() {
         document.removeEventListener("backbutton", backButtonHandler, false);

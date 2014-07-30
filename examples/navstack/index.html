@@ -67,8 +67,10 @@
     </style>
   <title>Nav Stack</title>
 </head>
-<body rfz-add-platform>
-  <div rfz-view-stack="'main'">
+<body rfz-add-platform ng-controller="StackPersistance">
+  <div rfz-view-stack="'main'"
+       on-stack-change="stackChanged(stack)"
+       restore-stack="restoreStack()">
     <div rfz-view="main" ng-controller="ItemList" class="rfz-view-has-header">
       <div rfz-view-header="'Items'">
         <div class="rfz-view-header-name">{{$viewName}}</div>
