@@ -36,6 +36,25 @@ lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", functio
       // It is set by watching the value of attr.rfzViewStack.
       var rootView;
 
+      /*
+        Pushes the root view onto the stack. The root view can either
+        be a string or an object with keys name, and parameters.
+      */
+      function pushRootView() {
+        if (typeof rootView === "string") {
+          pushView(rootView, "none", {}, true);
+        } else {
+          pushView(rootView.name, "none", rootView.parameters, true);
+        }
+      }
+
+      function rootViewName() {
+        if (typeof rootView === "string") {
+          return rootView;
+        } else if (rootView) {
+          return rootView.name;
+        }
+      }
 
       var restoreStackFn = $parse(attr["restoreStack"]);
       var notifyStackChangeFn = $parse(attr["onStackChange"]);
@@ -110,7 +129,7 @@ lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", functio
           ctrl.depthIndex--;
 
           if (ctrl.history.length === 1 && 
-              rootView === ctrl.history[0].name) {
+              rootViewName() === ctrl.history[0].name) {
             document.removeEventListener("backbutton", backButtonHandler, false);
           }
           scope.$rfzViewStack.$$currentViewName = _.last(ctrl.history).name;
@@ -184,7 +203,7 @@ lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", functio
           if (ctrl.history.length === 2) {
             document.addEventListener("backbutton", backButtonHandler, false);
           } else if (ctrl.history.length === 1) {
-            if (rootView !== name) {
+            if (rootViewName() !== name) {
               document.addEventListener("backbutton", backButtonHandler, false);
             } else {
               document.removeEventListener("backbutton", backButtonHandler, false);
@@ -223,11 +242,11 @@ lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", functio
       };
 
       scope.$watch(attr.rfzViewStack, function(val, previous) {
-        if (ctrl.history.length === 0) {
-          pushView(val, "none");
-        }
         rootView = val;
-      });
+        if (ctrl.history.length === 0) {
+          pushRootView();
+        }
+      }, true);
 
       // Restores the view stack with the result of restoreStackFn if
       // it returns anything.
@@ -255,8 +274,8 @@ lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", functio
         _.defer(function() {
           scope.$apply(function() {
             if (ctrl.history.length === 1 &&
-                ctrl.history[0].name !== rootView) {
-              pushView(rootView, "none", true);
+                ctrl.history[0].name !== rootViewName()) {
+              pushRootView();
               document.removeEventListener("backbutton", backButtonHandler, false);
             } else {
               popView();

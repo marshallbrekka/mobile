@@ -79,7 +79,7 @@
         <div rfz-scroll-view can-scroll-x="false">
           <ul rfz-scroll-view-body>
             <li ng-repeat="item in items" class="ITEM"
-                rfz-tap="openItem(item); $rfzViewStack.$push('item','side')"
+                rfz-tap="openItem(item);"
                 rfz-tap-claim-x="true"
                 ng-class="{'active-item' : item.active}">
               {{item.name}}
@@ -109,13 +109,13 @@
       <div rfz-view-body rfz-scroll-view can-scroll-x="false">
         <div rfz-scroll-view-body>
           <ul>
-            <span ng-if="$rfzViewProperties.previous.selectedItem">
+            <span ng-if="$rfzViewProperties.selectedItem">
             <li>Item Name:
-            {{$rfzViewProperties.previous.selectedItem.name}}</li>
+            {{$rfzViewProperties.selectedItem.name}}</li>
             <li>Item Id:
-            {{$rfzViewProperties.previous.selectedItem.id}}</li>
+            {{$rfzViewProperties.selectedItem.id}}</li>
             <li>Active:
-            {{$rfzViewProperties.previous.selectedItem.active}}</li>
+            {{$rfzViewProperties.selectedItem.active}}</li>
             </span>
             <li rfz-tap="$rfzViewStack.$push('item2', 'side')"
                 rfz-tap-claim-x="true">Go To Next Pane</li>

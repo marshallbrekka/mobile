@@ -12,7 +12,8 @@ module.controller("ItemList", ["$scope", function($scope){
     console.log("opened");
     openedItem = item;
     item.active = true;
-    $scope.$rfzViewProperties.selectedItem = item;
+
+    $scope.$rfzViewStack.$push('item','side', {selectedItem : item});
   }
 
   $scope.$on("$navStackViewFocus", function() {
@@ -32,6 +33,7 @@ module.controller("StackPersistance", ["$scope", function($scope) {
   $scope.stackChanged = function(stack) {
     console.log("STACK", stack);
   }
+
 
   $scope.restoreStack = function() {
     return [{name : "main",
