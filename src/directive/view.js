@@ -113,6 +113,7 @@ lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", functio
           element.addClass(transitionClass(transition));
           current.element.addClass("rfz-js-header-animation-" + transition);
           previous.element.addClass("rfz-js-header-animation-" + transition);
+          current.scope.$emit("$navStackViewPop");
           current.scope.$destroy();
 
           events.bind(previous.element[0], stopEvent, events.POINTER_START, true);
