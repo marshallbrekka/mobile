@@ -111,7 +111,9 @@ lib.factory("$rfz.util.scrollView",
   Scroll.MOVE_TRANSITION_END_EVENT = "moveTransitionEndEvent";
   Scroll.CHANGE_POSITION_EVENT = "changePositionEvent";
   Scroll.END_DECELERATION_EVENT = "endDecelerationEvent";
-
+  Scroll.INPUT_START_EVENT = "inputStartEvent";
+  Scroll.INPUT_MOVE_EVENT = "inputMoveEvent";
+  Scroll.INPUT_END_EVENT = "inputEndEvent";
 
   /*
     Given a element that should be scrolled to, and a boolean that
@@ -400,7 +402,7 @@ lib.factory("$rfz.util.scrollView",
       // position that would have resulted in the current out of bounds
       // position had we never let go.
       adjustedDiff = Point.difference(
-        this.position, 
+        this.position,
         this.position.copy().adjustIfOutsideRange(this.minPoint, this.maxPoint,
                                                   Scroll.OUT_OF_BOUNDS_FRICTION))
         .multiply(1 / Scroll.OUT_OF_BOUNDS_FRICTION);
@@ -410,6 +412,7 @@ lib.factory("$rfz.util.scrollView",
     if (this.pagingEnabled) {
       this.calculatePageSize();
     }
+    this.callListeners(Scroll.INPUT_START_EVENT, point);
   }
 
   Scroll.prototype.pointerMove = function(e) {
@@ -438,6 +441,7 @@ lib.factory("$rfz.util.scrollView",
     }
     this.setPositionAnimated(point);
     this.positionIndicators();
+    this.callListeners(Scroll.INPUT_MOVE_EVENT, point);
   }
 
   Scroll.prototype.pointerEnd = function(e) {
@@ -453,6 +457,7 @@ lib.factory("$rfz.util.scrollView",
     if (!this.decelerating) {
       this.snapPositionToBounds(true);
     }
+    this.callListeners(Scroll.INPUT_END_EVENT);
   }
 
   Scroll.prototype.transitionEnded = function(e) {
