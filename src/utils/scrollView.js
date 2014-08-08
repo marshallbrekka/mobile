@@ -441,7 +441,8 @@ lib.factory("$rfz.util.scrollView",
   }
 
   Scroll.prototype.pointerEnd = function(e) {
-    if (e.target.tagName !== "INPUT") {
+    if (e.target.tagName !== "INPUT" &&
+        e.target.tagName !== "BUTTON") {
       e.preventDefault();
     }
     this.dragging = false;
