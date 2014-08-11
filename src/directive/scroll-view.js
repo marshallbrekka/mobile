@@ -92,7 +92,13 @@ lib.directive("rfzScrollView", ["$rfz.util.scrollView", "$rfz.util.attrs", "$rfz
       var resize = _.throttle(function() {
         scroll.calculateMaxPoint();
         scroll.snapPositionToBounds(true);
-      }, 500);
+      }, 100, {leading: false});
+
+      
+      scope.$watch(function() {
+        resize();
+        return 1;
+      }, function() {});
 
       events.bind(window, resize, "resize");
       scope.$on("$destroy", function() {

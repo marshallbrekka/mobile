@@ -268,7 +268,11 @@ lib.factory("$rfz.util.scrollView",
       this.calculatePageSize();
       var pageNumber = Math.round(this.position.x / this.pageSize.x);
       var pagesElement = this.content.children[pageNumber];
-      this.container.style.height = pagesElement.clientHeight + "px";
+      // if the pages have not been rendered yet, then we won't have a
+      // pages element
+      if (pagesElement) {
+        this.container.style.height = pagesElement.clientHeight + "px";
+      }
     }
   }
 
@@ -510,6 +514,9 @@ lib.factory("$rfz.util.scrollView",
     var useNewPosition = false;
     var position = this.position.copy();
     if (this.pagingEnabled && animate) {
+      if (!this.pageSize) {
+        this.calculatePageSize();
+      }
       // if paging set position to the nearest page from the current position.
       position = Point.applyFn(function(curPos, pageSize) {
         return Math.round(curPos / pageSize) * pageSize;
