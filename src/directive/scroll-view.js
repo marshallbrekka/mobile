@@ -4,6 +4,7 @@ lib.directive("rfzScrollViewListener", function() {
       var scrollViews = {};
       var cb;
       return {
+        scrollViews : scrollViews,
         registerScrollView : function(name, view) {
           scrollViews[name] = view;
           if (cb) {
@@ -19,7 +20,14 @@ lib.directive("rfzScrollViewListener", function() {
       }
     },
     require : "rfzScrollViewListener",
-    scope : true
+    scope : true,
+    link : {
+      pre : function(scope, element, attrs, ctrl) {
+        if (attrs.rfzScrollViewListener) {
+          scope[attrs.rfzScrollViewListener] = ctrl.scrollViews;
+        }
+      }
+    }
   };
 });
 
@@ -27,7 +35,7 @@ lib.directive("rfzScrollView", ["$rfz.util.scrollView", "$rfz.util.attrs", "$rfz
                                 function(ScrollView, attrsUtils, events) {
   return {
     restrict : "A",
-    require : ["rfzScrollView","?^rfzScrollViewListener"],
+    require : ["rfzScrollView", "?^rfzScrollViewListener"],
     replace : true,
     transclude : true,
     template : "<div class='rfz-scroll-view-container' ng-transclude></div>",
