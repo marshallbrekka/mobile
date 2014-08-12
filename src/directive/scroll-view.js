@@ -89,14 +89,21 @@ lib.directive("rfzScrollView", ["$rfz.util.scrollView", "$rfz.util.attrs", "$rfz
         scroll.calculateMaxPoint();
       }, 4);
 
-      var resize = _.throttle(function() {
-        scroll.calculateMaxPoint();
-        scroll.snapPositionToBounds(true);
-      }, 100, {leading: false});
+      var resize = _.throttle(function(defer) {
+        if (defer) {
+          _.defer(function() {
+            scroll.calculateMaxPoint();
+            scroll.snapPositionToBounds(true);
+          });
+        } else {
+          scroll.calculateMaxPoint();
+          scroll.snapPositionToBounds(true);
+        }
+      }, 100);
 
       
       scope.$watch(function() {
-        resize();
+        resize(true);
         return 1;
       }, function() {});
 
