@@ -1,11 +1,17 @@
 function indicatorFactory(css, EVENTS, platform) {
 
-  function legacyTransformX(dom, middleOffset, scale) {
+  function legacyTransformX(dom, middleOffset, scale, anchor) {
+    if (anchor === Indicator.ANCHOR_END) {
+      middleOffset -= (scale - 1);
+    }
     css.setTransform(dom, "translate3d(" + middleOffset + "px,0,0)");
     dom.style.width = scale + "px";
   }
 
-  function legacyTransformY(dom, middleOffset, scale) {
+  function legacyTransformY(dom, middleOffset, scale, anchor) {
+    if (anchor === Indicator.ANCHOR_END) {
+      middleOffset -= (scale - 1);
+    }
     css.setTransform(dom, "translate3d(0, " + middleOffset + "px,0)");
     dom.style.height = scale + "px";
   }
@@ -125,11 +131,11 @@ function indicatorFactory(css, EVENTS, platform) {
 
     if (this.axis == "x") {
       css.setTranslate(startElement, startPosition);
-      transformFns.x(this.dom.middle, middleOffset, scale);
+      transformFns.x(this.dom.middle, middleOffset, scale, this.anchor);
       css.setTranslate(endElement, endPosition);
     } else {
       css.setTranslate(startElement, 0, startPosition);
-      transformFns.y(this.dom.middle, middleOffset, scale);
+      transformFns.y(this.dom.middle, middleOffset, scale, this.anchor);
       css.setTranslate(endElement, 0, endPosition);
     }
   }
