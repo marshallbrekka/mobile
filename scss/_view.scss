@@ -32,7 +32,11 @@ input, textarea {
 }
 
 .rfz-view-body {
-  @extend .rfz-pane;
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
   -webkit-transform:translate3d(0,0,0);
   background:#fff;
   z-index:10;
@@ -325,6 +329,28 @@ input, textarea {
   }
 }
 
+
+@-webkit-keyframes new-view-transition-side-android {
+  from {
+    -webkit-transform: translate3d(100%, 0, 0);
+  }
+
+  to {
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+}
+
+@-webkit-keyframes old-view-transition-side-android {
+  from {
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    -webkit-transform: translate3d(-25%, 0, 0);
+  }
+}
+
+
 .rfz-os-android {
   font-family:arial;
   &.rfz-os-version-4 {
@@ -332,39 +358,46 @@ input, textarea {
     $transition-function : ease-out;
 
     .rfz-view-stack-transition-side {
-
+        
       .rfz-pane {
-        -webkit-transform:translate3d(0,0,0);
-
-        &.ng-enter, &.ng-leave, &.ng-animate, &.ng-hide-add, &.ng-hide-remove {
-          -webkit-transition:-webkit-transform $transition-duration $transition-function,
-          opacity $transition-duration $transition-function;
-          display:block !important;
-        }
+        -webkit-animation-duration: $transition-duration;
+        -webkit-animation-timing-function: $transition-function;
+        -webkit-animation-fill-mode: forwards;
+        -webkit-animation-play-state: paused;
 
         &.ng-enter {
-          box-shadow:0 0 10px 0 rgba(0,0,0, 0.5);
-          opacity : 0;
-          -webkit-transform:scale3d(0.7, 0.7, 1);
-
+          display:none !important;
+          -webkit-animation-name: new-view-transition-side-android;
           &.ng-enter-active {
-            -webkit-transition:-webkit-transform $transition-duration $transition-function,
-            opacity $transition-duration $transition-function;
-            -webkit-transform:scale3d(1, 1, 1);
-            opacity:1;
+            display:block !important;
+            box-shadow: 0 0 30px 0 rgba(0,0,0, 0.5);
+            -webkit-animation-play-state: running;
           }
         }
 
         &.ng-leave {
-          box-shadow:0 0 10px 0 rgba(0,0,0, 0.5);
-          opacity : 1;
-          -webkit-transform:scale3d(1, 1, 1);
-
+          -webkit-animation-name: new-view-transition-side-android;
+          -webkit-animation-direction: reverse;
           &.ng-leave-active {
-            -webkit-transition:-webkit-transform $transition-duration $transition-function,
-            opacity $transition-duration $transition-function;
-            -webkit-transform:scale3d(0.7, 0.7, 0.7);
-            opacity:0;
+            box-shadow: 0 0 30px 0 rgba(0,0,0, 0.5);
+            -webkit-animation-play-state: running;
+          }
+        }
+
+        &.ng-hide-add {
+          display:block !important;
+          -webkit-animation-name: old-view-transition-side-android;
+          &.ng-hide-add-active {
+            -webkit-animation-play-state: running;
+          }
+        }
+
+        &.ng-hide-remove {
+          display:block !important;
+          -webkit-animation-name: old-view-transition-side-android;
+          -webkit-animation-direction: reverse;
+          &.ng-hide-remove-active {
+            -webkit-animation-play-state: running;
           }
         }
       }
