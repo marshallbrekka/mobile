@@ -330,7 +330,7 @@ input, textarea {
 }
 
 
-@-webkit-keyframes new-view-transition-side-android {
+@-webkit-keyframes new-view-transition-side-enter-android {
   from {
     -webkit-transform: translate3d(100%, 0, 0);
   }
@@ -340,13 +340,35 @@ input, textarea {
   }
 }
 
-@-webkit-keyframes old-view-transition-side-android {
+
+@-webkit-keyframes new-view-transition-side-leave-android {
+  from {
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    -webkit-transform: translate3d(100%, 0, 0);
+  }
+}
+
+
+@-webkit-keyframes old-view-transition-side-leave-android {
   from {
     -webkit-transform: translate3d(0, 0, 0);
   }
 
   to {
     -webkit-transform: translate3d(-25%, 0, 0);
+  }
+}
+
+@-webkit-keyframes old-view-transition-side-enter-android {
+  from {
+    -webkit-transform: translate3d(-25%, 0, 0);
+  }
+
+  to {
+    -webkit-transform: translate3d(0, 0, 0);
   }
 }
 
@@ -367,7 +389,7 @@ input, textarea {
 
         &.ng-enter {
           display:none !important;
-          -webkit-animation-name: new-view-transition-side-android;
+          -webkit-animation-name: new-view-transition-side-enter-android;
           &.ng-enter-active {
             display:block !important;
             box-shadow: 0 0 30px 0 rgba(0,0,0, 0.5);
@@ -376,8 +398,7 @@ input, textarea {
         }
 
         &.ng-leave {
-          -webkit-animation-name: new-view-transition-side-android;
-          -webkit-animation-direction: reverse;
+          -webkit-animation-name: new-view-transition-side-leave-android;
           &.ng-leave-active {
             box-shadow: 0 0 30px 0 rgba(0,0,0, 0.5);
             -webkit-animation-play-state: running;
@@ -386,7 +407,7 @@ input, textarea {
 
         &.ng-hide-add {
           display:block !important;
-          -webkit-animation-name: old-view-transition-side-android;
+          -webkit-animation-name: old-view-transition-side-leave-android;
           &.ng-hide-add-active {
             -webkit-animation-play-state: running;
           }
@@ -394,8 +415,7 @@ input, textarea {
 
         &.ng-hide-remove {
           display:block !important;
-          -webkit-animation-name: old-view-transition-side-android;
-          -webkit-animation-direction: reverse;
+          -webkit-animation-name: old-view-transition-side-enter-android;
           &.ng-hide-remove-active {
             -webkit-animation-play-state: running;
           }
