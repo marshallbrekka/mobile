@@ -198,11 +198,11 @@ lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", functio
             events.bind(current.element[0], stopEvent, events.POINTER_START, true);
             // attempt to allow the enter animation to start before
             // the class one, which is faster than enter.
-            _.defer(function) {
+            _.defer(function() {
               $animate.addClass(current.element, "ng-hide", function() {
                 events.unbind(current.element[0], stopEvent, events.POINTER_START, true);
               });
-            }
+            });
           }
 
 
