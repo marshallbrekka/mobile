@@ -439,7 +439,7 @@ lib.factory("$rfz.util.events",
       intercepted : boundLost
     };
     eventHandlers.preMove = _.bind(this.preMove, this);
-    new PointerNested(element, eventHandlers);
+    return new PointerNested(element, eventHandlers);
   }
 
   PointerAction.prototype.start = function(e) {
