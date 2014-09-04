@@ -122,15 +122,11 @@ Structure of scroll view is as follows
     .rfz-scroll-indicator-x .rfz-scroll-indicator-middle {
       left:1px;
       width:1px;
-      /* Provide clip to fix a render bug on android >= 4.3 */
-      clip:rect(0, 1px, 2px, 0);
     }
 
     .rfz-scroll-indicator-y .rfz-scroll-indicator-middle {
       top:1px;
       height:1px;
-      /* Provide clip to fix a render bug on android >= 4.3 */
-      clip:rect(0, 2px, 1px, 0);
     }
 
     .rfz-scroll-indicator-y :nth-child(1) {
