@@ -221,11 +221,6 @@ lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", functio
           }
 
         });
-
-        if (ctrl.history.length === 1 && 
-            rootViewName() === ctrl.history[0].name) {
-          document.removeEventListener("backbutton", backButtonHandler, false);
-        }
       }
 
       ctrl.$$pop = popView;
@@ -258,7 +253,7 @@ lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", functio
           pushRootView();
         } else if (ctrl.history.length === 1 &&
                    ctrl.history[0].name === rootViewName()) {
-          document.removEventListener("backbutton", backButtonHandler, false);
+          document.removeEventListener("backbutton", backButtonHandler, false);
         }
       }, true);
 
