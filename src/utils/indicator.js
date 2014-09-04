@@ -47,6 +47,12 @@ function indicatorFactory(css, EVENTS, platform) {
       middle : angular.element("<div class='rfz-scroll-indicator-middle'></div>")[0],
       end : angular.element("<div></div>")[0]
     };
+    if (platform.os === platform.PLATFORMS.ANDROID &&
+        platform.version.major >= 4 &&
+        platform.version.minor >= 4) {
+      /* Provide clip to fix a render bug on android >= 4.4.3 */
+      this.dom.middle.style.clip = this.axis === "x" ? "rect(0, 1px, 2px, 0)" : "rect(0, 2px, 1px, 0)";
+    }
     parent.append(this.dom.start);
     parent.append(this.dom.middle);
     parent.append(this.dom.end);
