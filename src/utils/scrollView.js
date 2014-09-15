@@ -59,7 +59,7 @@ lib.factory("$rfz.util.scrollView",
 
     new Events.PointerNested(angular.element(this.container), {
       startPreventDefault : false,
-      endPreventDefault : false,
+//      endPreventDefault : false,
       preStart : _.bind(this.pointerPreStart, this),
       start    : _.bind(this.pointerStart, this),
       preMove  : _.bind(this.pointerPreMove, this),
@@ -280,8 +280,10 @@ lib.factory("$rfz.util.scrollView",
     if (this.canScroll.x) {
       this.calculatePageSize();
       this.calculateMaxPoint();
-      var pagesElement = this.content.children[pageNumber];
-      this.container.style.height = pagesElement.clientHeight + "px";
+      if (this.autoPageHeight) {
+        var pagesElement = this.content.children[pageNumber];
+        this.container.style.height = pagesElement.clientHeight + "px";
+      }
       this.setPositionAnimated(new Point(this.pageSize.x * pageNumber, this.position.y), animate);
     }
   }
