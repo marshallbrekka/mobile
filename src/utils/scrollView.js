@@ -4,6 +4,19 @@ lib.factory("$rfz.util.scrollView",
             "$rfz.util.render", "$rfz.util.platform",
             function(css, numb, Point, Axis, Edges, Indicator, Events, render, platform) {
 
+  function easeOutCubic(currentTime, duration, positionDifference, startPosition) {
+    var tempTime = (currentTime / duration - 1)
+    return positionDifference *
+           (tempTime * tempTime * tempTime + 1)
+           + startPosition;
+  }
+
+  function easeOutExponential(currentTime, duration, positionDifference, startPosition) {
+    return positionDifference *
+           (-Math.pow(2, -10 * currentTime / duration) + 1)
+           + startPosition;
+  }
+
   function Scroll(opts) {
     var opts = _.defaults(opts, {
       bounces          : platform.os === platform.PLATFORMS.IOS,
@@ -15,6 +28,8 @@ lib.factory("$rfz.util.scrollView",
       pagingEnabled    : false,
       autoPageHeight   : false
     });
+
+    window.S = this;
 
     if (!opts.container) {
       throw new Error("Scroll view requires a container");
@@ -45,7 +60,6 @@ lib.factory("$rfz.util.scrollView",
     this.minPoint = new Point();
     this.maxPoint = null;
     this.position = new Point();
-    this.scrollTransitionActive = false;
     this.startPosition = null;
     this.startScroll = null;
     this.tracking = null;
@@ -80,7 +94,7 @@ lib.factory("$rfz.util.scrollView",
   }
 
   Scroll.prototype.positionElements = function() {
-    if (this.decelerating) {
+    if (this.animating) {
       css.setTranslate(this.content, -this.position.x, -this.position.y);
       this.positionIndicators();
     } else {
@@ -98,19 +112,20 @@ lib.factory("$rfz.util.scrollView",
   // Generic constants
   Scroll.MAX_TRACKING_TIME = 150;
   Scroll.OUT_OF_BOUNDS_FRICTION = 0.5;
-  Scroll.PAGE_TRANSITION_DURATION = 0.25;
+  Scroll.PAGE_TRANSITION_DURATION = 300;
+  Scroll.SCROLL_TRANSITION_DURATION = 580;
+
   Scroll.MINIMUM_VELOCITY = 10;
   Scroll.MIN_OUT_OF_RANGE_DISTANCE = 1;
   Scroll.MIN_VELOCITY_FOR_DECELERATION = 250;
   Scroll.MIN_VELOCITY_FOR_DECELERATION_WITH_PAGING = 300;
-  Scroll.DESIRED_FRAME_RATE = 1 / 60;
   Scroll.PENETRATION_DECELERATION = 8;
   Scroll.PENETRATION_ACCELERATION = 5;
   Scroll.SCROLL_TO_ELEMENT_MARGIN = 20;
+
   Scroll.INDICATOR_DISPLAY_EVENT = "indicatorDisplayEvent";
-  Scroll.MOVE_TRANSITION_END_EVENT = "moveTransitionEndEvent";
   Scroll.CHANGE_POSITION_EVENT = "changePositionEvent";
-  Scroll.END_DECELERATION_EVENT = "endDecelerationEvent";
+  Scroll.CHANGE_POSITION_END_EVENT = "endDecelerationEvent";
   Scroll.INPUT_START_EVENT = "inputStartEvent";
   Scroll.INPUT_MOVE_EVENT = "inputMoveEvent";
   Scroll.INPUT_END_EVENT = "inputEndEvent";
@@ -178,7 +193,7 @@ lib.factory("$rfz.util.scrollView",
   }
 
   Scroll.prototype.pointerPreStart = function(e) {
-    if (this.decelerating || this.scrollTransitionActive) {
+    if (this.animating) {
       return true;
     }
   }
@@ -208,17 +223,8 @@ lib.factory("$rfz.util.scrollView",
     // If the deceleration function determined we weren't going to
     // decelerate then decelerating is false and we should snap to
     // the bounds of minPoint and maxPoint
-    if (!this.decelerating) {
+    if (!this.animating) {
       this.snapPositionToBounds(true);
-    }
-  }
-
-  Scroll.prototype.handleEvent = function(e) {
-    e.preventDefault();
-    switch(e.type) {
-    case Events.TRANSITION_END:
-      this.transitionEnded(e);
-      break;
     }
   }
 
@@ -284,7 +290,10 @@ lib.factory("$rfz.util.scrollView",
         var pagesElement = this.content.children[pageNumber];
         this.container.style.height = pagesElement.clientHeight + "px";
       }
-      this.setPositionAnimated(new Point(this.pageSize.x * pageNumber, this.position.y), animate);
+      this.setPositionAnimated(new Point(this.pageSize.x * pageNumber, this.position.y),
+                               animate,
+                               null,
+                               easeOutCubic);
     }
   }
 
@@ -370,30 +379,11 @@ lib.factory("$rfz.util.scrollView",
   }
 
   Scroll.prototype.pointerStart = function(e) {
-    this.decelerating = false;
+    this.animating = false;
     this.firstScroll = true;
     var rect = this.container.getBoundingClientRect();
     var adjustedDiff;
     var point = Point.fromEvent(e);
-
-    if (this.scrollTransitionActive) {
-      var midTransitionPosition = css.getPointFromTranslate(this.content).inverse();
-
-      // Set both of these variables to true so that
-      // A. position isnt't clamped because we are "dragging"
-      // B. position is actually set on element now (instead of next
-      // animation frame), because positionElements only sets the
-      // position if decelerating is true, and positionElements is
-      // called by setPositionAnimated
-      this.dragging = true;
-      this.decelerating = true;
-      this.setPositionAnimated(midTransitionPosition);
-      this.decelerating = false;
-      this.dragging = false;
-      this.transitionEnded(e);
-      this.toggleIndicators(true);
-    }
-
     this.tracking = [];
     this.startPosition = this.position.copy();
     this.startScroll = point.copy();
@@ -451,6 +441,7 @@ lib.factory("$rfz.util.scrollView",
   }
 
   Scroll.prototype.pointerEnd = function(e) {
+    this.callListeners(Scroll.INPUT_END_EVENT);
     if (e.target.tagName !== "INPUT" &&
         e.target.tagName !== "BUTTON") {
       e.preventDefault();
@@ -460,22 +451,13 @@ lib.factory("$rfz.util.scrollView",
     // If the deceleration function determined we weren't going to
     // decelerate then decelerating is false and we should snap to
     // the bounds of minPoint and maxPoint
-    if (!this.decelerating) {
+    if (!this.animating) {
       this.snapPositionToBounds(true);
     }
-    this.callListeners(Scroll.INPUT_END_EVENT);
-  }
-
-  Scroll.prototype.transitionEnded = function(e) {
-    if (this.scrollTransitionActive) {
-      this.scrollTransitionActive = false;
-      Events.unbind(this.container, this, [Events.TRANSITION_END]);
-      css.setTransitionDuration(this.content, "");
-      this.toggleIndicators(false);
-      if (this.autoPageHeight) {
-        this.adjustHeight();
-      }
-      this.callListeners(Scroll.MOVE_TRANSITION_END_EVENT);
+    // don't combine these if blocks, snapPositionToBounds can result
+    // in an animation.
+    if (!this.animating) {
+      this.callListeners(Scroll.CHANGE_POSITION_END_EVENT);
     }
   }
 
@@ -483,29 +465,69 @@ lib.factory("$rfz.util.scrollView",
   Used externally for calls from listeners.
   */
   Scroll.prototype.setPosition = function(point) {
-    this.transitionEnded();
     (this.position = point.copy()).roundToPx();
     this.positionElements();
   }
 
-  Scroll.prototype.setPositionAnimated = function(point, animate, duration) {
+  /*
+  Given a start point, an end point, a duration (in ms), and an
+  optional start time (if no start time is provided it defaults
+  to the time the fn was called).
+  */
+  Scroll.prototype.animateToPosition = function(startPoint, pointDifference, duration, easingFn, startTime) {
+    // if animating is false, then something has intercepted our
+    // animation, so don't do anything
+    if (this.animating) {
+      var currentTime = Date.now();
+      // if a start time wasn't provided set it to the current time.
+      if (!startTime) {
+        startTime = currentTime;
+      }
+      currentTime = currentTime - startTime;
+
+      if (currentTime >= duration) {
+        // we are done with the animation now, call listeners, hide the
+        // indicators (if they are shown)
+        this.setPositionAnimated(Point.add(startPoint, pointDifference));
+        this.toggleIndicators(false);
+        this.animating = false;
+        this.callListeners(Scroll.CHANGE_POSITION_END_EVENT);
+      } else {
+        var newPosition = Point.applyFn(
+          function applyEasingFunction(startPosition, positionDifference) {
+            return easingFn(currentTime, duration, positionDifference, startPosition);
+          }, startPoint, pointDifference);
+        this.setPositionAnimated(newPosition);
+        // call ourselves on the next animation frame.
+        render.render(this.renderId, _.bind(function() {
+          this.animateToPosition(startPoint, pointDifference, duration, easingFn, startTime);
+        }, this), true);
+      }
+    }
+  }
+
+  /*
+  Moves the scroll view to the given Point.
+  Takes a point to move to, an optional boolean that when true will
+  trigger an animation to the given point, and an optional duration
+  for the animation.
+  */
+  Scroll.prototype.setPositionAnimated = function(point, animate, duration, animationFn) {
     if (point && !point.equals(this.position)) {
-      (this.position = point.copy()).roundToPx();
-      if (!this.dragging && !this.decelerating) {
+      point = point.copy().roundToPx();
+      if (!this.dragging && !this.animating) {
         // If we aren't dragging or decelerating then prevent the
         // view from being scrolled beyond the content edges.
-        this.position.clamp(this.minPoint, this.maxPoint);
+        point.clamp(this.minPoint, this.maxPoint);
       }
-
       if (animate) {
-        this.scrollTransitionActive = true;
-        Events.bind(this.container, this, [Events.TRANSITION_END]);
-        css.setTranslate(this.content, -this.position.x,  -this.position.y);
-        css.setTransition(this.content, duration || Scroll.PAGE_TRANSITION_DURATION);
-        this.positionIndicators(true, duration || Scroll.PAGE_TRANSITION_DURATION);
-        // TODO animate scroll indicators getting larger again
-        this.callListeners(Scroll.CHANGE_POSITION_EVENT, duration || Scroll.PAGE_TRANSITION_DURATION);
+        this.animating = true;
+        this.animateToPosition(this.position.copy(),
+                               Point.difference(point, this.position),
+                               duration || Scroll.SCROLL_TRANSITION_DURATION,
+                               animationFn || easeOutExponential);
       } else {
+        this.position = point;
         this.positionElements();
         this.callListeners(Scroll.CHANGE_POSITION_EVENT);
       }
@@ -515,7 +537,10 @@ lib.factory("$rfz.util.scrollView",
   Scroll.prototype.snapPositionToBounds = function(animate) {
     var useNewPosition = false;
     var position = this.position.copy();
+    var animationDuration, animationFn;
     if (this.pagingEnabled && animate) {
+      animationDuration = Scroll.PAGE_TRANSITION_DURATION;
+      animationFn = easeOutCubic;
       if (!this.pageSize) {
         this.calculatePageSize();
       }
@@ -529,7 +554,7 @@ lib.factory("$rfz.util.scrollView",
       useNewPosition = !position.equals(this.position);
     }
     if (useNewPosition) {
-      this.setPositionAnimated(position, animate);
+      this.setPositionAnimated(position, animate, animationDuration, animationFn);
     } else if (animate) {
       this.toggleIndicators(false);
     }
@@ -567,7 +592,7 @@ lib.factory("$rfz.util.scrollView",
         // If the abs velocity is greater than the min velocity then
         // start decelerating
         if (absVelocity.test(function(v) {return v > minDecelerationVelocity;})) {
-          this.decelerating = true;
+          this.animating = true;
           if (this.pagingEnabled) {
             this.nextPagePosition = Point.applyFn(function(decVel, minDecPoint, maxDecPoint) {
               return decVel > 0 ? maxDecPoint : minDecPoint;
@@ -622,7 +647,7 @@ lib.factory("$rfz.util.scrollView",
   }
 
   Scroll.prototype.stepThroughDeceleration = function() {
-    if (this.decelerating) {
+    if (this.animating) {
       var frameTime = Date.now();
       var elapsedTime = frameTime - this.previousDecelerationFrame;
       if (this.pagingEnabled) {
@@ -697,7 +722,7 @@ lib.factory("$rfz.util.scrollView",
   }
 
   Scroll.prototype.decelerationCompleted = function() {
-    this.decelerating = false;
+    this.animating = false;
     if (this.pagingEnabled) {
       this.setPositionAnimated(Point.applyFn(function(curPos, pageSize) {
         return (Math.round(curPos / pageSize) * pageSize);
@@ -708,7 +733,7 @@ lib.factory("$rfz.util.scrollView",
       this.adjustHeight();
     }
     this.toggleIndicators(false);
-    this.callListeners(Scroll.END_DECELERATION_EVENT);
+    this.callListeners(Scroll.CHANGE_POSITION_END_EVENT);
   }
 
   return Scroll;

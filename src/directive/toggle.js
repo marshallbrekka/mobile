@@ -6,18 +6,27 @@ lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.number", "$rfz.util.even
     scope : {
       model : "=rfzToggle"
     },
-    template : "<div class='rfz-toggle' ng-class=\"{on : model}\"><div class='rfz-toggle-handle'></div></div>",
+    template : "<div class='rfz-toggle' ng-class=\"{on : modelValueWhileInteracting}\"><div class='rfz-toggle-handle'></div></div>",
     link : function(scope, element, attr) {
       var handle = element.children();
       var startPosition;
       var targetPoint;
       var hasMoved;
       var iosPointerStartTimer;
+      
+      // use this to track the toggle control value while the user is
+      // interacting with it before assigning the end value to the
+      // bound model provided to the directive
+      scope.modelValueWhileInteracting;
+
+      scope.$watch("model", function(newValue) {
+        scope.modelValueWhileInteracting = newValue;
+      });
 
       function getTargetPoint(start, firstChange) {
         var target = start.copy();
         var unit = firstChange ? 35 : 25;
-        if (scope.model) {
+        if (scope.modelValueWhileInteracting) {
           target.x -= unit;
         } else {
           target.x += unit;
@@ -27,6 +36,7 @@ lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.number", "$rfz.util.even
 
 
       function pointerStartIOS (e) {
+        scope.modelValueWhileInteracting = scope.model;
         hasMoved = false;
         startPosition = Point.fromEvent(e);
         iosPointerStartTimer = setTimeout(function() {
@@ -37,17 +47,17 @@ lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.number", "$rfz.util.even
 
       function pointerMoveIOS(e) {
         var position = Point.fromEvent(e);
-        if (scope.model) {
+        if (scope.modelValueWhileInteracting) {
           if (position.x <= targetPoint.x) {
             hasMoved = true;
-            scope.model = false;
+            scope.modelValueWhileInteracting = false;
             targetPoint = getTargetPoint(targetPoint, false);
-            scope.$apply();
+            scope.$digest();
           }
         } else {
           if (position.x >= targetPoint.x) {
             hasMoved = true;
-            scope.model = true;
+            scope.modelValueWhileInteracting = true;
             targetPoint = getTargetPoint(targetPoint, false);
             scope.$digest();
           }
@@ -64,8 +74,10 @@ lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.number", "$rfz.util.even
         pointerLostIOS(e);
         if (!hasMoved) {
           scope.model = !scope.model;
-          scope.$apply();
+        } else {
+          scope.model = scope.modelValueWhileInteracting;
         }
+        scope.$apply();
       }
 
       if (platform.os === platform.PLATFORMS.IOS) {
@@ -82,10 +94,9 @@ lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.number", "$rfz.util.even
       } else {
         handle.text(scope.model ? "ON" : "OFF");
         var distance = 47;
-        var startModelValue;
 
         function pointerStartAndroid(e) {
-          startModelValue = scope.model;
+          scope.modelValueWhileInteracting = scope.model;
           hasMoved = false;
           startPosition = Point.fromEvent(e);
           element.addClass("pointer-start");
@@ -107,9 +118,9 @@ lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.number", "$rfz.util.even
         }
 
         function toggleAndroid() {
-          scope.model = !scope.model;
-          handle.text(scope.model ? "ON" : "OFF");
-          scope.$apply();
+          scope.modelValueWhileInteracting = !scope.modelValueWhileInteracting;
+          handle.text(scope.modelValueWhileInteracting ? "ON" : "OFF");
+          scope.$digest();
         }
 
         function pointerMoveAndroid(e) {
@@ -117,14 +128,14 @@ lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.number", "$rfz.util.even
           var position = Point.fromEvent(e);
           var delta = Point.difference(startPosition, position).x;
 
-          if (startModelValue) {
+          if (scope.model) {
             delta = -numb.clampNum(distance - delta, 0, distance);
           } else {
             delta = numb.clampNum(delta, -distance, 0);
           }
 
           css.setTranslate(handle[0], -delta, 0, 0);
-          if (scope.model) {
+          if (scope.modelValueWhileInteracting) {
             if (delta > -(distance / 2)) {
               toggleAndroid();
             }
@@ -144,6 +155,8 @@ lib.directive("rfzToggle", ["$rfz.util.css", "$rfz.util.number", "$rfz.util.even
           if (!hasMoved) {
             toggleAndroid();
           }
+          scope.model = scope.modelValueWhileInteracting;
+          scope.$apply();
           css.setTransform(handle[0], "");
         }
 
