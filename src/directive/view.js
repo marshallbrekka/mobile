@@ -129,7 +129,7 @@ lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", functio
           });
           ctrl.depthIndex--;
 
-          if (ctrl.history.length === 1 && 
+          if (ctrl.history.length === 1 &&
               rootViewName() === ctrl.history[0].name) {
             document.removeEventListener("backbutton", backButtonHandler, false);
           }
@@ -178,13 +178,6 @@ lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", functio
             newScope.$rfzViewProperties.previous = current.scope.$rfzViewProperties;
           }
 
-          if (current) {
-            current.element.addClass("rfz-js-header-animation-" + transitionType);
-            events.bind(current.element[0], stopEvent, events.POINTER_START, true);
-            $animate.addClass(current.element, "ng-hide", function() {
-              events.unbind(current.element[0], stopEvent, events.POINTER_START, true);
-            });
-          }
           ctrl.history.push(view);
           // notify the stack change listener if we aren't being restored
           if (!restoreStackCb) {
@@ -200,6 +193,18 @@ lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", functio
               current.element.removeClass("rfz-js-header-animation-" + transitionType);
             }
           });
+          if (current) {
+            current.element.addClass("rfz-js-header-animation-" + transitionType);
+            events.bind(current.element[0], stopEvent, events.POINTER_START, true);
+            // attempt to allow the enter animation to start before
+            // the class one, which is faster than enter.
+            _.defer(function() {
+              $animate.addClass(current.element, "ng-hide", function() {
+                events.unbind(current.element[0], stopEvent, events.POINTER_START, true);
+              });
+            });
+          }
+
 
           if (ctrl.history.length === 2) {
             document.addEventListener("backbutton", backButtonHandler, false);
@@ -246,6 +251,9 @@ lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", functio
         rootView = val;
         if (ctrl.history.length === 0) {
           pushRootView();
+        } else if (ctrl.history.length === 1 &&
+                   ctrl.history[0].name === rootViewName()) {
+          document.removeEventListener("backbutton", backButtonHandler, false);
         }
       }, true);
 

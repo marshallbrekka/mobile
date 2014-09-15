@@ -16,6 +16,8 @@ lib.factory("$rfz.util.scrollView",
       autoPageHeight   : false
     });
 
+    window.S = this;
+
     if (!opts.container) {
       throw new Error("Scroll view requires a container");
     }
@@ -40,6 +42,7 @@ lib.factory("$rfz.util.scrollView",
     }, this.canScroll.copy().swap(), this.showIndicator, this.indicatorOffsets, new Axis("right", "bottom"));
 
     // Internal use properties
+    this.decelerating = false;
     this.animating = false;
     this.dragging = false;
     this.minPoint = new Point();
@@ -81,8 +84,10 @@ lib.factory("$rfz.util.scrollView",
 
   Scroll.prototype.positionElements = function() {
     if (this.decelerating) {
+
       css.setTranslate(this.content, -this.position.x, -this.position.y);
       this.positionIndicators();
+      console.log("positioning elements", this.position.y);
     } else {
       render.render(this.renderId, this.render);
     }
@@ -98,19 +103,22 @@ lib.factory("$rfz.util.scrollView",
   // Generic constants
   Scroll.MAX_TRACKING_TIME = 150;
   Scroll.OUT_OF_BOUNDS_FRICTION = 0.5;
-  Scroll.PAGE_TRANSITION_DURATION = 0.25;
+  Scroll.PAGE_TRANSITION_DURATION = 300;
+  Scroll.SCROLL_TRANSITION_DURATION = 580;
+  
   Scroll.MINIMUM_VELOCITY = 10;
   Scroll.MIN_OUT_OF_RANGE_DISTANCE = 1;
   Scroll.MIN_VELOCITY_FOR_DECELERATION = 250;
   Scroll.MIN_VELOCITY_FOR_DECELERATION_WITH_PAGING = 300;
-  Scroll.DESIRED_FRAME_RATE = 1 / 60;
   Scroll.PENETRATION_DECELERATION = 8;
   Scroll.PENETRATION_ACCELERATION = 5;
   Scroll.SCROLL_TO_ELEMENT_MARGIN = 20;
   Scroll.INDICATOR_DISPLAY_EVENT = "indicatorDisplayEvent";
+
   Scroll.MOVE_TRANSITION_END_EVENT = "moveTransitionEndEvent";
+
   Scroll.CHANGE_POSITION_EVENT = "changePositionEvent";
-  Scroll.END_DECELERATION_EVENT = "endDecelerationEvent";
+  Scroll.CHANGE_POSITION_END_EVENT = "endDecelerationEvent";
   Scroll.INPUT_START_EVENT = "inputStartEvent";
   Scroll.INPUT_MOVE_EVENT = "inputMoveEvent";
   Scroll.INPUT_END_EVENT = "inputEndEvent";
@@ -486,6 +494,36 @@ lib.factory("$rfz.util.scrollView",
     this.positionElements();
   }
 
+  /*
+  Given a start point, an end point, a duration (in ms), and an
+  optional start time (if no start time is provided it defaults
+  to the time the fn was called).
+  */
+  Scroll.prototype.animateToPosition = function(startPoint, pointDifference, duration, startTime) {
+    var currentTime = Date.now();
+    if (!startTime) {
+      startTime = currentTime;
+    }
+    currentTime = currentTime - startTime;
+    // we are done with the animation now
+    if (currentTime >= duration) {
+      this.setPositionAnimated(Point.add(startPoint, pointDifference));
+      this.toggleIndicators();
+      this.callListeners(Scroll.CHANGE_POSITION_END_EVENT);
+    } else {
+      var newPosition = Point.applyFn(
+        function easeOutExponential(startPosition, positionDifference) {
+          return positionDifference *
+                 (-Math.pow(2, -10 * currentTime / duration) + 1)
+                 + startPosition;
+        }, startPoint, pointDifference);
+      this.setPositionAnimated(newPosition);
+      render.render(this.renderId, _.bind(function() {
+        this.animateToPosition(startPoint, pointDifference, duration, startTime);
+      }, this), true);
+    }
+  }
+
   Scroll.prototype.setPositionAnimated = function(point, animate, duration) {
     if (point && !point.equals(this.position)) {
       (this.position = point.copy()).roundToPx();
@@ -504,6 +542,7 @@ lib.factory("$rfz.util.scrollView",
         // TODO animate scroll indicators getting larger again
         this.callListeners(Scroll.CHANGE_POSITION_EVENT, duration || Scroll.PAGE_TRANSITION_DURATION);
       } else {
+        console.log("calling positionElements()");
         this.positionElements();
         this.callListeners(Scroll.CHANGE_POSITION_EVENT);
       }
@@ -706,7 +745,7 @@ lib.factory("$rfz.util.scrollView",
       this.adjustHeight();
     }
     this.toggleIndicators(false);
-    this.callListeners(Scroll.END_DECELERATION_EVENT);
+    this.callListeners(Scroll.CHANGE_POSITION_END_EVENT);
   }
 
   return Scroll;

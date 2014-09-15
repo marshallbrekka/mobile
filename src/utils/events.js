@@ -1,5 +1,5 @@
 'use strict';
-lib.factory("$rfz.util.events", 
+lib.factory("$rfz.util.events",
             ["$rfz.util.point", "$rfz.util.edges", function(Point, Edges) {
   var supportsTouch = "createTouch" in document;
   var events = {POINTER_START : supportsTouch ? "touchstart" : "mousedown",
@@ -281,6 +281,9 @@ lib.factory("$rfz.util.events",
   };
 
   PointerNested.prototype.start = function(e) {
+    // record the start event so that we can prevent default on it if
+    // our lost handler is called.
+    this._startEvent = e;
     this.log("start");
     this.firstMove = true;
     if (e._pointerNested) {
@@ -310,7 +313,6 @@ lib.factory("$rfz.util.events",
       this.log("preMove bail early: the event owner was already set, and the owner " +
                "claimed the event last time, so don't even try to intercept.");
       this.owns.preMove = false;
-      return;
     } else if (this.callStage("preMove", e)) {
       this.log("preMove claim: our preMove fn returned true, so claim the event.");
       e._pointerNested = this;
@@ -321,73 +323,97 @@ lib.factory("$rfz.util.events",
       this.setEndListener(false);
       this.setMoveListener(false);
       this.callStage("lost");
+      this._startEvent.preventDefault();
+
     }
   };
 
   PointerNested.prototype.move = function(e) {
     this.log("move step");
+
     // if we are getting called on document after we
-    // unbound from el and bound to document, return
+    // unbound from el and bound to document, bail early
     if (e.moveStage && e.moveStage[this]) {
-      this.log("move 2nd call in an event, this means we were unbound from" + 
+      this.log("move 2nd call in an event, this means we were unbound from" +
                " our element and bound to the document. so we exited early");
       return;
-    } else if (e._pointerNested) {
-      if (e._pointerNested == this) {
-        this.log("move own: the owner of the move event is equal to 'this', " +
-                 "so we own it, run the 'move' stage");
-        this.callStage("move", e);
-        if (this.firstMove) {
-          this.firstMove = false;
-          this.setMoveListener(true);
-        }
-        e.moveStage = e.moveStage || {};
-        e.moveStage[this] = true;
-        this.owns.move = true;
-        if (this.opts.movePreventDefault) {
-          e.preventDefault();
-        }
-      } 
-      // The problem here is for things like an item in a list. If any
-      // move action occurs in a direction the scroll view supports,
-      // then we should sort of know that the item should get its
-      // "lost" method called.
-      // One solution could be that if we already owned the event,
-      // then we do lose the event for good if we didn't claim the
-      // preMove. however, if we never claimed a preMove, the system
-      // will call our lost method, but if on another move event
-      // the previous move owner loses it, and then we end up claiming
-      // it, then we call the start stage again.
-      else if (this.owns.preMove && !this.firstMove) {
-        this.log("move lost: we indicated that we owned preMove, but we weren't " +
-                 "the indicated owner on the event object. calling the lost stage.");
-        this.setEndListener(false);
-        this.setMoveListener(false);
-        this.callStage("lost");
-      } else {
-        this.firstMove = false;
-        this.owns.move = false;
-        this.callStage("intercepted");
-      }
-    } else {
+    }
+
+    // If pointerNested is not set, then no one has claimed the move
+    // event, so the deepest listener "wins". So we set it to
+    // ourselves
+    if (!e._pointerNested) {
       this.log("move called without any owner, so set ourselves to the " +
                "owner and call move again.");
       e._pointerNested = this;
       this.move(e);
     }
+
+    // If pointerNested is equal to ourselves, then we should run our
+    // move handler, and setup the document level move listeners if
+    // this is the first move event that has been called for us.
+    if (e._pointerNested === this) {
+      this.log("move own: the owner of the move event is equal to 'this', " +
+               "so we own it, run the 'move' stage");
+      this.callStage("move", e);
+      if (this.firstMove) {
+        this.firstMove = false;
+        this.setMoveListener(true);
+      }
+      // this is used to track if the move event handler has already
+      // been called for this event. This can happen if we bind to the
+      // document for a move event while a move event is already in
+      // progress. In that case we don't want to call the move handler
+      // a 2nd time.
+      e.moveStage = e.moveStage || {};
+      e.moveStage[this] = true;
+      this.owns.move = true;
+      if (this.opts.movePreventDefault) {
+        e.preventDefault();
+      }
+    }
+    // The problem here is for things like an item in a list. If any
+    // move action occurs in a direction the scroll view supports,
+    // then we should sort of know that the item should get its
+    // "lost" method called.
+    // One solution could be that if we already owned the event,
+    // then we do lose the event for good if we didn't claim the
+    // preMove. however, if we never claimed a preMove, the system
+    // will call our lost method, but if on another move event
+    // the previous move owner loses it, and then we end up claiming
+    // it, then we call the start stage again.
+    else if (this.owns.preMove && !this.firstMove) {
+      this.log("move lost: we indicated that we owned preMove, but we weren't " +
+               "the indicated owner on the event object. calling the lost stage.");
+      this.setEndListener(false);
+      this.setMoveListener(false);
+      this.callStage("lost");
+      this._startEvent.preventDefault();
+    } else {
+      this.firstMove = false;
+      this.owns.move = false;
+      this.owns.preMove = false;
+      this.callStage("intercepted");
+    }
   };
 
   PointerNested.prototype.end = function(e) {
     this.log("end");
+
     if (this.calledPreMove && !this.owns.move) {
       this.log("end lost: calledPreMove was true, and we don't own move, so call lost.");
       this.callStage("lost");
-    } else {
+      this._startEvent.preventDefault();
+    } else if (!e._pointerNested) {
+      e._pointerNested = this;
       this.log("end called");
       this.callStage("end", e);
       if (this.opts.endPreventDefault) {
         e.preventDefault();
       }
+    } else {
+      this.log("end lost: there were no move events to claim, and we were not the deepest listener.");
+      this.callStage("lost");
     }
     this.setEndListener(false);
     this.setMoveListener(false);
@@ -396,6 +422,7 @@ lib.factory("$rfz.util.events",
   PointerNested.prototype.lost = function(e) {
     this.log("lost");
     this.callStage("lost");
+    this._startEvent.preventDefault();
     this.setEndListener(false);
     this.setMoveListener(false);
   }
@@ -439,7 +466,7 @@ lib.factory("$rfz.util.events",
       intercepted : boundLost
     };
     eventHandlers.preMove = _.bind(this.preMove, this);
-    new PointerNested(element, eventHandlers);
+    return new PointerNested(element, eventHandlers);
   }
 
   PointerAction.prototype.start = function(e) {
