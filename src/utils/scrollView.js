@@ -226,6 +226,11 @@ lib.factory("$rfz.util.scrollView",
     if (!this.animating) {
       this.snapPositionToBounds(true);
     }
+    // don't combine these if blocks, snapPositionToBounds can result
+    // in an animation.
+    if (!this.animating) {
+      this.callListeners(Scroll.CHANGE_POSITION_END_EVENT);
+    }
   }
 
   Scroll.prototype.addListener = function(obj) {
