@@ -233,7 +233,7 @@ lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", functio
           // $digest calls have completed.
           _.defer(function() {
             pushView(name, transitionType, params, reset);
-            scope.$digest();
+            scope.$apply();
           });
         },
         $pop : function(name) {
@@ -241,7 +241,7 @@ lib.directive("rfzViewStack", ["$animate", "$parse", "$rfz.util.events", functio
           // $digest calls have completed.
           _.defer(function() {
             popView(name);
-            scope.$digest();
+            scope.$apply();
           });
         },
         $$currentViewName : null
