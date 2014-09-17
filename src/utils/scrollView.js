@@ -29,8 +29,6 @@ lib.factory("$rfz.util.scrollView",
       autoPageHeight   : false
     });
 
-    window.S = this;
-
     if (!opts.container) {
       throw new Error("Scroll view requires a container");
     }
