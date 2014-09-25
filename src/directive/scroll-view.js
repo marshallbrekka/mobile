@@ -96,15 +96,19 @@ lib.directive("rfzScrollView", ["$rfz.util.scrollView", "$rfz.util.attrs", "$rfz
           scroll.calculateMaxPoint();
         }, 4);
 
+        function adjustScrollView() {
+          var max = scroll.maxPoint;
+          scroll.calculateMaxPoint();
+          if (!max || !scroll.maxPoint.equals(max)) {
+            scroll.snapPositionToBounds(true);
+          }
+        }
+
         var resize = _.throttle(function(defer) {
           if (defer) {
-            _.defer(function() {
-              scroll.calculateMaxPoint();
-              scroll.snapPositionToBounds(true);
-            });
+            _.defer(adjustScrollView);
           } else {
-            scroll.calculateMaxPoint();
-            scroll.snapPositionToBounds(true);
+            adjustScrollView();
           }
         }, 100);
 
